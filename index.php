@@ -25,15 +25,17 @@ declare(strict_types=1);
     content="Discover offers and activities, complete requirements, earn rewards, and cash out when you reach the minimum balance."
   >
 
+  
   <link
     rel="stylesheet"
-    href="assets/home.css"
+    href="assets/poketflow.css?v=2"
   >
 
   <link
     rel="stylesheet"
-    href="assets/poketflow.css"
+    href="assets/home.css?v=2"
   >
+  
 
 </head>
 
