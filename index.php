@@ -19,6 +19,10 @@
     name="description"
     content="Discover offers and activities, complete requirements, earn rewards, and cash out when you reach the minimum balance."
   >
+   <link
+    rel="stylesheet"
+    href="assets/home.css"
+  >
 
   <link
     rel="stylesheet"
