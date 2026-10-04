@@ -1,3 +1,8 @@
+<?php
+
+declare(strict_types=1);
+
+?>
 <!doctype html>
 
 <html lang="en">
@@ -20,11 +25,15 @@
     content="Discover offers and activities, complete requirements, earn rewards, and cash out when you reach the minimum balance."
   >
 
-  <link rel="stylesheet" href="assets/home.css">
-  
-  
+  <link
+    rel="stylesheet"
+    href="assets/home.css?v=2"
+  >
 
-  <link rel="stylesheet" href="assets/poketflow.css">
+  <link
+    rel="stylesheet"
+    href="assets/poketflow.css?v=2"
+  >
 
 </head>
 
@@ -293,7 +302,7 @@
 
 
     <!-- ==================================================
-         REMAINING FLOATING FEATURE CARD
+         FLOATING FEATURE CARD
     ================================================== -->
 
     <div class="float-card float-one">
@@ -558,11 +567,7 @@
      through the reusable PHP component.
 ================================================== -->
 
-<?php
-
-require_once __DIR__ . '/includes/featured-offers.php';
-
-?>
+<?php require_once __DIR__ . '/includes/featured-offers.php'; ?>
 
 
 <!-- ==================================================
