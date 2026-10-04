@@ -93,6 +93,13 @@ try {
     );
 
 
+    error_log(
+    'PoketFlow OGAds DEBUG: API returned '
+    . count($ogadsOffers)
+    . ' raw offers.'
+);
+
+
     // --------------------------------------------------
     // Process visitor-specific offers
     // --------------------------------------------------
@@ -250,6 +257,15 @@ try {
 
         ];
     }
+
+
+
+
+    error_log(
+    'PoketFlow OGAds DEBUG: '
+    . count($campaigns)
+    . ' offers survived PoketFlow filtering.'
+);
 
 
     // --------------------------------------------------
