@@ -31,47 +31,87 @@ $csrfToken = $_SESSION['campaigns_csrf_token'];
 
 function campaignEscape(?string $value): string
 {
-    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars(
+        (string) $value,
+        ENT_QUOTES,
+        'UTF-8'
+    );
 }
 
 function campaignStatusClass(string $status): string
 {
-    return match (strtoupper($status)) {
-        'ACTIVE'    => 'status-active',
-        'PAUSED'    => 'status-paused',
-        'COMPLETED' => 'status-completed',
-        'EXPIRED'   => 'status-expired',
-        'DRAFT'     => 'status-draft',
-        default     => 'status-default',
-    };
+    switch (strtoupper($status)) {
+
+        case 'ACTIVE':
+            return 'status-active';
+
+        case 'PAUSED':
+            return 'status-paused';
+
+        case 'COMPLETED':
+            return 'status-completed';
+
+        case 'EXPIRED':
+            return 'status-expired';
+
+        case 'DRAFT':
+            return 'status-draft';
+
+        default:
+            return 'status-default';
+    }
 }
 
 function campaignApprovalClass(string $status): string
 {
-    return match (strtoupper($status)) {
-        'APPROVED' => 'approval-approved',
-        'PENDING'  => 'approval-pending',
-        'REJECTED' => 'approval-rejected',
-        default    => 'approval-default',
-    };
+    switch (strtoupper($status)) {
+
+        case 'APPROVED':
+            return 'approval-approved';
+
+        case 'PENDING':
+            return 'approval-pending';
+
+        case 'REJECTED':
+            return 'approval-rejected';
+
+        default:
+            return 'approval-default';
+    }
 }
 
 function campaignSourceClass(string $source): string
 {
-    return match (strtoupper($source)) {
-        'CPA_NETWORK'      => 'source-network',
-        'DIRECT_ADVERTISER' => 'source-advertiser',
-        default            => 'source-default',
-    };
+    switch (strtoupper($source)) {
+
+        case 'CPA_NETWORK':
+            return 'source-network';
+
+        case 'DIRECT_ADVERTISER':
+            return 'source-advertiser';
+
+        default:
+            return 'source-default';
+    }
 }
 
 function campaignSourceLabel(string $source): string
 {
-    return match (strtoupper($source)) {
-        'CPA_NETWORK'       => 'CPA Network',
-        'DIRECT_ADVERTISER' => 'Direct Advertiser',
-        default             => ucwords(strtolower(str_replace('_', ' ', $source))),
-    };
+    switch (strtoupper($source)) {
+
+        case 'CPA_NETWORK':
+            return 'CPA Network';
+
+        case 'DIRECT_ADVERTISER':
+            return 'Direct Advertiser';
+
+        default:
+            return ucwords(
+                strtolower(
+                    str_replace('_', ' ', $source)
+                )
+            );
+    }
 }
 
 function campaignMoney(float $amount): string
@@ -90,17 +130,29 @@ $actionError = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $submittedToken = (string) ($_POST['csrf_token'] ?? '');
+    $submittedToken = (string) (
+        $_POST['csrf_token'] ?? ''
+    );
 
     if (
         $submittedToken === '' ||
         !hash_equals($csrfToken, $submittedToken)
     ) {
-        $actionError = 'Security validation failed. Please refresh the page and try again.';
+
+        $actionError =
+            'Security validation failed. Please refresh the page and try again.';
+
     } else {
 
-        $action = strtoupper(trim((string) ($_POST['action'] ?? '')));
-        $campaignId = (int) ($_POST['campaign_id'] ?? 0);
+        $action = strtoupper(
+            trim(
+                (string) ($_POST['action'] ?? '')
+            )
+        );
+
+        $campaignId = (int) (
+            $_POST['campaign_id'] ?? 0
+        );
 
         $allowedActions = [
             'APPROVE',
@@ -111,9 +163,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (
             $campaignId <= 0 ||
-            !in_array($action, $allowedActions, true)
+            !in_array(
+                $action,
+                $allowedActions,
+                true
+            )
         ) {
+
             $actionError = 'Invalid campaign action.';
+
         } else {
 
             try {
@@ -122,7 +180,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * Make sure the campaign exists.
                  */
                 $campaignStmt = $pdo->prepare(
-                    'SELECT id, title, status, approval_status
+                    'SELECT
+                        id,
+                        title,
+                        status,
+                        approval_status
                      FROM campaigns
                      WHERE id = :id
                      LIMIT 1'
@@ -132,13 +194,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'id' => $campaignId,
                 ]);
 
-                $campaign = $campaignStmt->fetch(PDO::FETCH_ASSOC);
+                $campaign = $campaignStmt->fetch(
+                    PDO::FETCH_ASSOC
+                );
 
                 if (!$campaign) {
+
                     $actionError = 'Campaign not found.';
+
                 } else {
 
                     switch ($action) {
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | APPROVE
+                        |--------------------------------------------------------------------------
+                        */
 
                         case 'APPROVE':
 
@@ -153,8 +225,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'id' => $campaignId,
                             ]);
 
-                            $actionMessage = 'Campaign approved successfully.';
+                            $actionMessage =
+                                'Campaign approved successfully.';
+
                             break;
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | REJECT
+                        |--------------------------------------------------------------------------
+                        */
 
                         case 'REJECT':
 
@@ -169,13 +250,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'id' => $campaignId,
                             ]);
 
-                            $actionMessage = 'Campaign rejected successfully.';
+                            $actionMessage =
+                                'Campaign rejected successfully.';
+
                             break;
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | ACTIVATE
+                        |--------------------------------------------------------------------------
+                        */
 
                         case 'ACTIVATE':
 
-                            if (strtoupper((string) $campaign['approval_status']) !== 'APPROVED') {
-                                $actionError = 'Only approved campaigns can be activated.';
+                            if (
+                                strtoupper(
+                                    (string) $campaign['approval_status']
+                                ) !== 'APPROVED'
+                            ) {
+
+                                $actionError =
+                                    'Only approved campaigns can be activated.';
+
                                 break;
                             }
 
@@ -190,8 +287,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'id' => $campaignId,
                             ]);
 
-                            $actionMessage = 'Campaign activated successfully.';
+                            $actionMessage =
+                                'Campaign activated successfully.';
+
                             break;
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | PAUSE
+                        |--------------------------------------------------------------------------
+                        */
 
                         case 'PAUSE':
 
@@ -206,7 +312,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'id' => $campaignId,
                             ]);
 
-                            $actionMessage = 'Campaign paused successfully.';
+                            $actionMessage =
+                                'Campaign paused successfully.';
+
                             break;
                     }
                 }
@@ -214,10 +322,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (Throwable $e) {
 
                 error_log(
-                    'Campaign action error: ' . $e->getMessage()
+                    'Campaign action error: ' .
+                    $e->getMessage()
                 );
 
-                $actionError = 'Unable to update the campaign. Please try again.';
+                $actionError =
+                    'Unable to update the campaign. Please try again.';
             }
         }
     }
@@ -229,18 +339,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 |--------------------------------------------------------------------------
 */
 
-$search = trim((string) ($_GET['search'] ?? ''));
+$search = trim(
+    (string) ($_GET['search'] ?? '')
+);
 
 $status = strtoupper(
-    trim((string) ($_GET['status'] ?? ''))
+    trim(
+        (string) ($_GET['status'] ?? '')
+    )
 );
 
 $approval = strtoupper(
-    trim((string) ($_GET['approval'] ?? ''))
+    trim(
+        (string) ($_GET['approval'] ?? '')
+    )
 );
 
 $source = strtoupper(
-    trim((string) ($_GET['source'] ?? ''))
+    trim(
+        (string) ($_GET['source'] ?? '')
+    )
 );
 
 $allowedStatuses = [
@@ -303,10 +421,11 @@ if ($search !== '') {
         OR c.external_offer_id LIKE :search
         OR c.category LIKE :search
         OR n.name LIKE :search
-        OR a.name LIKE :search
+        OR a.company_name LIKE :search
     )';
 
-    $params['search'] = '%' . $search . '%';
+    $params['search'] =
+        '%' . $search . '%';
 }
 
 /*
@@ -317,9 +436,11 @@ if ($search !== '') {
 
 if ($status !== '') {
 
-    $where[] = 'c.status = :status';
+    $where[] =
+        'c.status = :status';
 
-    $params['status'] = $status;
+    $params['status'] =
+        $status;
 }
 
 /*
@@ -330,9 +451,11 @@ if ($status !== '') {
 
 if ($approval !== '') {
 
-    $where[] = 'c.approval_status = :approval';
+    $where[] =
+        'c.approval_status = :approval';
 
-    $params['approval'] = $approval;
+    $params['approval'] =
+        $approval;
 }
 
 /*
@@ -343,15 +466,20 @@ if ($approval !== '') {
 
 if ($source !== '') {
 
-    $where[] = 'c.source_type = :source';
+    $where[] =
+        'c.source_type = :source';
 
-    $params['source'] = $source;
+    $params['source'] =
+        $source;
 }
 
 $whereSql = '';
 
-if ($where) {
-    $whereSql = 'WHERE ' . implode(' AND ', $where);
+if (!empty($where)) {
+
+    $whereSql =
+        'WHERE ' .
+        implode(' AND ', $where);
 }
 
 /*
@@ -373,21 +501,32 @@ $countSql = "
     {$whereSql}
 ";
 
-$countStmt = $pdo->prepare($countSql);
-$countStmt->execute($params);
+$countStmt = $pdo->prepare(
+    $countSql
+);
 
-$totalCampaigns = (int) $countStmt->fetchColumn();
+$countStmt->execute(
+    $params
+);
+
+$totalCampaigns = (int) (
+    $countStmt->fetchColumn()
+);
 
 $totalPages = max(
     1,
-    (int) ceil($totalCampaigns / $perPage)
+    (int) ceil(
+        $totalCampaigns / $perPage
+    )
 );
 
 if ($page > $totalPages) {
     $page = $totalPages;
 }
 
-$offset = ($page - 1) * $perPage;
+$offset =
+    ($page - 1) *
+    $perPage;
 
 /*
 |--------------------------------------------------------------------------
@@ -425,7 +564,7 @@ $sql = "
 
         n.name AS network_name,
 
-        a.name AS advertiser_name
+        a.company_name AS advertiser_name
 
     FROM campaigns c
 
@@ -450,10 +589,17 @@ $sql = "
     OFFSET {$offset}
 ";
 
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+$stmt = $pdo->prepare(
+    $sql
+);
 
-$campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt->execute(
+    $params
+);
+
+$campaigns = $stmt->fetchAll(
+    PDO::FETCH_ASSOC
+);
 
 /*
 |--------------------------------------------------------------------------
@@ -464,31 +610,41 @@ $campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $queryParams = [];
 
 if ($search !== '') {
-    $queryParams['search'] = $search;
+    $queryParams['search'] =
+        $search;
 }
 
 if ($status !== '') {
-    $queryParams['status'] = $status;
+    $queryParams['status'] =
+        $status;
 }
 
 if ($approval !== '') {
-    $queryParams['approval'] = $approval;
+    $queryParams['approval'] =
+        $approval;
 }
 
 if ($source !== '') {
-    $queryParams['source'] = $source;
+    $queryParams['source'] =
+        $source;
 }
 
-function campaignPageUrl(array $params, int $page): string
-{
-    $params['page'] = $page;
+function campaignPageUrl(
+    array $params,
+    int $page
+): string {
 
-    return 'campaigns.php?' . http_build_query($params);
+    $params['page'] =
+        $page;
+
+    return 'campaigns.php?' .
+        http_build_query($params);
 }
 
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
     <meta charset="UTF-8">
@@ -503,7 +659,9 @@ function campaignPageUrl(array $params, int $page): string
         content="#080d1a"
     >
 
-    <title>Campaigns — PoketFlow Admin</title>
+    <title>
+        Campaigns — PoketFlow Admin
+    </title>
 
     <link
         rel="stylesheet"
@@ -524,9 +682,14 @@ function campaignPageUrl(array $params, int $page): string
 
         <div class="sidebar-brand">
 
-            <a href="index.php" class="brand-link">
+            <a
+                href="index.php"
+                class="brand-link"
+            >
 
-                <span class="brand-mark">P</span>
+                <span class="brand-mark">
+                    P
+                </span>
 
                 <span class="brand-text">
                     Poket<span>Flow</span>
@@ -543,12 +706,18 @@ function campaignPageUrl(array $params, int $page): string
 
         <nav class="sidebar-navigation">
 
-            <a href="index.php" class="sidebar-link">
+            <a
+                href="index.php"
+                class="sidebar-link"
+            >
                 <span class="sidebar-icon">⌂</span>
                 <span>Dashboard</span>
             </a>
 
-            <a href="users.php" class="sidebar-link">
+            <a
+                href="users.php"
+                class="sidebar-link"
+            >
                 <span class="sidebar-icon">◉</span>
                 <span>Users</span>
             </a>
@@ -561,27 +730,42 @@ function campaignPageUrl(array $params, int $page): string
                 <span>Campaigns</span>
             </a>
 
-            <a href="conversions.php" class="sidebar-link">
+            <a
+                href="conversions.php"
+                class="sidebar-link"
+            >
                 <span class="sidebar-icon">✓</span>
                 <span>Conversions</span>
             </a>
 
-            <a href="withdrawals.php" class="sidebar-link">
+            <a
+                href="withdrawals.php"
+                class="sidebar-link"
+            >
                 <span class="sidebar-icon">↗</span>
                 <span>Withdrawals</span>
             </a>
 
-            <a href="advertisers.php" class="sidebar-link">
+            <a
+                href="advertisers.php"
+                class="sidebar-link"
+            >
                 <span class="sidebar-icon">▣</span>
                 <span>Advertisers</span>
             </a>
 
-            <a href="networks.php" class="sidebar-link">
+            <a
+                href="networks.php"
+                class="sidebar-link"
+            >
                 <span class="sidebar-icon">◎</span>
                 <span>Networks</span>
             </a>
 
-            <a href="settings.php" class="sidebar-link">
+            <a
+                href="settings.php"
+                class="sidebar-link"
+            >
                 <span class="sidebar-icon">⚙</span>
                 <span>Settings</span>
             </a>
@@ -622,9 +806,14 @@ function campaignPageUrl(array $params, int $page): string
 
         <header class="mobile-header">
 
-            <a href="index.php" class="mobile-brand">
+            <a
+                href="index.php"
+                class="mobile-brand"
+            >
 
-                <span class="brand-mark">P</span>
+                <span class="brand-mark">
+                    P
+                </span>
 
                 <span class="brand-text">
                     Poket<span>Flow</span>
@@ -639,9 +828,11 @@ function campaignPageUrl(array $params, int $page): string
                 aria-label="Open menu"
                 aria-expanded="false"
             >
+
                 <span></span>
                 <span></span>
                 <span></span>
+
             </button>
 
         </header>
@@ -654,16 +845,48 @@ function campaignPageUrl(array $params, int $page): string
             id="mobileNavigation"
         >
 
-            <a href="index.php">Dashboard</a>
-            <a href="users.php">Users</a>
-            <a href="campaigns.php" class="active">Campaigns</a>
-            <a href="conversions.php">Conversions</a>
-            <a href="withdrawals.php">Withdrawals</a>
-            <a href="advertisers.php">Advertisers</a>
-            <a href="networks.php">Networks</a>
-            <a href="settings.php">Settings</a>
-            <a href="../index.php">View Website</a>
-            <a href="../logout.php">Logout</a>
+            <a href="index.php">
+                Dashboard
+            </a>
+
+            <a href="users.php">
+                Users
+            </a>
+
+            <a
+                href="campaigns.php"
+                class="active"
+            >
+                Campaigns
+            </a>
+
+            <a href="conversions.php">
+                Conversions
+            </a>
+
+            <a href="withdrawals.php">
+                Withdrawals
+            </a>
+
+            <a href="advertisers.php">
+                Advertisers
+            </a>
+
+            <a href="networks.php">
+                Networks
+            </a>
+
+            <a href="settings.php">
+                Settings
+            </a>
+
+            <a href="../index.php">
+                View Website
+            </a>
+
+            <a href="../logout.php">
+                Logout
+            </a>
 
         </div>
 
@@ -693,7 +916,9 @@ function campaignPageUrl(array $params, int $page): string
 
             <div class="page-header-stat">
 
-                <span>Total Campaigns</span>
+                <span>
+                    Total Campaigns
+                </span>
 
                 <strong>
                     <?= number_format($totalCampaigns) ?>
@@ -711,8 +936,15 @@ function campaignPageUrl(array $params, int $page): string
         <?php if ($actionMessage !== ''): ?>
 
             <div class="campaign-alert success">
-                <span class="alert-icon">✓</span>
-                <span><?= campaignEscape($actionMessage) ?></span>
+
+                <span class="alert-icon">
+                    ✓
+                </span>
+
+                <span>
+                    <?= campaignEscape($actionMessage) ?>
+                </span>
+
             </div>
 
         <?php endif; ?>
@@ -721,8 +953,15 @@ function campaignPageUrl(array $params, int $page): string
         <?php if ($actionError !== ''): ?>
 
             <div class="campaign-alert error">
-                <span class="alert-icon">!</span>
-                <span><?= campaignEscape($actionError) ?></span>
+
+                <span class="alert-icon">
+                    !
+                </span>
+
+                <span>
+                    <?= campaignEscape($actionError) ?>
+                </span>
+
             </div>
 
         <?php endif; ?>
@@ -748,7 +987,9 @@ function campaignPageUrl(array $params, int $page): string
 
                     <div class="search-input-wrap">
 
-                        <span class="search-icon">⌕</span>
+                        <span class="search-icon">
+                            ⌕
+                        </span>
 
                         <input
                             type="search"
@@ -931,7 +1172,12 @@ function campaignPageUrl(array $params, int $page): string
                         There are no campaigns matching the current filters.
                     </p>
 
-                    <?php if ($search !== '' || $status !== '' || $approval !== '' || $source !== ''): ?>
+                    <?php if (
+                        $search !== '' ||
+                        $status !== '' ||
+                        $approval !== '' ||
+                        $source !== ''
+                    ): ?>
 
                         <a
                             href="campaigns.php"
@@ -996,43 +1242,71 @@ function campaignPageUrl(array $params, int $page): string
 
                             <?php
 
-                            $campaignId = (int) $campaign['id'];
+                            $campaignId =
+                                (int) $campaign['id'];
 
-                            $sourceType = strtoupper(
-                                (string) $campaign['source_type']
-                            );
+                            $sourceType =
+                                strtoupper(
+                                    (string) $campaign['source_type']
+                                );
 
-                            $statusValue = strtoupper(
-                                (string) $campaign['status']
-                            );
+                            $statusValue =
+                                strtoupper(
+                                    (string) $campaign['status']
+                                );
 
-                            $approvalValue = strtoupper(
-                                (string) $campaign['approval_status']
-                            );
+                            $approvalValue =
+                                strtoupper(
+                                    (string) $campaign['approval_status']
+                                );
 
-                            $networkName = trim(
-                                (string) ($campaign['network_name'] ?? '')
-                            );
+                            $networkName =
+                                trim(
+                                    (string) (
+                                        $campaign['network_name'] ?? ''
+                                    )
+                                );
 
-                            $advertiserName = trim(
-                                (string) ($campaign['advertiser_name'] ?? '')
-                            );
+                            $advertiserName =
+                                trim(
+                                    (string) (
+                                        $campaign['advertiser_name'] ?? ''
+                                    )
+                                );
 
-                            $providerName = $sourceType === 'CPA_NETWORK'
-                                ? ($networkName !== '' ? $networkName : 'CPA Network')
-                                : ($advertiserName !== '' ? $advertiserName : 'Direct Advertiser');
+                            $providerName =
+                                $sourceType === 'CPA_NETWORK'
+                                    ? (
+                                        $networkName !== ''
+                                            ? $networkName
+                                            : 'CPA Network'
+                                    )
+                                    : (
+                                        $advertiserName !== ''
+                                            ? $advertiserName
+                                            : 'Direct Advertiser'
+                                    );
 
-                            $countries = trim(
-                                (string) ($campaign['countries'] ?? '')
-                            );
+                            $countries =
+                                trim(
+                                    (string) (
+                                        $campaign['countries'] ?? ''
+                                    )
+                                );
 
-                            $devices = trim(
-                                (string) ($campaign['devices'] ?? '')
-                            );
+                            $devices =
+                                trim(
+                                    (string) (
+                                        $campaign['devices'] ?? ''
+                                    )
+                                );
 
-                            $os = trim(
-                                (string) ($campaign['os'] ?? '')
-                            );
+                            $os =
+                                trim(
+                                    (string) (
+                                        $campaign['os'] ?? ''
+                                    )
+                                );
 
                             ?>
 
@@ -1044,10 +1318,16 @@ function campaignPageUrl(array $params, int $page): string
 
                                     <div class="campaign-title-row">
 
-                                        <?php if (!empty($campaign['image_url'])): ?>
+                                        <?php if (
+                                            !empty(
+                                                $campaign['image_url']
+                                            )
+                                        ): ?>
 
                                             <img
-                                                src="<?= campaignEscape((string) $campaign['image_url']) ?>"
+                                                src="<?= campaignEscape(
+                                                    (string) $campaign['image_url']
+                                                ) ?>"
                                                 alt=""
                                                 class="campaign-image"
                                                 loading="lazy"
@@ -1077,7 +1357,11 @@ function campaignPageUrl(array $params, int $page): string
 
                                                 ID #<?= $campaignId ?>
 
-                                                <?php if (!empty($campaign['external_offer_id'])): ?>
+                                                <?php if (
+                                                    !empty(
+                                                        $campaign['external_offer_id']
+                                                    )
+                                                ): ?>
 
                                                     <span>
                                                         • Offer
@@ -1095,7 +1379,11 @@ function campaignPageUrl(array $params, int $page): string
                                     </div>
 
 
-                                    <?php if (!empty($campaign['category'])): ?>
+                                    <?php if (
+                                        !empty(
+                                            $campaign['category']
+                                        )
+                                    ): ?>
 
                                         <span class="category-label">
 
@@ -1117,15 +1405,21 @@ function campaignPageUrl(array $params, int $page): string
                                     <div class="source-stack">
 
                                         <span
-                                            class="source-badge <?= campaignSourceClass($sourceType) ?>"
+                                            class="source-badge <?= campaignSourceClass(
+                                                $sourceType
+                                            ) ?>"
                                         >
                                             <?= campaignEscape(
-                                                campaignSourceLabel($sourceType)
+                                                campaignSourceLabel(
+                                                    $sourceType
+                                                )
                                             ) ?>
                                         </span>
 
                                         <span class="provider-name">
-                                            <?= campaignEscape($providerName) ?>
+                                            <?= campaignEscape(
+                                                $providerName
+                                            ) ?>
                                         </span>
 
                                     </div>
@@ -1190,37 +1484,53 @@ function campaignPageUrl(array $params, int $page): string
 
                                     <div class="targeting-list">
 
-                                        <?php if ($countries !== ''): ?>
+                                        <?php if (
+                                            $countries !== ''
+                                        ): ?>
 
                                             <span class="target-pill">
                                                 🌍
-                                                <?= campaignEscape($countries) ?>
+                                                <?= campaignEscape(
+                                                    $countries
+                                                ) ?>
                                             </span>
 
                                         <?php endif; ?>
 
 
-                                        <?php if ($devices !== ''): ?>
+                                        <?php if (
+                                            $devices !== ''
+                                        ): ?>
 
                                             <span class="target-pill">
                                                 ▣
-                                                <?= campaignEscape($devices) ?>
+                                                <?= campaignEscape(
+                                                    $devices
+                                                ) ?>
                                             </span>
 
                                         <?php endif; ?>
 
 
-                                        <?php if ($os !== ''): ?>
+                                        <?php if (
+                                            $os !== ''
+                                        ): ?>
 
                                             <span class="target-pill">
                                                 ◉
-                                                <?= campaignEscape($os) ?>
+                                                <?= campaignEscape(
+                                                    $os
+                                                ) ?>
                                             </span>
 
                                         <?php endif; ?>
 
 
-                                        <?php if ((int) $campaign['incentive_allowed'] === 1): ?>
+                                        <?php if (
+                                            (int) $campaign[
+                                                'incentive_allowed'
+                                            ] === 1
+                                        ): ?>
 
                                             <span class="target-pill incentive">
                                                 Incentive
@@ -1238,9 +1548,13 @@ function campaignPageUrl(array $params, int $page): string
                                 <td>
 
                                     <span
-                                        class="status-badge <?= campaignStatusClass($statusValue) ?>"
+                                        class="status-badge <?= campaignStatusClass(
+                                            $statusValue
+                                        ) ?>"
                                     >
-                                        <?= campaignEscape($statusValue) ?>
+                                        <?= campaignEscape(
+                                            $statusValue
+                                        ) ?>
                                     </span>
 
                                 </td>
@@ -1251,9 +1565,13 @@ function campaignPageUrl(array $params, int $page): string
                                 <td>
 
                                     <span
-                                        class="approval-badge <?= campaignApprovalClass($approvalValue) ?>"
+                                        class="approval-badge <?= campaignApprovalClass(
+                                            $approvalValue
+                                        ) ?>"
                                     >
-                                        <?= campaignEscape($approvalValue) ?>
+                                        <?= campaignEscape(
+                                            $approvalValue
+                                        ) ?>
                                     </span>
 
                                 </td>
@@ -1264,25 +1582,33 @@ function campaignPageUrl(array $params, int $page): string
                                 <td class="date-cell">
 
                                     <span>
+
                                         <?= campaignEscape(
                                             date(
                                                 'M j, Y',
                                                 strtotime(
-                                                    (string) $campaign['created_at']
+                                                    (string) $campaign[
+                                                        'created_at'
+                                                    ]
                                                 )
                                             )
                                         ) ?>
+
                                     </span>
 
                                     <small>
+
                                         <?= campaignEscape(
                                             date(
                                                 'H:i',
                                                 strtotime(
-                                                    (string) $campaign['created_at']
+                                                    (string) $campaign[
+                                                        'created_at'
+                                                    ]
                                                 )
                                             )
                                         ) ?>
+
                                     </small>
 
                                 </td>
@@ -1294,7 +1620,11 @@ function campaignPageUrl(array $params, int $page): string
 
                                     <div class="campaign-actions">
 
-                                        <?php if ($approvalValue === 'PENDING'): ?>
+                                        <?php if (
+                                            $approvalValue === 'PENDING'
+                                        ): ?>
+
+                                            <!-- APPROVE -->
 
                                             <form
                                                 method="post"
@@ -1304,7 +1634,9 @@ function campaignPageUrl(array $params, int $page): string
                                                 <input
                                                     type="hidden"
                                                     name="csrf_token"
-                                                    value="<?= campaignEscape($csrfToken) ?>"
+                                                    value="<?= campaignEscape(
+                                                        $csrfToken
+                                                    ) ?>"
                                                 >
 
                                                 <input
@@ -1322,13 +1654,14 @@ function campaignPageUrl(array $params, int $page): string
                                                 <button
                                                     type="submit"
                                                     class="action-button approve"
-                                                    title="Approve campaign"
                                                 >
                                                     Approve
                                                 </button>
 
                                             </form>
 
+
+                                            <!-- REJECT -->
 
                                             <form
                                                 method="post"
@@ -1338,7 +1671,9 @@ function campaignPageUrl(array $params, int $page): string
                                                 <input
                                                     type="hidden"
                                                     name="csrf_token"
-                                                    value="<?= campaignEscape($csrfToken) ?>"
+                                                    value="<?= campaignEscape(
+                                                        $csrfToken
+                                                    ) ?>"
                                                 >
 
                                                 <input
@@ -1356,16 +1691,23 @@ function campaignPageUrl(array $params, int $page): string
                                                 <button
                                                     type="submit"
                                                     class="action-button reject"
-                                                    title="Reject campaign"
                                                 >
                                                     Reject
                                                 </button>
 
                                             </form>
 
-                                        <?php elseif ($approvalValue === 'APPROVED'): ?>
 
-                                            <?php if ($statusValue === 'ACTIVE'): ?>
+                                        <?php elseif (
+                                            $approvalValue === 'APPROVED'
+                                        ): ?>
+
+
+                                            <?php if (
+                                                $statusValue === 'ACTIVE'
+                                            ): ?>
+
+                                                <!-- PAUSE -->
 
                                                 <form
                                                     method="post"
@@ -1375,7 +1717,9 @@ function campaignPageUrl(array $params, int $page): string
                                                     <input
                                                         type="hidden"
                                                         name="csrf_token"
-                                                        value="<?= campaignEscape($csrfToken) ?>"
+                                                        value="<?= campaignEscape(
+                                                            $csrfToken
+                                                        ) ?>"
                                                     >
 
                                                     <input
@@ -1399,7 +1743,12 @@ function campaignPageUrl(array $params, int $page): string
 
                                                 </form>
 
-                                            <?php elseif ($statusValue === 'PAUSED'): ?>
+
+                                            <?php elseif (
+                                                $statusValue === 'PAUSED'
+                                            ): ?>
+
+                                                <!-- ACTIVATE -->
 
                                                 <form
                                                     method="post"
@@ -1409,7 +1758,9 @@ function campaignPageUrl(array $params, int $page): string
                                                     <input
                                                         type="hidden"
                                                         name="csrf_token"
-                                                        value="<?= campaignEscape($csrfToken) ?>"
+                                                        value="<?= campaignEscape(
+                                                            $csrfToken
+                                                        ) ?>"
                                                     >
 
                                                     <input
@@ -1456,15 +1807,22 @@ function campaignPageUrl(array $params, int $page): string
                      PAGINATION
                 ================================================== -->
 
-                <?php if ($totalPages > 1): ?>
+                <?php if (
+                    $totalPages > 1
+                ): ?>
 
                     <div class="pagination">
 
-                        <?php if ($page > 1): ?>
+                        <?php if (
+                            $page > 1
+                        ): ?>
 
                             <a
                                 href="<?= campaignEscape(
-                                    campaignPageUrl($queryParams, $page - 1)
+                                    campaignPageUrl(
+                                        $queryParams,
+                                        $page - 1
+                                    )
                                 ) ?>"
                                 class="pagination-button"
                             >
@@ -1478,15 +1836,31 @@ function campaignPageUrl(array $params, int $page): string
 
                             <?php
 
-                            $startPage = max(1, $page - 2);
-                            $endPage = min($totalPages, $page + 2);
+                            $startPage =
+                                max(
+                                    1,
+                                    $page - 2
+                                );
 
-                            for ($i = $startPage; $i <= $endPage; $i++):
+                            $endPage =
+                                min(
+                                    $totalPages,
+                                    $page + 2
+                                );
+
+                            for (
+                                $i = $startPage;
+                                $i <= $endPage;
+                                $i++
+                            ):
                             ?>
 
                                 <a
                                     href="<?= campaignEscape(
-                                        campaignPageUrl($queryParams, $i)
+                                        campaignPageUrl(
+                                            $queryParams,
+                                            $i
+                                        )
                                     ) ?>"
                                     class="pagination-number <?= $i === $page ? 'active' : '' ?>"
                                 >
@@ -1498,11 +1872,16 @@ function campaignPageUrl(array $params, int $page): string
                         </div>
 
 
-                        <?php if ($page < $totalPages): ?>
+                        <?php if (
+                            $page < $totalPages
+                        ): ?>
 
                             <a
                                 href="<?= campaignEscape(
-                                    campaignPageUrl($queryParams, $page + 1)
+                                    campaignPageUrl(
+                                        $queryParams,
+                                        $page + 1
+                                    )
                                 ) ?>"
                                 class="pagination-button"
                             >
@@ -1555,68 +1934,94 @@ function campaignPageUrl(array $params, int $page): string
 
 (function () {
 
-    const menuButton = document.getElementById('mobileMenuButton');
-    const navigation = document.getElementById('mobileNavigation');
+    const menuButton =
+        document.getElementById('mobileMenuButton');
+
+    const navigation =
+        document.getElementById('mobileNavigation');
 
     if (!menuButton || !navigation) {
         return;
     }
 
-    menuButton.addEventListener('click', function () {
+    menuButton.addEventListener(
+        'click',
+        function () {
 
-        const isOpen = navigation.classList.toggle('open');
-
-        menuButton.setAttribute(
-            'aria-expanded',
-            isOpen ? 'true' : 'false'
-        );
-
-        menuButton.setAttribute(
-            'aria-label',
-            isOpen ? 'Close menu' : 'Open menu'
-        );
-
-    });
-
-
-    navigation.querySelectorAll('a').forEach(function (link) {
-
-        link.addEventListener('click', function () {
-
-            navigation.classList.remove('open');
+            const isOpen =
+                navigation.classList.toggle('open');
 
             menuButton.setAttribute(
                 'aria-expanded',
-                'false'
+                isOpen ? 'true' : 'false'
             );
 
             menuButton.setAttribute(
                 'aria-label',
-                'Open menu'
+                isOpen
+                    ? 'Close menu'
+                    : 'Open menu'
             );
-
-        });
-
-    });
+        }
+    );
 
 
-    document.addEventListener('click', function (event) {
+    navigation
+        .querySelectorAll('a')
+        .forEach(
+            function (link) {
 
-        if (
-            !navigation.contains(event.target) &&
-            !menuButton.contains(event.target)
-        ) {
+                link.addEventListener(
+                    'click',
+                    function () {
 
-            navigation.classList.remove('open');
+                        navigation.classList.remove(
+                            'open'
+                        );
 
-            menuButton.setAttribute(
-                'aria-expanded',
-                'false'
-            );
+                        menuButton.setAttribute(
+                            'aria-expanded',
+                            'false'
+                        );
+
+                        menuButton.setAttribute(
+                            'aria-label',
+                            'Open menu'
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+    document.addEventListener(
+        'click',
+        function (event) {
+
+            if (
+                !navigation.contains(
+                    event.target
+                ) &&
+                !menuButton.contains(
+                    event.target
+                )
+            ) {
+
+                navigation.classList.remove(
+                    'open'
+                );
+
+                menuButton.setAttribute(
+                    'aria-expanded',
+                    'false'
+                );
+
+            }
 
         }
-
-    });
+    );
 
 })();
 
