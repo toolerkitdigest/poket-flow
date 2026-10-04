@@ -287,7 +287,7 @@ foreach ($featuredRawOffers as $offer) {
     |--------------------------------------------------------------------------
     */
 
-    if (count($featuredOffers) >= 6) {
+    if (count($featuredOffers) >= 12) {
         break;
     }
 }
