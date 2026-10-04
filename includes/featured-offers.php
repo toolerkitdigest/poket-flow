@@ -223,7 +223,11 @@ foreach ($featuredRawOffers as $offer) {
 
     /*
     |--------------------------------------------------------------------------
-    | Country
+    | Country / device data
+    |--------------------------------------------------------------------------
+    | These are intentionally retained internally for future
+    | filtering/personalization, but are NOT displayed on the
+    | homepage card.
     |--------------------------------------------------------------------------
     */
 
@@ -234,13 +238,6 @@ foreach ($featuredRawOffers as $offer) {
             ?? ''
         )
     );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Device
-    |--------------------------------------------------------------------------
-    */
 
     $devices = trim(
         (string) (
@@ -406,20 +403,19 @@ if (!function_exists('featuredOfferLink')) {
 
         <div class="pf-featured-header">
 
-            <div>
+            <div class="pf-featured-heading-copy">
 
                 <span class="pf-featured-eyebrow">
-                    LIVE OPPORTUNITIES
+                    LIVE REWARDS
                 </span>
 
                 <h2>
-                    Earn From Real Offers
+                    Start discovering available rewards
                 </h2>
 
                 <p>
-                    Discover available offers matched to your
-                    device and location. Complete an offer and
-                    receive the reward shown.
+                    Explore real offers available through PoketFlow.
+                    Complete an offer and receive the reward shown.
                 </p>
 
             </div>
@@ -478,13 +474,6 @@ if (!function_exists('featuredOfferLink')) {
                             'UTF-8'
                         );
 
-                    $offerId =
-                        htmlspecialchars(
-                            $featuredOffer['id'],
-                            ENT_QUOTES,
-                            'UTF-8'
-                        );
-
                     $offerLink =
                         htmlspecialchars(
                             featuredOfferLink(
@@ -494,27 +483,13 @@ if (!function_exists('featuredOfferLink')) {
                             'UTF-8'
                         );
 
-                    $countries =
-                        htmlspecialchars(
-                            $featuredOffer['countries'],
-                            ENT_QUOTES,
-                            'UTF-8'
-                        );
-
-                    $devices =
-                        htmlspecialchars(
-                            $featuredOffer['devices'],
-                            ENT_QUOTES,
-                            'UTF-8'
-                        );
-
                     ?>
 
-                    <article
-                        class="pf-featured-card"
-                    >
+                    <article class="pf-featured-card">
 
-                        <!-- Offer top -->
+                        <!-- =================================================
+                             OFFER IMAGE
+                        ================================================== -->
 
                         <div class="pf-featured-card-top">
 
@@ -544,9 +519,8 @@ if (!function_exists('featuredOfferLink')) {
 
                                 <?php else: ?>
 
-                                    <span
-                                        class="pf-featured-fallback"
-                                    >
+                                    <span class="pf-featured-fallback">
+
                                         <?= htmlspecialchars(
                                             featuredOfferInitial(
                                                 $featuredOffer['title']
@@ -554,101 +528,95 @@ if (!function_exists('featuredOfferLink')) {
                                             ENT_QUOTES,
                                             'UTF-8'
                                         ) ?>
+
                                     </span>
 
                                 <?php endif; ?>
 
                             </div>
 
+                        </div>
 
-                            <div class="pf-featured-heading">
+
+                        <!-- =================================================
+                             OFFER CONTENT
+                        ================================================== -->
+
+                        <div class="pf-featured-content">
+
+                            <div class="pf-featured-meta">
 
                                 <span class="pf-featured-category">
                                     <?= $offerCategory ?>
                                 </span>
 
-                                <h3>
-                                    <?= $offerTitle ?>
-                                </h3>
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- Description -->
-
-                        <p class="pf-featured-description">
-                            <?= $offerDescription ?>
-                        </p>
-
-
-                        <!-- Details -->
-
-                        <div class="pf-featured-tags">
-
-                            <?php if ($countries !== ''): ?>
-
-                                <span>
-                                    🌍 <?= $countries ?>
+                                <span class="pf-featured-source">
+                                    OGAds
                                 </span>
-
-                            <?php endif; ?>
-
-
-                            <?php if ($devices !== ''): ?>
-
-                                <span>
-                                    📱 <?= $devices ?>
-                                </span>
-
-                            <?php endif; ?>
-
-                        </div>
-
-
-                        <!-- Bottom -->
-
-                        <div class="pf-featured-bottom">
-
-                            <div>
-
-                                <span
-                                    class="pf-featured-reward-label"
-                                >
-                                    You can earn
-
-                                </span>
-
-                                <strong
-                                    class="pf-featured-reward"
-                                >
-                                    <?= featuredOfferMoney(
-                                        (float) $featuredOffer['worker_reward']
-                                    ) ?>
-                                </strong>
 
                             </div>
 
 
-                            <a
-                                href="<?= $offerLink ?>"
-                                class="pf-featured-button"
-                            >
+                            <h3 class="pf-featured-title">
+                                <?= $offerTitle ?>
+                            </h3>
 
-                                <?= (
-                                    function_exists('isLoggedIn')
-                                    && isLoggedIn()
-                                )
-                                    ? 'Start Offer'
-                                    : 'Get Started'
-                                ?>
 
-                                <span aria-hidden="true">
-                                    →
-                                </span>
+                            <p class="pf-featured-description">
+                                <?= $offerDescription ?>
+                            </p>
 
-                            </a>
+
+                            <!-- =================================================
+                                 REWARD ACTION
+                            ================================================== -->
+
+                            <div class="pf-featured-bottom">
+
+                                <div class="pf-featured-reward-box">
+
+                                    <span class="pf-featured-reward-label">
+                                        YOU CAN EARN
+                                    </span>
+
+                                    <strong class="pf-featured-reward">
+                                        <?= featuredOfferMoney(
+                                            (float) $featuredOffer['worker_reward']
+                                        ) ?>
+                                    </strong>
+
+                                    <span class="pf-featured-reward-note">
+                                        Real reward
+                                    </span>
+
+                                </div>
+
+
+                                <a
+                                    href="<?= $offerLink ?>"
+                                    class="pf-featured-button"
+                                >
+
+                                    <span>
+                                        <?= (
+                                            function_exists('isLoggedIn')
+                                            && isLoggedIn()
+                                        )
+                                            ? 'Start Offer'
+                                            : 'Get Started'
+                                        ?>
+                                    </span>
+
+                                    <span
+                                        class="pf-featured-button-arrow"
+                                        aria-hidden="true"
+                                    >
+                                        →
+                                    </span>
+
+                                </a>
+
+                            </div>
 
                         </div>
 
