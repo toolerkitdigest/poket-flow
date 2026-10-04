@@ -125,38 +125,25 @@ input {
 
 .mobile-menu-button {
     display: none;
-
     width: 42px;
     height: 42px;
-
     padding: 0;
-
     border: 1px solid var(--pf-border);
-
     border-radius: 11px;
-
     background: #0d1729;
-
     cursor: pointer;
-
     align-items: center;
     justify-content: center;
-
     flex-direction: column;
-
     gap: 5px;
-
     flex-shrink: 0;
 }
 
 .mobile-menu-button span {
     width: 19px;
     height: 2px;
-
     border-radius: 2px;
-
     background: #e8edff;
-
     transition:
         transform 0.2s ease,
         opacity 0.2s ease;
@@ -168,9 +155,7 @@ input {
 ========================================= */
 
 .mobile-menu-button.open span:nth-child(1) {
-    transform:
-        translateY(7px)
-        rotate(45deg);
+    transform: translateY(7px) rotate(45deg);
 }
 
 .mobile-menu-button.open span:nth-child(2) {
@@ -178,9 +163,7 @@ input {
 }
 
 .mobile-menu-button.open span:nth-child(3) {
-    transform:
-        translateY(-7px)
-        rotate(-45deg);
+    transform: translateY(-7px) rotate(-45deg);
 }
 
 
@@ -198,147 +181,81 @@ input {
     }
 }
 
-
 .mobile-navigation {
     display: none;
-
     position: fixed;
-
     top: 72px;
     left: 0;
     right: 0;
-
     width: 100%;
-
     z-index: 100;
-
     background: rgba(8, 13, 26, 0.98);
-
     border-bottom: 1px solid var(--pf-border);
-
-    box-shadow:
-        0 18px 45px rgba(0, 0, 0, 0.45);
-
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
     padding: 12px 14px 16px;
-
     box-sizing: border-box;
 }
-
-
-
-
-
-
-/* Navigation container */
 
 .mobile-navigation nav {
     display: grid;
-
     grid-template-columns: 1fr;
-
     gap: 5px;
-
     width: 100%;
-
     margin: 0;
-
     padding: 0;
 }
 
-
-/* Navigation links */
-
 .mobile-navigation nav a {
     display: flex;
-
     align-items: center;
-
     width: 100%;
-
     min-height: 46px;
-
     box-sizing: border-box;
-
     gap: 13px;
-
     padding: 12px 14px;
-
     margin: 0;
-
     border: 0;
-
     border-radius: 11px;
-
     background: transparent;
-
     color: #8e9bb2;
-
     font-size: 14px;
-
     font-weight: 600;
-
     line-height: 1.2;
-
     text-decoration: none;
-
     white-space: nowrap;
-
     transition:
         background 0.2s ease,
         color 0.2s ease;
 }
 
-
-/* Hover */
-
 .mobile-navigation nav a:hover {
     background: #111d34;
-
     color: #ffffff;
 }
-
-
-/* Active link */
 
 .mobile-navigation nav a.active {
     background: #111d34;
-
     color: #ffffff;
-
-    box-shadow:
-        inset 3px 0 var(--pf-primary2);
+    box-shadow: inset 3px 0 var(--pf-primary2);
 }
-
-
-/* Navigation icons */
 
 .mobile-navigation .mobile-nav-icon {
     width: 24px;
-
     min-width: 24px;
-
     text-align: center;
-
     color: #8c7cff;
-
     font-size: 18px;
-
     line-height: 1;
 }
-
-
-/* Active icon */
 
 .mobile-navigation nav a.active .mobile-nav-icon {
     color: #a49cff;
 }
 
-
-/* Show mobile menu */
-
 .mobile-navigation.open {
     display: block;
 }
+
 
 /* =========================================
    BUTTONS
@@ -432,7 +349,6 @@ input {
     letter-spacing: -3px;
     margin: 24px 0 28px;
     max-width: 720px;
-    
 }
 
 .hero h1 span {
@@ -577,6 +493,7 @@ input {
     font-weight: 800;
     padding: 8px;
     margin-top: 10px;
+    cursor: pointer;
 }
 
 .phone h4 {
@@ -644,12 +561,6 @@ input {
 .float-one {
     right: -10px;
     top: 75px;
-}
-
-.float-two {
-    left: -5px;
-    bottom: 55px;
-    color: #3acfff;
 }
 
 
@@ -791,45 +702,194 @@ input {
     font-size: 12px;
 }
 
-/* =========================================
-   OFFERS
-========================================= */
 
-.offer-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
+/* =========================================================
+   POKETFLOW LIVE FEATURED OFFERS
+========================================================= */
+
+.pf-featured-offers {
+    position: relative;
+    overflow: hidden;
+    padding: 82px 24px 88px;
+    background:
+        radial-gradient(
+            circle at 15% 20%,
+            rgba(99, 102, 241, 0.08),
+            transparent 32%
+        ),
+        radial-gradient(
+            circle at 85% 75%,
+            rgba(34, 211, 238, 0.06),
+            transparent 30%
+        );
+    border-top: 1px solid rgba(38, 50, 72, 0.7);
+    border-bottom: 1px solid rgba(38, 50, 72, 0.7);
 }
 
-.offer-card {
-    background: linear-gradient(
-        145deg,
-        #101a2d,
-        #0c1526
-    );
+.pf-featured-container {
+    width: min(1232px, 100%);
+    margin: 0 auto;
+}
 
-    border: 1px solid #203250;
+.pf-featured-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 25px;
+    margin-bottom: 32px;
+}
 
-    border-radius: var(--pf-radius);
+.pf-featured-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #8c7cff;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+}
 
-    padding: 20px;
+.pf-featured-kicker::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.09);
+    animation: pfLivePulse 2s ease-in-out infinite;
+}
+
+.pf-featured-header h2 {
+    margin: 7px 0 6px;
+    font-size: clamp(28px, 4vw, 38px);
+    line-height: 1.08;
+    letter-spacing: -1.4px;
+}
+
+.pf-featured-header p {
+    max-width: 650px;
+    margin: 0;
+    color: #8190a8;
+    font-size: 14px;
+}
+
+.pf-featured-view-all {
+    flex-shrink: 0;
+    color: #39baff;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.pf-featured-view-all:hover {
+    color: #8ad9ff;
+    transform: translateX(3px);
+}
+
+
+/* =========================================
+   FEATURED OFFER GRID
+========================================= */
+
+.pf-featured-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    align-items: stretch;
+}
+
+
+/* =========================================
+   FEATURED OFFER CARD
+========================================= */
+
+.pf-featured-card {
+    --offer-index: 0;
+
+    position: relative;
+    min-width: 0;
+    min-height: 530px;
 
     display: flex;
     flex-direction: column;
 
-    min-height: 280px;
+    overflow: hidden;
+
+    border: 1px solid #243653;
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(20, 31, 53, 0.98),
+            rgba(10, 19, 35, 0.98)
+        );
 
     box-shadow:
-        0 12px 35px rgba(0, 0, 0, 0.12);
+        0 20px 55px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.025);
+
+    opacity: 0;
+    transform: translateY(24px);
+
+    animation:
+        pfOfferCardIn 0.65s cubic-bezier(0.22, 1, 0.36, 1)
+        forwards;
+
+    animation-delay:
+        calc(var(--offer-index) * 90ms);
 
     transition:
-        border-color 0.2s ease,
-        transform 0.2s ease;
+        transform 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
 }
 
-.offer-card:hover {
-    border-color: #3b4d78;
-    transform: translateY(-2px);
+.pf-featured-card:hover {
+    transform: translateY(-8px);
+
+    border-color: rgba(129, 140, 248, 0.55);
+
+    box-shadow:
+        0 28px 70px rgba(0, 0, 0, 0.32),
+        0 0 35px rgba(99, 102, 241, 0.09);
+}
+
+
+/* =========================================
+   FEATURED BADGE
+========================================= */
+
+.pf-featured-badge {
+    position: absolute;
+
+    top: 14px;
+    left: 14px;
+
+    z-index: 5;
+
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    background: rgba(99, 102, 241, 0.94);
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    color: #fff;
+
+    font-size: 10px;
+    font-weight: 900;
+
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+
+    box-shadow:
+        0 8px 25px rgba(79, 70, 229, 0.3);
 }
 
 
@@ -837,158 +897,534 @@ input {
    OFFER IMAGE
 ========================================= */
 
-.offer-image {
-    width: 76px;
-    height: 76px;
+.pf-featured-image {
+    position: relative;
 
-    border-radius: 16px;
+    width: 100%;
+    height: 185px;
 
     overflow: hidden;
 
-    background: #17233d;
+    background:
+        radial-gradient(
+            circle at 30% 20%,
+            rgba(99, 102, 241, 0.35),
+            transparent 45%
+        ),
+        #101b31;
 
-    display: grid;
-    place-items: center;
-
-    margin-bottom: 18px;
-
-    flex-shrink: 0;
+    border-bottom: 1px solid #243653;
 }
 
-.offer-image img {
-    width: 100%;
-    height: 100%;
+.pf-featured-image::after {
+    content: "";
 
-    object-fit: cover;
+    position: absolute;
 
-    display: block;
-}
-
-
-/* =========================================
-   OFFER FALLBACK ICON
-========================================= */
-
-.offer-fallback-icon {
-    width: 100%;
-    height: 100%;
-
-    display: grid;
-    place-items: center;
-
-    font-size: 31px;
-
-    color: #ffffff;
+    inset: 0;
 
     background:
         linear-gradient(
-            145deg,
-            #263dff,
-            #635bff
+            180deg,
+            transparent 55%,
+            rgba(4, 9, 18, 0.55)
         );
+
+    pointer-events: none;
 }
 
-.offer-image.orange {
-    background: #8b4b20;
+.pf-featured-image img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+
+    transition:
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        filter 0.35s ease;
 }
 
-.offer-image.cyan {
-    background: #087f9a;
+.pf-featured-card:hover .pf-featured-image img {
+    transform: scale(1.07);
+    filter: brightness(1.06);
 }
 
 
 /* =========================================
-   OFFER BODY
+   IMAGE FALLBACK
 ========================================= */
 
-.offer-body {
-    min-width: 0;
+.pf-featured-image-fallback {
+    width: 100%;
+    height: 100%;
+
+    display: grid;
+    place-items: center;
+
+    position: relative;
+
+    background:
+        radial-gradient(
+            circle at 30% 30%,
+            rgba(129, 140, 248, 0.4),
+            transparent 35%
+        ),
+        linear-gradient(
+            145deg,
+            #18264a,
+            #101a31
+        );
+
+    color: #b7baff;
+    font-size: 50px;
+    font-weight: 900;
 }
 
-.offer-body h3 {
+.pf-featured-image-fallback::before,
+.pf-featured-image-fallback::after {
+    content: "";
+
+    position: absolute;
+
+    border-radius: 50%;
+
+    border: 1px solid rgba(129, 140, 248, 0.15);
+}
+
+.pf-featured-image-fallback::before {
+    width: 130px;
+    height: 130px;
+}
+
+.pf-featured-image-fallback::after {
+    width: 190px;
+    height: 190px;
+}
+
+
+/* =========================================
+   OFFER CONTENT
+========================================= */
+
+.pf-featured-content {
+    display: flex;
+    flex-direction: column;
+
+    flex: 1;
+
+    padding: 20px;
+}
+
+.pf-featured-topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin-bottom: 10px;
+}
+
+.pf-featured-category {
+    display: inline-flex;
+    align-items: center;
+
+    width: fit-content;
+
+    padding: 5px 9px;
+
+    border: 1px solid rgba(129, 140, 248, 0.22);
+
+    border-radius: 999px;
+
+    background: rgba(99, 102, 241, 0.09);
+
+    color: #a9a5ff;
+
+    font-size: 9px;
+    font-weight: 900;
+
+    letter-spacing: 0.7px;
+
+    text-transform: uppercase;
+}
+
+.pf-featured-source {
+    color: #667791;
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.pf-featured-card h3 {
     margin: 0;
 
     color: #f8fafc;
 
-    font-size: 19px;
+    font-size: 20px;
+    line-height: 1.28;
 
-    line-height: 1.3;
-
-    font-weight: 800;
-
-    letter-spacing: -0.35px;
+    letter-spacing: -0.45px;
 }
 
-.offer-body p {
+.pf-featured-description {
     margin: 9px 0 0;
 
     color: #8997ad;
 
-    font-size: 13px;
-
-    line-height: 1.6;
+    font-size: 12px;
+    line-height: 1.65;
 
     display: -webkit-box;
-
     -webkit-box-orient: vertical;
-
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
 
     overflow: hidden;
 }
 
 
 /* =========================================
-   OFFER REWARD / START
+   OFFER TAGS
 ========================================= */
 
-.offer-bottom {
-    margin-top: auto;
-
-    padding-top: 22px;
-
+.pf-featured-tags {
     display: flex;
+    flex-wrap: wrap;
 
-    justify-content: space-between;
+    gap: 6px;
 
+    margin-top: 14px;
+}
+
+.pf-featured-tag {
+    display: inline-flex;
     align-items: center;
 
-    gap: 12px;
-}
+    padding: 5px 8px;
 
-.offer-bottom strong {
-    color: #43e38a;
+    border-radius: 7px;
 
-    font-size: 14px;
+    background: #0c1629;
 
-    font-weight: 800;
+    border: 1px solid #1d2c47;
 
-    white-space: nowrap;
-}
+    color: #7f8da6;
 
-.offer-bottom a,
-.offer-bottom button {
-    font-size: 12px;
-
-    padding: 9px 15px;
-
-    border-radius: 10px;
-
-    white-space: nowrap;
+    font-size: 9px;
+    font-weight: 700;
 }
 
 
 /* =========================================
-   EMPTY OFFER
+   REWARD AREA
 ========================================= */
 
-.empty-offer-card {
-    grid-column: 1 / -1;
+.pf-featured-bottom {
+    margin-top: auto;
+
+    padding-top: 20px;
 }
 
-.empty-offer-card .offer-body h3 {
-    font-size: 18px;
+.pf-featured-reward {
+    position: relative;
+
+    overflow: hidden;
+
+    padding: 13px 14px;
+
+    border: 1px solid rgba(34, 197, 94, 0.18);
+
+    border-radius: 13px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(34, 197, 94, 0.075),
+            rgba(22, 163, 74, 0.025)
+        );
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 12px;
 }
+
+.pf-featured-reward::after {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    bottom: 0;
+
+    width: 70px;
+
+    left: -90px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.09),
+            transparent
+        );
+
+    transform: skewX(-18deg);
+
+    animation:
+        pfRewardSweep 4s ease-in-out infinite;
+}
+
+.pf-featured-reward-label {
+    display: block;
+
+    color: #71829a;
+
+    font-size: 8px;
+    font-weight: 900;
+
+    letter-spacing: 1px;
+
+    text-transform: uppercase;
+}
+
+.pf-featured-reward-amount {
+    display: block;
+
+    margin-top: 1px;
+
+    color: #43e38a;
+
+    font-size: 22px;
+    line-height: 1.1;
+
+    font-weight: 900;
+
+    letter-spacing: -0.5px;
+
+    animation:
+        pfRewardFloat 2.8s ease-in-out infinite;
+}
+
+.pf-featured-reward-meta {
+    color: #61728c;
+    font-size: 8px;
+    text-align: right;
+}
+
+
+/* =========================================
+   OFFER CTA
+========================================= */
+
+.pf-featured-button {
+    position: relative;
+
+    display: flex;
+
+    width: 100%;
+
+    min-height: 46px;
+
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(129, 140, 248, 0.3);
+
+    border-radius: 11px;
+
+    background:
+        linear-gradient(
+            100deg,
+            #6045e9,
+            #168fd7
+        );
+
+    color: #fff;
+
+    font-size: 12px;
+    font-weight: 900;
+
+    letter-spacing: 0.15px;
+
+    box-shadow:
+        0 10px 28px rgba(79, 70, 229, 0.18);
+
+    transition:
+        transform 0.25s ease,
+        filter 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.pf-featured-button::after {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    bottom: 0;
+
+    left: -75px;
+
+    width: 55px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.32),
+            transparent
+        );
+
+    transform: skewX(-18deg);
+
+    animation:
+        pfButtonShine 3.8s ease-in-out infinite;
+}
+
+.pf-featured-button:hover {
+    transform: translateY(-2px);
+
+    filter: brightness(1.09);
+
+    box-shadow:
+        0 15px 34px rgba(79, 70, 229, 0.3);
+}
+
+
+/* =========================================
+   EMPTY FEATURED OFFERS
+========================================= */
+
+.pf-featured-empty {
+    grid-column: 1 / -1;
+
+    padding: 60px 25px;
+
+    text-align: center;
+
+    border: 1px dashed #2a3a57;
+
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #101a2c,
+            #0c1525
+        );
+}
+
+.pf-featured-empty-icon {
+    width: 58px;
+    height: 58px;
+
+    margin: 0 auto 17px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 17px;
+
+    background: #182545;
+
+    color: #9186ff;
+
+    font-size: 25px;
+}
+
+.pf-featured-empty h3 {
+    margin: 0 0 7px;
+
+    font-size: 19px;
+}
+
+.pf-featured-empty p {
+    max-width: 520px;
+
+    margin: 0 auto;
+
+    color: #7888a1;
+
+    font-size: 13px;
+}
+
+
+/* =========================================
+   FEATURED OFFER ANIMATIONS
+========================================= */
+
+@keyframes pfOfferCardIn {
+
+    0% {
+        opacity: 0;
+        transform: translateY(24px) scale(0.985);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes pfLivePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.55;
+        transform: scale(0.82);
+    }
+}
+
+@keyframes pfRewardFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-2px);
+    }
+}
+
+@keyframes pfRewardSweep {
+
+    0% {
+        left: -90px;
+    }
+
+    28%,
+    100% {
+        left: 115%;
+    }
+}
+
+@keyframes pfButtonShine {
+
+    0% {
+        left: -75px;
+    }
+
+    30%,
+    100% {
+        left: 120%;
+    }
+}
+
+
 /* =========================================
    CTA
 ========================================= */
@@ -1486,9 +1922,8 @@ input {
         border-top: 1px solid var(--pf-border);
     }
 
-    .offer-grid,
-    .dashboard-offers {
-        grid-template-columns: 1fr 1fr;
+    .pf-featured-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .app-header nav {
@@ -1539,9 +1974,8 @@ input {
     }
 
     .mobile-navigation {
-    top: 64px;
+        top: 64px;
     }
-
 
     .header-actions {
         margin-left: auto;
@@ -1596,10 +2030,6 @@ input {
         transform: scale(0.9);
     }
 
-    .float-two {
-        left: -10px;
-    }
-
     .trust-strip {
         grid-template-columns: 1fr;
         padding: 10px 18px;
@@ -1626,11 +2056,57 @@ input {
     }
 
     .steps,
-    .offer-grid,
     .dashboard-offers,
     .stats-row,
     .earn-grid {
         grid-template-columns: 1fr;
+    }
+
+    .pf-featured-offers {
+        padding: 58px 18px 65px;
+    }
+
+    .pf-featured-header {
+        display: block;
+        margin-bottom: 25px;
+    }
+
+    .pf-featured-header h2 {
+        font-size: 29px;
+    }
+
+    .pf-featured-header p {
+        font-size: 13px;
+    }
+
+    .pf-featured-view-all {
+        display: inline-flex;
+        margin-top: 14px;
+    }
+
+    .pf-featured-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .pf-featured-card {
+        min-height: 0;
+    }
+
+    .pf-featured-image {
+        height: 195px;
+    }
+
+    .pf-featured-content {
+        padding: 18px;
+    }
+
+    .pf-featured-card h3 {
+        font-size: 19px;
+    }
+
+    .pf-featured-reward-amount {
+        font-size: 21px;
     }
 
     .step {
@@ -1692,5 +2168,25 @@ input {
     .withdraw-card .btn {
         margin-top: 15px;
         width: 100%;
+    }
+}
+
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }
