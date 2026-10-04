@@ -71,7 +71,7 @@
       How It Works
     </a>
 
-    <a href="#rewards">
+    <a href="#featured-offers">
       Rewards
     </a>
 
@@ -120,15 +120,6 @@
 
 
   <div class="hero-copy">
-
-
-    <div class="eyebrow">
-
-      <span class="dot"></span>
-
-      Real offers • Real rewards • No hidden fees
-
-    </div>
 
 
     <h1>
@@ -300,6 +291,10 @@
     </div>
 
 
+    <!-- ==================================================
+         REMAINING FLOATING FEATURE CARD
+    ================================================== -->
+
     <div class="float-card float-one">
 
       ✓
@@ -312,25 +307,6 @@
 
         <small>
           Earn rewards
-        </small>
-
-      </span>
-
-    </div>
-
-
-    <div class="float-card float-two">
-
-      ϟ
-
-      <span>
-
-        <b>
-          Fast & Secure
-        </b>
-
-        <small>
-          Cash out
         </small>
 
       </span>
@@ -575,171 +551,17 @@
 
 
 <!-- ==================================================
-     WAYS TO EARN
+     LIVE FEATURED OFFERS
+     
+     Real OGAds offers are loaded dynamically
+     through the reusable PHP component.
 ================================================== -->
 
-<section
-  class="section offers-section"
-  id="rewards"
->
+<?php
 
+require_once __DIR__ . '/includes/featured-offers.php';
 
-  <div class="section-heading">
-
-
-    <div>
-
-      <span class="kicker">
-        AVAILABLE OPPORTUNITIES
-      </span>
-
-      <h2>
-        Ways to Earn
-      </h2>
-
-    </div>
-
-
-    <a href="offers.php">
-      View all offers →
-    </a>
-
-
-  </div>
-
-
-  <div class="offer-grid">
-
-
-    <article class="offer-card">
-
-
-      <div class="offer-icon">
-        ◎
-      </div>
-
-
-      <div class="offer-body">
-
-        <span class="tag">
-          App Install
-        </span>
-
-        <h3>
-          Discover new apps
-        </h3>
-
-        <p>
-          Explore an available app offer and follow
-          its listed requirements.
-        </p>
-
-      </div>
-
-
-      <div class="offer-bottom">
-
-        <strong>
-          Earn rewards
-        </strong>
-
-        <a href="offers.php">
-          Start →
-        </a>
-
-      </div>
-
-
-    </article>
-
-
-    <article class="offer-card">
-
-
-      <div class="offer-icon orange">
-        ▤
-      </div>
-
-
-      <div class="offer-body">
-
-        <span class="tag">
-          Survey
-        </span>
-
-        <h3>
-          Share your opinion
-        </h3>
-
-        <p>
-          Answer an available survey and complete
-          the required steps.
-        </p>
-
-      </div>
-
-
-      <div class="offer-bottom">
-
-        <strong>
-          Earn rewards
-        </strong>
-
-        <a href="offers.php">
-          Start →
-        </a>
-
-      </div>
-
-
-    </article>
-
-
-    <article class="offer-card">
-
-
-      <div class="offer-icon cyan">
-        ◇
-      </div>
-
-
-      <div class="offer-body">
-
-        <span class="tag">
-          Special Offer
-        </span>
-
-        <h3>
-          Explore opportunities
-        </h3>
-
-        <p>
-          Browse additional offers available
-          for your account.
-        </p>
-
-      </div>
-
-
-      <div class="offer-bottom">
-
-        <strong>
-          Earn rewards
-        </strong>
-
-        <a href="offers.php">
-          Start →
-        </a>
-
-      </div>
-
-
-    </article>
-
-
-  </div>
-
-</section>
+?>
 
 
 <!-- ==================================================
@@ -871,7 +693,7 @@
 
     <a
       class="brand"
-      href="index.html"
+      href="index.php"
     >
 
       <span class="brand-mark">
