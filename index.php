@@ -27,12 +27,12 @@ declare(strict_types=1);
 
   <link
     rel="stylesheet"
-    href="assets/home.css?v=2"
+    href="assets/home.css"
   >
 
   <link
     rel="stylesheet"
-    href="assets/poketflow.css?v=2"
+    href="assets/poketflow.css"
   >
 
 </head>
