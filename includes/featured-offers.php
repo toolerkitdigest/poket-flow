@@ -7,10 +7,11 @@ declare(strict_types=1);
 | PoketFlow — Dynamic Featured Offers
 |--------------------------------------------------------------------------
 | This component:
-| - Fetches real OGAds offers for the current visitor
-| - Uses the existing OGAds safety filters
+| - Fetches real offers for the current visitor
+| - Uses the existing offer safety filters
 | - Uses the existing reward calculation
 | - Shows only valid offers
+| - Hides CPA network/source information from visitors
 | - Sends guests to register.php
 | - Sends logged-in users to start-offer.php
 |--------------------------------------------------------------------------
@@ -50,7 +51,7 @@ $featuredSite =
 
 /*
 |--------------------------------------------------------------------------
-| Fetch live OGAds offers
+| Fetch live offers
 |--------------------------------------------------------------------------
 */
 
@@ -225,9 +226,10 @@ foreach ($featuredRawOffers as $offer) {
     |--------------------------------------------------------------------------
     | Country / device data
     |--------------------------------------------------------------------------
-    | These are intentionally retained internally for future
-    | filtering/personalization, but are NOT displayed on the
-    | homepage card.
+    | These remain available internally for future
+    | filtering/personalization.
+    |
+    | They are NOT displayed on the homepage.
     |--------------------------------------------------------------------------
     */
 
@@ -389,6 +391,7 @@ if (!function_exists('featuredOfferLink')) {
 
 ?>
 
+
 <section
     class="pf-featured-offers"
     id="featured-offers"
@@ -414,8 +417,9 @@ if (!function_exists('featuredOfferLink')) {
                 </h2>
 
                 <p>
-                    Explore real offers available through PoketFlow.
-                    Complete an offer and receive the reward shown.
+                    Explore real opportunities available through
+                    PoketFlow. Complete an offer and receive the
+                    reward shown.
                 </p>
 
             </div>
@@ -548,10 +552,6 @@ if (!function_exists('featuredOfferLink')) {
 
                                 <span class="pf-featured-category">
                                     <?= $offerCategory ?>
-                                </span>
-
-                                <span class="pf-featured-source">
-                                    OGAds
                                 </span>
 
                             </div>
