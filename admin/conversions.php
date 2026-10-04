@@ -29,7 +29,10 @@ if ($status !== '' && !in_array($status, $allowedStatuses, true)) {
 
 $perPage = 20;
 
-$page = max(1, (int) ($_GET['page'] ?? 1));
+$page = max(
+    1,
+    (int) ($_GET['page'] ?? 1)
+);
 
 $offset = ($page - 1) * $perPage;
 
@@ -43,11 +46,14 @@ $where = [];
 $params = [];
 
 if ($status !== '') {
+
     $where[] = 'c.status = ?';
+
     $params[] = $status;
 }
 
 if ($search !== '') {
+
     $where[] = '(
         CAST(c.id AS CHAR) LIKE ?
         OR u.name LIKE ?
@@ -70,7 +76,11 @@ if ($search !== '') {
 $whereSql = '';
 
 if ($where) {
-    $whereSql = 'WHERE ' . implode(' AND ', $where);
+
+    $whereSql = 'WHERE ' . implode(
+        ' AND ',
+        $where
+    );
 }
 
 /*
@@ -84,19 +94,27 @@ $totalConversions = (int) $pdo->query(
 )->fetchColumn();
 
 $pendingConversions = (int) $pdo->query(
-    "SELECT COUNT(*) FROM conversions WHERE status = 'PENDING'"
+    "SELECT COUNT(*)
+     FROM conversions
+     WHERE status = 'PENDING'"
 )->fetchColumn();
 
 $approvedConversions = (int) $pdo->query(
-    "SELECT COUNT(*) FROM conversions WHERE status = 'APPROVED'"
+    "SELECT COUNT(*)
+     FROM conversions
+     WHERE status = 'APPROVED'"
 )->fetchColumn();
 
 $rejectedConversions = (int) $pdo->query(
-    "SELECT COUNT(*) FROM conversions WHERE status = 'REJECTED'"
+    "SELECT COUNT(*)
+     FROM conversions
+     WHERE status = 'REJECTED'"
 )->fetchColumn();
 
 $reversedConversions = (int) $pdo->query(
-    "SELECT COUNT(*) FROM conversions WHERE status = 'REVERSED'"
+    "SELECT COUNT(*)
+     FROM conversions
+     WHERE status = 'REVERSED'"
 )->fetchColumn();
 
 $totalWorkerRewards = (float) $pdo->query(
@@ -120,22 +138,31 @@ $totalPlatformRevenue = (float) $pdo->query(
 $countSql = "
     SELECT COUNT(*)
     FROM conversions c
+
     INNER JOIN users u
         ON u.id = c.worker_id
+
     LEFT JOIN campaigns cp
         ON cp.id = c.campaign_id
+
     $whereSql
 ";
 
 $countStmt = $pdo->prepare($countSql);
+
 $countStmt->execute($params);
 
 $totalFiltered = (int) $countStmt->fetchColumn();
 
-$totalPages = max(1, (int) ceil($totalFiltered / $perPage));
+$totalPages = max(
+    1,
+    (int) ceil($totalFiltered / $perPage)
+);
 
 if ($page > $totalPages) {
+
     $page = $totalPages;
+
     $offset = ($page - 1) * $perPage;
 }
 
@@ -147,15 +174,18 @@ if ($page > $totalPages) {
 
 $sql = "
     SELECT
+
         c.id,
         c.campaign_id,
         c.worker_id,
         c.network_id,
         c.external_transaction_id,
+
         c.network_payout,
         c.reward_rate,
         c.worker_reward,
         c.platform_margin,
+
         c.status,
         c.converted_at,
         c.created_at,
@@ -182,6 +212,7 @@ $sql = "
     $whereSql
 
     ORDER BY
+
         CASE c.status
             WHEN 'PENDING' THEN 1
             WHEN 'APPROVED' THEN 2
@@ -189,12 +220,17 @@ $sql = "
             WHEN 'REVERSED' THEN 4
             ELSE 5
         END,
-        COALESCE(c.converted_at, c.created_at) DESC
+
+        COALESCE(
+            c.converted_at,
+            c.created_at
+        ) DESC
 
     LIMIT $perPage OFFSET $offset
 ";
 
 $stmt = $pdo->prepare($sql);
+
 $stmt->execute($params);
 
 $conversions = $stmt->fetchAll();
@@ -208,38 +244,58 @@ $conversions = $stmt->fetchAll();
 function conversionStatusLabel(string $status): string
 {
     return match ($status) {
+
         'APPROVED' => 'Approved',
+
         'PENDING' => 'Pending',
+
         'REJECTED' => 'Rejected',
+
         'REVERSED' => 'Reversed',
-        default => ucfirst(strtolower($status)),
+
+        default => ucfirst(
+            strtolower($status)
+        ),
     };
 }
 
 function conversionStatusClass(string $status): string
 {
     return match ($status) {
+
         'APPROVED' => 'status-approved',
+
         'PENDING' => 'status-pending',
+
         'REJECTED' => 'status-rejected',
+
         'REVERSED' => 'status-reversed',
+
         default => 'status-default',
     };
 }
 
-function conversionsQuery(array $extra = []): string
-{
+function conversionsQuery(
+    array $extra = []
+): string {
+
     $query = array_merge(
+
         [
             'search' => $_GET['search'] ?? '',
             'status' => $_GET['status'] ?? '',
         ],
+
         $extra
     );
 
     $query = array_filter(
+
         $query,
-        static fn ($value): bool => $value !== null && $value !== ''
+
+        static fn ($value): bool =>
+            $value !== null &&
+            $value !== ''
     );
 
     return http_build_query($query);
@@ -251,13 +307,18 @@ function conversionsQuery(array $extra = []): string
 |--------------------------------------------------------------------------
 */
 
-$adminName = $adminUser['name'] ?? 'Administrator';
+$adminName = $adminUser['name']
+    ?? 'Administrator';
 
-$currentPage = basename($_SERVER['PHP_SELF']);
+$currentPage = basename(
+    $_SERVER['PHP_SELF']
+);
 
 ?>
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
 
     <meta charset="UTF-8">
@@ -267,38 +328,60 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         content="width=device-width, initial-scale=1.0"
     >
 
+    <meta
+        name="theme-color"
+        content="#080d1a"
+    >
+
     <title>
         <?= e($pageTitle) ?> - PoketFlow Admin
     </title>
 
-
-    
-
-
-
     <link
         rel="stylesheet"
-        href="assets/conversions.css">
+        href="assets/conversions.css?v=2"
+    >
 
-    
-    
 </head>
 
 <body>
 
+<div class="admin-layout">
 
-    <!-- Sidebar -->
+    <!-- =====================================================
+         SIDEBAR OVERLAY
+    ====================================================== -->
 
-    <aside class="admin-sidebar">
+    <div
+        class="sidebar-overlay"
+        id="sidebarOverlay"
+        aria-hidden="true"
+    ></div>
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside
+        class="admin-sidebar"
+        id="adminSidebar"
+    >
 
         <div class="admin-brand">
 
             <a href="index.php">
+
                 PoketFlow
-                <span>Admin</span>
+
+                <span>
+                    Admin
+                </span>
+
             </a>
 
         </div>
+
 
         <nav class="admin-nav">
 
@@ -310,9 +393,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 href="index.php"
                 class="<?= $currentPage === 'index.php' ? 'active' : '' ?>"
             >
+
                 <span>▦</span>
+
                 Dashboard
+
             </a>
+
 
             <div class="nav-section-title">
                 Users
@@ -320,11 +407,18 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
             <a
                 href="users.php"
-                class="<?= $currentPage === 'users.php' || $currentPage === 'user-view.php' ? 'active' : '' ?>"
+                class="<?= (
+                    $currentPage === 'users.php' ||
+                    $currentPage === 'user-view.php'
+                ) ? 'active' : '' ?>"
             >
+
                 <span>◉</span>
+
                 Users
+
             </a>
+
 
             <div class="nav-section-title">
                 Finance
@@ -332,27 +426,45 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
             <a
                 href="withdrawals.php"
-                class="<?= $currentPage === 'withdrawals.php' || $currentPage === 'withdrawal-view.php' ? 'active' : '' ?>"
+                class="<?= (
+                    $currentPage === 'withdrawals.php' ||
+                    $currentPage === 'withdrawal-view.php'
+                ) ? 'active' : '' ?>"
             >
+
                 <span>⇩</span>
+
                 Withdrawals
+
             </a>
 
             <a
                 href="conversions.php"
-                class="<?= $currentPage === 'conversions.php' || $currentPage === 'conversion-view.php' ? 'active' : '' ?>"
+                class="<?= (
+                    $currentPage === 'conversions.php' ||
+                    $currentPage === 'conversion-view.php'
+                ) ? 'active' : '' ?>"
             >
+
                 <span>↗</span>
+
                 Conversions
+
             </a>
 
             <a
                 href="wallet.php"
-                class="<?= $currentPage === 'wallet.php' ? 'active' : '' ?>"
+                class="<?= (
+                    $currentPage === 'wallet.php'
+                ) ? 'active' : '' ?>"
             >
+
                 <span>◈</span>
+
                 Wallet
+
             </a>
+
 
             <div class="nav-section-title">
                 Offers
@@ -360,11 +472,17 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
             <a
                 href="campaigns.php"
-                class="<?= $currentPage === 'campaigns.php' ? 'active' : '' ?>"
+                class="<?= (
+                    $currentPage === 'campaigns.php'
+                ) ? 'active' : '' ?>"
             >
+
                 <span>▤</span>
+
                 Campaigns
+
             </a>
+
 
             <div class="nav-section-title">
                 System
@@ -372,13 +490,19 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
             <a
                 href="settings.php"
-                class="<?= $currentPage === 'settings.php' ? 'active' : '' ?>"
+                class="<?= (
+                    $currentPage === 'settings.php'
+                ) ? 'active' : '' ?>"
             >
+
                 <span>⚙</span>
+
                 Settings
+
             </a>
 
         </nav>
+
 
         <div class="sidebar-bottom">
 
@@ -386,34 +510,63 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 href="../index.php"
                 class="sidebar-link"
                 target="_blank"
+                rel="noopener"
             >
+
                 <span>↗</span>
+
                 View Site
+
             </a>
+
 
             <a
                 href="../logout.php"
                 class="sidebar-link logout-link"
             >
+
                 <span>⇥</span>
+
                 Logout
+
             </a>
 
         </div>
 
     </aside>
 
-    <!-- Main -->
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
 
     <main class="admin-main">
+
+
+        <!-- =================================================
+             TOPBAR
+        ================================================== -->
 
         <header class="admin-topbar">
 
             <div class="topbar-title">
 
-                <div class="mobile-menu-placeholder"></div>
+                <button
+                    type="button"
+                    class="mobile-menu-button"
+                    id="mobileMenuButton"
+                    aria-label="Open admin navigation"
+                    aria-controls="adminSidebar"
+                    aria-expanded="false"
+                >
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
 
                 <div>
+
                     <h1>
                         <?= e($pageTitle) ?>
                     </h1>
@@ -421,13 +574,16 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     <p>
                         Admin Control Center
                     </p>
+
                 </div>
 
             </div>
 
+
             <div class="admin-user">
 
                 <div class="admin-avatar">
+
                     <?= e(
                         strtoupper(
                             substr(
@@ -437,12 +593,16 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                             )
                         )
                     ) ?>
+
                 </div>
+
 
                 <div class="admin-user-info">
 
                     <strong>
-                        <?= e((string) $adminName) ?>
+                        <?= e(
+                            (string) $adminName
+                        ) ?>
                     </strong>
 
                     <span>
@@ -455,9 +615,15 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
         </header>
 
+
+        <!-- =================================================
+             CONTENT
+        ================================================== -->
+
         <div class="admin-content">
 
-            <!-- Page Header -->
+
+            <!-- PAGE HEADER -->
 
             <div class="page-header">
 
@@ -468,14 +634,18 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     </h2>
 
                     <p>
-                        Monitor offer conversions, worker rewards and platform revenue.
+                        Monitor offer conversions, worker rewards
+                        and platform revenue.
                     </p>
 
                 </div>
 
             </div>
 
-            <!-- Statistics -->
+
+            <!-- =================================================
+                 STATISTICS
+            ================================================== -->
 
             <div class="stats-grid">
 
@@ -486,10 +656,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     </div>
 
                     <div class="stat-value">
-                        <?= number_format($totalConversions) ?>
+                        <?= number_format(
+                            $totalConversions
+                        ) ?>
                     </div>
 
                 </div>
+
 
                 <div class="stat-card">
 
@@ -498,10 +671,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     </div>
 
                     <div class="stat-value">
-                        <?= number_format($pendingConversions) ?>
+                        <?= number_format(
+                            $pendingConversions
+                        ) ?>
                     </div>
 
                 </div>
+
 
                 <div class="stat-card">
 
@@ -510,10 +686,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     </div>
 
                     <div class="stat-value">
-                        <?= number_format($approvedConversions) ?>
+                        <?= number_format(
+                            $approvedConversions
+                        ) ?>
                     </div>
 
                 </div>
+
 
                 <div class="stat-card">
 
@@ -522,10 +701,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     </div>
 
                     <div class="stat-value">
-                        <?= number_format($rejectedConversions) ?>
+                        <?= number_format(
+                            $rejectedConversions
+                        ) ?>
                     </div>
 
                 </div>
+
 
                 <div class="stat-card">
 
@@ -534,10 +716,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     </div>
 
                     <div class="stat-value">
-                        <?= number_format($reversedConversions) ?>
+                        <?= number_format(
+                            $reversedConversions
+                        ) ?>
                     </div>
 
                 </div>
+
 
                 <div class="stat-card">
 
@@ -546,10 +731,14 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     </div>
 
                     <div class="stat-value">
-                        $<?= number_format($totalWorkerRewards, 2) ?>
+                        $<?= number_format(
+                            $totalWorkerRewards,
+                            2
+                        ) ?>
                     </div>
 
                 </div>
+
 
                 <div class="stat-card">
 
@@ -558,14 +747,20 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     </div>
 
                     <div class="stat-value">
-                        $<?= number_format($totalPlatformRevenue, 2) ?>
+                        $<?= number_format(
+                            $totalPlatformRevenue,
+                            2
+                        ) ?>
                     </div>
 
                 </div>
 
             </div>
 
-            <!-- Filters -->
+
+            <!-- =================================================
+                 FILTERS
+            ================================================== -->
 
             <div class="filters-card">
 
@@ -590,6 +785,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
                     </div>
 
+
                     <div class="filter-group">
 
                         <label for="status">
@@ -605,14 +801,21 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                                 All statuses
                             </option>
 
-                            <?php foreach ($allowedStatuses as $option): ?>
+                            <?php foreach (
+                                $allowedStatuses
+                                as $option
+                            ): ?>
 
                                 <option
                                     value="<?= e($option) ?>"
-                                    <?= $status === $option ? 'selected' : '' ?>
+                                    <?= $status === $option
+                                        ? 'selected'
+                                        : '' ?>
                                 >
                                     <?= e(
-                                        conversionStatusLabel($option)
+                                        conversionStatusLabel(
+                                            $option
+                                        )
                                     ) ?>
                                 </option>
 
@@ -621,6 +824,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                         </select>
 
                     </div>
+
 
                     <div class="filter-actions">
 
@@ -644,7 +848,10 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
             </div>
 
-            <!-- Conversion Table -->
+
+            <!-- =================================================
+                 CONVERSION TABLE
+            ================================================== -->
 
             <div class="table-card">
 
@@ -657,14 +864,21 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                         </h2>
 
                         <span>
-                            <?= number_format($totalFiltered) ?>
-                            record<?= $totalFiltered === 1 ? '' : 's' ?>
+                            <?= number_format(
+                                $totalFiltered
+                            ) ?>
+
+                            record<?= (
+                                $totalFiltered === 1
+                            ) ? '' : 's' ?>
+
                             found
                         </span>
 
                     </div>
 
                 </div>
+
 
                 <?php if (!$conversions): ?>
 
@@ -679,7 +893,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                         </h3>
 
                         <p>
-                            There are no conversion records matching your current filters.
+                            There are no conversion records
+                            matching your current filters.
                         </p>
 
                     </div>
@@ -693,41 +908,81 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                             <thead>
 
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Worker</th>
-                                    <th>Offer</th>
-                                    <th>Network</th>
-                                    <th>Payout</th>
-                                    <th>Worker Reward</th>
-                                    <th>Platform Margin</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                    <th></th>
+
+                                    <th>
+                                        ID
+                                    </th>
+
+                                    <th>
+                                        Worker
+                                    </th>
+
+                                    <th>
+                                        Offer
+                                    </th>
+
+                                    <th>
+                                        Network
+                                    </th>
+
+                                    <th>
+                                        Payout
+                                    </th>
+
+                                    <th>
+                                        Worker Reward
+                                    </th>
+
+                                    <th>
+                                        Platform Margin
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Date
+                                    </th>
+
+                                    <th>
+                                    </th>
+
                                 </tr>
 
                             </thead>
 
+
                             <tbody>
 
-                            <?php foreach ($conversions as $conversion): ?>
+                            <?php foreach (
+                                $conversions
+                                as $conversion
+                            ): ?>
 
                                 <?php
 
-                                $conversionId = (int) $conversion['id'];
+                                $conversionId =
+                                    (int) $conversion['id'];
 
-                                $conversionStatus = strtoupper(
-                                    (string) $conversion['status']
-                                );
+                                $conversionStatus =
+                                    strtoupper(
+                                        (string)
+                                        $conversion['status']
+                                    );
 
                                 ?>
 
                                 <tr>
 
                                     <td>
+
                                         <strong>
                                             #<?= $conversionId ?>
                                         </strong>
+
                                     </td>
+
 
                                     <td>
 
@@ -735,19 +990,22 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
                                             <strong>
                                                 <?= e(
-                                                    (string) $conversion['worker_name']
+                                                    (string)
+                                                    $conversion['worker_name']
                                                 ) ?>
                                             </strong>
 
                                             <span>
                                                 <?= e(
-                                                    (string) $conversion['worker_email']
+                                                    (string)
+                                                    $conversion['worker_email']
                                                 ) ?>
                                             </span>
 
                                         </div>
 
                                     </td>
+
 
                                     <td>
 
@@ -756,18 +1014,30 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                                             <strong>
                                                 <?= e(
                                                     (string) (
-                                                        $conversion['campaign_title']
+                                                        $conversion[
+                                                            'campaign_title'
+                                                        ]
                                                         ?: 'Unknown offer'
                                                     )
                                                 ) ?>
                                             </strong>
 
-                                            <?php if (!empty($conversion['external_offer_id'])): ?>
+                                            <?php if (
+                                                !empty(
+                                                    $conversion[
+                                                        'external_offer_id'
+                                                    ]
+                                                )
+                                            ): ?>
 
                                                 <span>
                                                     Offer #
+
                                                     <?= e(
-                                                        (string) $conversion['external_offer_id']
+                                                        (string)
+                                                        $conversion[
+                                                            'external_offer_id'
+                                                        ]
                                                     ) ?>
                                                 </span>
 
@@ -777,38 +1047,60 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
                                     </td>
 
+
                                     <td>
+
                                         <?= e(
                                             (string) (
-                                                $conversion['network_name']
+                                                $conversion[
+                                                    'network_name'
+                                                ]
                                                 ?: '—'
                                             )
                                         ) ?>
+
                                     </td>
 
+
                                     <td>
+
                                         $<?= number_format(
                                             (float) (
-                                                $conversion['network_payout']
-                                                ?? 0
+                                                $conversion[
+                                                    'network_payout'
+                                                ] ?? 0
                                             ),
                                             2
                                         ) ?>
+
                                     </td>
+
 
                                     <td class="money-positive">
+
                                         $<?= number_format(
-                                            (float) $conversion['worker_reward'],
+                                            (float)
+                                            $conversion[
+                                                'worker_reward'
+                                            ],
                                             2
                                         ) ?>
+
                                     </td>
 
+
                                     <td class="money-platform">
+
                                         $<?= number_format(
-                                            (float) $conversion['platform_margin'],
+                                            (float)
+                                            $conversion[
+                                                'platform_margin'
+                                            ],
                                             2
                                         ) ?>
+
                                     </td>
+
 
                                     <td>
 
@@ -819,27 +1111,37 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                                                 )
                                             ) ?>"
                                         >
+
                                             <?= e(
                                                 conversionStatusLabel(
                                                     $conversionStatus
                                                 )
                                             ) ?>
+
                                         </span>
 
                                     </td>
+
 
                                     <td>
 
                                         <span class="date-cell">
+
                                             <?= e(
                                                 (string) (
-                                                    $conversion['converted_at']
-                                                    ?: $conversion['created_at']
+                                                    $conversion[
+                                                        'converted_at'
+                                                    ]
+                                                    ?: $conversion[
+                                                        'created_at'
+                                                    ]
                                                 )
                                             ) ?>
+
                                         </span>
 
                                     </td>
+
 
                                     <td>
 
@@ -861,6 +1163,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                         </table>
 
                     </div>
+
+
+                    <!-- =================================================
+                         PAGINATION
+                    ================================================== -->
 
                     <?php if ($totalPages > 1): ?>
 
@@ -885,16 +1192,25 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
                             <?php endif; ?>
 
+
                             <div class="page-info">
 
                                 Page
+
                                 <?= number_format($page) ?>
+
                                 of
-                                <?= number_format($totalPages) ?>
+
+                                <?= number_format(
+                                    $totalPages
+                                ) ?>
 
                             </div>
 
-                            <?php if ($page < $totalPages): ?>
+
+                            <?php if (
+                                $page < $totalPages
+                            ): ?>
 
                                 <a
                                     href="?<?= e(
@@ -927,5 +1243,176 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
 </div>
 
+
+<!-- =========================================================
+     MOBILE SIDEBAR JAVASCRIPT
+========================================================== -->
+
+<script>
+
+(function () {
+
+    const menuButton =
+        document.getElementById(
+            'mobileMenuButton'
+        );
+
+    const sidebar =
+        document.getElementById(
+            'adminSidebar'
+        );
+
+    const overlay =
+        document.getElementById(
+            'sidebarOverlay'
+        );
+
+    if (
+        !menuButton ||
+        !sidebar ||
+        !overlay
+    ) {
+        return;
+    }
+
+
+    function openSidebar() {
+
+        sidebar.classList.add(
+            'is-open'
+        );
+
+        overlay.classList.add(
+            'is-visible'
+        );
+
+        document.body.classList.add(
+            'sidebar-open'
+        );
+
+        menuButton.setAttribute(
+            'aria-expanded',
+            'true'
+        );
+
+        overlay.setAttribute(
+            'aria-hidden',
+            'false'
+        );
+    }
+
+
+    function closeSidebar() {
+
+        sidebar.classList.remove(
+            'is-open'
+        );
+
+        overlay.classList.remove(
+            'is-visible'
+        );
+
+        document.body.classList.remove(
+            'sidebar-open'
+        );
+
+        menuButton.setAttribute(
+            'aria-expanded',
+            'false'
+        );
+
+        overlay.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+    }
+
+
+    menuButton.addEventListener(
+        'click',
+        function () {
+
+            if (
+                sidebar.classList.contains(
+                    'is-open'
+                )
+            ) {
+
+                closeSidebar();
+
+            } else {
+
+                openSidebar();
+
+            }
+
+        }
+    );
+
+
+    overlay.addEventListener(
+        'click',
+        closeSidebar
+    );
+
+
+    document.addEventListener(
+        'keydown',
+        function (event) {
+
+            if (
+                event.key === 'Escape'
+            ) {
+
+                closeSidebar();
+
+            }
+
+        }
+    );
+
+
+    sidebar
+        .querySelectorAll('a')
+        .forEach(function (link) {
+
+            link.addEventListener(
+                'click',
+                function () {
+
+                    if (
+                        window.innerWidth <= 600
+                    ) {
+
+                        closeSidebar();
+
+                    }
+
+                }
+            );
+
+        });
+
+
+    window.addEventListener(
+        'resize',
+        function () {
+
+            if (
+                window.innerWidth > 600
+            ) {
+
+                closeSidebar();
+
+            }
+
+        }
+    );
+
+})();
+
+</script>
+
 </body>
+
 </html>
