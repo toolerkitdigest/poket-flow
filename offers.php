@@ -30,6 +30,21 @@ $ogadsError = null;
 
 
 // --------------------------------------------------
+// Internal OGAds debugging counters
+// --------------------------------------------------
+
+$offerDebug = [
+    'requested_max' => 100,
+    'raw_received' => 0,
+    'missing_offer_id' => 0,
+    'invalid_payout' => 0,
+    'missing_url' => 0,
+    'safety_rejected' => 0,
+    'eligible' => 0,
+];
+
+
+// --------------------------------------------------
 // Safety check
 // --------------------------------------------------
 
@@ -89,11 +104,29 @@ try {
         $language,
         $site,
         0,
-        100
+        $offerDebug['requested_max']
     );
 
 
-    
+    // --------------------------------------------------
+    // Record raw API result count
+    // --------------------------------------------------
+
+    $offerDebug['raw_received'] = count(
+        $ogadsOffers
+    );
+
+
+    // --------------------------------------------------
+    // Internal debug logging
+    // --------------------------------------------------
+
+    error_log(
+        'PoketFlow OGAds DEBUG: '
+        . 'Requested=' . $offerDebug['requested_max']
+        . ' | RawReceived=' . $offerDebug['raw_received']
+    );
+
 
     // --------------------------------------------------
     // Process visitor-specific offers
@@ -106,7 +139,14 @@ try {
         );
 
 
+        // ----------------------------------------------
+        // Require valid offer ID
+        // ----------------------------------------------
+
         if ($externalOfferId === '') {
+
+            $offerDebug['missing_offer_id']++;
+
             continue;
         }
 
@@ -168,6 +208,9 @@ try {
         // ----------------------------------------------
 
         if ($networkPayout <= 0) {
+
+            $offerDebug['invalid_payout']++;
+
             continue;
         }
 
@@ -177,6 +220,9 @@ try {
         // ----------------------------------------------
 
         if ($networkOfferUrl === '') {
+
+            $offerDebug['missing_url']++;
+
             continue;
         }
 
@@ -190,6 +236,9 @@ try {
             $pdo,
             $offer
         )) {
+
+            $offerDebug['safety_rejected']++;
+
             continue;
         }
 
@@ -251,18 +300,37 @@ try {
             'approval_status' => 'APPROVED',
 
         ];
+
+
+        // ----------------------------------------------
+        // Count eligible offer
+        // ----------------------------------------------
+
+        $offerDebug['eligible']++;
     }
 
-
-
-
-    
 
     // --------------------------------------------------
     // Store current visitor's eligible offers
     // --------------------------------------------------
 
     $_SESSION['ogads_offers'] = $campaigns;
+
+
+    // --------------------------------------------------
+    // Final internal debug report
+    // --------------------------------------------------
+
+    error_log(
+        'PoketFlow OGAds DEBUG: '
+        . 'Requested=' . $offerDebug['requested_max']
+        . ' | RawReceived=' . $offerDebug['raw_received']
+        . ' | MissingID=' . $offerDebug['missing_offer_id']
+        . ' | InvalidPayout=' . $offerDebug['invalid_payout']
+        . ' | MissingURL=' . $offerDebug['missing_url']
+        . ' | SafetyRejected=' . $offerDebug['safety_rejected']
+        . ' | Eligible=' . $offerDebug['eligible']
+    );
 
 
 } catch (Throwable $e) {
@@ -272,6 +340,16 @@ try {
     $_SESSION['ogads_offers'] = [];
 
     $campaigns = [];
+
+
+    // --------------------------------------------------
+    // Internal error logging
+    // --------------------------------------------------
+
+    error_log(
+        'PoketFlow OGAds ERROR: '
+        . $e->getMessage()
+    );
 }
 
 
@@ -459,10 +537,17 @@ function getOfferCategory(array $campaign): string
         content="width=device-width, initial-scale=1"
     >
 
-<title>Offers — PoketFlow</title>
+    <title>Offers — PoketFlow</title>
 
-<link rel="stylesheet" href="assets/poketflow.css">
-<link rel="stylesheet" href="assets/offers.css">
+    <link
+        rel="stylesheet"
+        href="assets/poketflow.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="assets/offers.css"
+    >
 
 </head>
 
@@ -492,7 +577,7 @@ function getOfferCategory(array $campaign): string
     </a>
 
 
-<nav class="app-header-nav">
+    <nav class="app-header-nav">
 
         <a href="dashboard.php">
             Home
@@ -540,9 +625,11 @@ function getOfferCategory(array $campaign): string
             aria-expanded="false"
             aria-controls="mobileNavigation"
         >
+
             <span></span>
             <span></span>
             <span></span>
+
         </button>
 
     </div>
@@ -563,8 +650,15 @@ function getOfferCategory(array $campaign): string
     <nav>
 
         <a href="dashboard.php">
-            <span class="mobile-nav-icon">⌂</span>
-            <span>Home</span>
+
+            <span class="mobile-nav-icon">
+                ⌂
+            </span>
+
+            <span>
+                Home
+            </span>
+
         </a>
 
 
@@ -572,32 +666,67 @@ function getOfferCategory(array $campaign): string
             class="active"
             href="offers.php"
         >
-            <span class="mobile-nav-icon">▦</span>
-            <span>Earn Rewards</span>
+
+            <span class="mobile-nav-icon">
+                ▦
+            </span>
+
+            <span>
+                Earn Rewards
+            </span>
+
         </a>
 
 
         <a href="history.php">
-            <span class="mobile-nav-icon">◷</span>
-            <span>History</span>
+
+            <span class="mobile-nav-icon">
+                ◷
+            </span>
+
+            <span>
+                History
+            </span>
+
         </a>
 
 
         <a href="referrals.php">
-            <span class="mobile-nav-icon">♧</span>
-            <span>Refer & Earn</span>
+
+            <span class="mobile-nav-icon">
+                ♧
+            </span>
+
+            <span>
+                Refer & Earn
+            </span>
+
         </a>
 
 
         <a href="withdraw.php">
-            <span class="mobile-nav-icon">▣</span>
-            <span>Withdraw</span>
+
+            <span class="mobile-nav-icon">
+                ▣
+            </span>
+
+            <span>
+                Withdraw
+            </span>
+
         </a>
 
 
         <a href="logout.php">
-            <span class="mobile-nav-icon">↪</span>
-            <span>Log Out</span>
+
+            <span class="mobile-nav-icon">
+                ↪
+            </span>
+
+            <span>
+                Log Out
+            </span>
+
         </a>
 
     </nav>
