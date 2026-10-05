@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/ogads.php';
-
+require_once __DIR__ . '/includes/cpagrip.php';
 
 // --------------------------------------------------
 // Protect offers page
