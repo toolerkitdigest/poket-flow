@@ -28,7 +28,7 @@ $user = getUser(
 
 $ogadsError = null;
 $cpagripError = null;
-$cpagripOffers = [];
+
 
 // --------------------------------------------------
 // Safety check
@@ -55,18 +55,29 @@ $availableBalance = getUserBalance(
 
 
 // ==================================================
-// FETCH LIVE VISITOR-SPECIFIC OGADS OFFERS
+// ALL DISPLAY CAMPAIGNS
 // ==================================================
 
 $campaigns = [];
 
+
+// ==================================================
+// FETCH LIVE VISITOR-SPECIFIC OGADS OFFERS
+// ==================================================
+
 try {
 
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    $ip = isset($_SERVER['REMOTE_ADDR'])
+        ? $_SERVER['REMOTE_ADDR']
+        : '';
 
-    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    $userAgent = isset($_SERVER['HTTP_USER_AGENT'])
+        ? $_SERVER['HTTP_USER_AGENT']
+        : '';
 
-    $language = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
+    $language = isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])
+        ? $_SERVER['HTTP_ACCEPT_LANGUAGE']
+        : '';
 
     $scheme = (
         !empty($_SERVER['HTTPS']) &&
@@ -74,9 +85,13 @@ try {
     ) ? 'https' : 'http';
 
     $site = $scheme . '://' . (
-        $_SERVER['HTTP_HOST'] ?? 'poketflow.com'
+        isset($_SERVER['HTTP_HOST'])
+            ? $_SERVER['HTTP_HOST']
+            : 'poketflow.com'
     ) . (
-        $_SERVER['REQUEST_URI'] ?? '/offers.php'
+        isset($_SERVER['REQUEST_URI'])
+            ? $_SERVER['REQUEST_URI']
+            : '/offers.php'
     );
 
 
@@ -110,7 +125,11 @@ try {
     foreach ($ogadsOffers as $offer) {
 
         $externalOfferId = trim(
-            (string) ($offer['offerid'] ?? '')
+            (string) (
+                isset($offer['offerid'])
+                    ? $offer['offerid']
+                    : ''
+            )
         );
 
 
@@ -124,19 +143,27 @@ try {
         // ----------------------------------------------
 
         $title = cleanOgadsText(
-            $offer['name_short']
-                ?? $offer['name']
-                ?? 'OGAds Offer'
+            isset($offer['name_short'])
+                ? $offer['name_short']
+                : (
+                    isset($offer['name'])
+                        ? $offer['name']
+                        : 'OGAds Offer'
+                )
         );
 
 
         $description = cleanOgadsText(
-            $offer['description'] ?? ''
+            isset($offer['description'])
+                ? $offer['description']
+                : ''
         );
 
 
         $instructions = cleanOgadsText(
-            $offer['adcopy'] ?? ''
+            isset($offer['adcopy'])
+                ? $offer['adcopy']
+                : ''
         );
 
 
@@ -146,27 +173,47 @@ try {
 
 
         $countries = trim(
-            (string) ($offer['country'] ?? '')
+            (string) (
+                isset($offer['country'])
+                    ? $offer['country']
+                    : ''
+            )
         );
 
 
         $devices = trim(
-            (string) ($offer['device'] ?? '')
+            (string) (
+                isset($offer['device'])
+                    ? $offer['device']
+                    : ''
+            )
         );
 
 
         $networkOfferUrl = trim(
-            (string) ($offer['link'] ?? '')
+            (string) (
+                isset($offer['link'])
+                    ? $offer['link']
+                    : ''
+            )
         );
 
 
         $imageUrl = trim(
-            (string) ($offer['picture'] ?? '')
+            (string) (
+                isset($offer['picture'])
+                    ? $offer['picture']
+                    : ''
+            )
         );
 
 
         $networkPayout = round(
-            (float) ($offer['payout'] ?? 0),
+            (float) (
+                isset($offer['payout'])
+                    ? $offer['payout']
+                    : 0
+            ),
             2
         );
 
@@ -201,15 +248,9 @@ try {
         }
 
 
-        // ==================================================
-        // IMPORTANT:
-        //
-        // Check whether this OGAds offer already has a
-        // PoketFlow campaign record.
-        //
-        // If an administrator paused/rejected it, we MUST
-        // respect that decision.
-        // ==================================================
+        // ----------------------------------------------
+        // Check existing PoketFlow campaign
+        // ----------------------------------------------
 
         $existingCampaignStmt = $pdo->prepare(
             'SELECT
@@ -230,17 +271,14 @@ try {
         $existingCampaign = $existingCampaignStmt->fetch();
 
 
-        // --------------------------------------------------
-        // Existing campaign?
-        // --------------------------------------------------
-
         if ($existingCampaign) {
 
             $existingStatus = strtoupper(
                 trim(
                     (string) (
-                        $existingCampaign['status']
-                        ?? ''
+                        isset($existingCampaign['status'])
+                            ? $existingCampaign['status']
+                            : ''
                     )
                 )
             );
@@ -249,19 +287,17 @@ try {
             $existingApproval = strtoupper(
                 trim(
                     (string) (
-                        $existingCampaign['approval_status']
-                        ?? ''
+                        isset($existingCampaign['approval_status'])
+                            ? $existingCampaign['approval_status']
+                            : ''
                     )
                 )
             );
 
 
-            // ----------------------------------------------
-            // ADMIN CONTROL IS AUTHORITATIVE
-            //
-            // Paused, rejected, pending, completed or
-            // expired campaigns must not appear.
-            // ----------------------------------------------
+            // ------------------------------------------
+            // Admin control is authoritative
+            // ------------------------------------------
 
             if (
                 $existingStatus !== 'ACTIVE' ||
@@ -271,9 +307,9 @@ try {
             }
 
 
-            // ----------------------------------------------
-            // Load the actual database campaign.
-            // ----------------------------------------------
+            // ------------------------------------------
+            // Load database campaign
+            // ------------------------------------------
 
             $databaseCampaign = getCampaign(
                 $pdo,
@@ -286,9 +322,9 @@ try {
             }
 
 
-            // ----------------------------------------------
-            // Final database safety check.
-            // ----------------------------------------------
+            // ------------------------------------------
+            // Final database safety check
+            // ------------------------------------------
 
             if (!isCampaignAllowed(
                 $pdo,
@@ -310,7 +346,7 @@ try {
 
 
         // ----------------------------------------------
-        // Build visitor-specific offer
+        // Build visitor-specific OGAds offer
         // ----------------------------------------------
 
         $campaigns[] = [
@@ -320,6 +356,8 @@ try {
             'source_type' => 'CPA_NETWORK',
 
             'network_id' => $networkId,
+
+            'network' => 'OGAds',
 
             'external_offer_id' => $externalOfferId,
 
@@ -360,7 +398,7 @@ try {
 
 
     // --------------------------------------------------
-    // Store current visitor's eligible offers
+    // Store current visitor's eligible OGAds offers
     // --------------------------------------------------
 
     $_SESSION['ogads_offers'] = $campaigns;
@@ -371,8 +409,6 @@ try {
     $ogadsError = $e->getMessage();
 
     $_SESSION['ogads_offers'] = [];
-
-    $campaigns = [];
 }
 
 
@@ -384,7 +420,7 @@ try {
 /**
  * Create a short, clean description for the offer card.
  *
- * We intentionally do NOT display raw OGAds metadata.
+ * We intentionally do NOT display raw network metadata.
  */
 function getShortOfferDescription(
     string $description,
@@ -437,7 +473,6 @@ function getShortOfferDescription(
 
 
     if ($description === '') {
-
         return 'Complete this offer to earn your reward.';
     }
 
@@ -467,10 +502,14 @@ function getShortOfferDescription(
 
 
 // ==================================================
-// FETCH LIVE VISITOR-SPECIFIC CPAGRIP OFFERS
+// FETCH + SYNCHRONIZE CPAGRIP OFFERS
 // ==================================================
 
 try {
+
+    // --------------------------------------------------
+    // Load CPAGrip live visitor-specific feed
+    // --------------------------------------------------
 
     $cpagripOffers = require __DIR__ . '/includes/cpagrip.php';
 
@@ -480,7 +519,40 @@ try {
 
 
     // --------------------------------------------------
-    // Process CPAGrip offers
+    // Get CPAGrip network ID
+    //
+    // IMPORTANT:
+    // We use the slug instead of hard-coding ID 2.
+    // --------------------------------------------------
+
+    $cpagripNetworkStmt = $pdo->prepare(
+        'SELECT id
+         FROM networks
+         WHERE slug = ?
+           AND status = ?
+         LIMIT 1'
+    );
+
+    $cpagripNetworkStmt->execute([
+        'cpagrip',
+        'ACTIVE'
+    ]);
+
+    $cpagripNetwork = $cpagripNetworkStmt->fetch();
+
+
+    if (!$cpagripNetwork) {
+        throw new RuntimeException(
+            'CPAGrip network is not configured.'
+        );
+    }
+
+
+    $cpagripNetworkId = (int) $cpagripNetwork['id'];
+
+
+    // --------------------------------------------------
+    // Process every live CPAGrip offer
     // --------------------------------------------------
 
     foreach ($cpagripOffers as $offer) {
@@ -496,8 +568,9 @@ try {
 
         $externalOfferId = trim(
             (string) (
-                $offer['offer_id']
-                ?? ''
+                isset($offer['offer_id'])
+                    ? $offer['offer_id']
+                    : ''
             )
         );
 
@@ -513,62 +586,69 @@ try {
 
         $title = trim(
             (string) (
-                $offer['title']
-                ?? 'CPAGrip Offer'
+                isset($offer['title'])
+                    ? $offer['title']
+                    : 'CPAGrip Offer'
             )
         );
 
 
         $description = trim(
             (string) (
-                $offer['description']
-                ?? ''
+                isset($offer['description'])
+                    ? $offer['description']
+                    : ''
             )
         );
 
 
         $category = trim(
             (string) (
-                $offer['category']
-                ?? 'Offer'
+                isset($offer['category'])
+                    ? $offer['category']
+                    : 'Offer'
             )
         );
 
 
         $networkOfferUrl = trim(
             (string) (
-                $offer['offerlink']
-                ?? ''
+                isset($offer['offerlink'])
+                    ? $offer['offerlink']
+                    : ''
             )
         );
 
 
         $imageUrl = trim(
             (string) (
-                $offer['image']
-                ?? ''
+                isset($offer['image'])
+                    ? $offer['image']
+                    : ''
             )
         );
 
 
         $offerType = trim(
             (string) (
-                $offer['type']
-                ?? ''
+                isset($offer['type'])
+                    ? $offer['type']
+                    : ''
             )
         );
 
 
         $countries = trim(
             (string) (
-                $offer['accepted_countries']
-                ?? ''
+                isset($offer['accepted_countries'])
+                    ? $offer['accepted_countries']
+                    : ''
             )
         );
 
 
         // ----------------------------------------------
-        // Validate offer
+        // Validate basic offer information
         // ----------------------------------------------
 
         if ($title === '') {
@@ -587,8 +667,9 @@ try {
 
         $networkPayout = round(
             (float) (
-                $offer['payout']
-                ?? 0
+                isset($offer['payout'])
+                    ? $offer['payout']
+                    : 0
             ),
             2
         );
@@ -605,8 +686,9 @@ try {
 
         $workerReward = round(
             (float) (
-                $offer['reward']
-                ?? 0
+                isset($offer['reward'])
+                    ? $offer['reward']
+                    : 0
             ),
             2
         );
@@ -618,19 +700,29 @@ try {
         );
 
 
-        // ----------------------------------------------
-        // Build normalized campaign
-        // ----------------------------------------------
+        $rewardRate = $networkPayout > 0
+            ? round(
+                ($workerReward / $networkPayout) * 100,
+                2
+            )
+            : 0;
 
-        $campaigns[] = [
 
-            'id' => 'cpagrip_' . $externalOfferId,
+        // ==================================================
+        // SAFETY CHECK BEFORE DATABASE INSERT
+        //
+        // isCampaignAllowed() normally requires APPROVED.
+        // For a new CPAGrip offer we temporarily present
+        // it as approved ONLY for the safety-filter check.
+        //
+        // It will actually be stored as PENDING.
+        // ==================================================
+
+        $safetyCandidate = [
 
             'source_type' => 'CPA_NETWORK',
 
-            'network_id' => 0,
-
-            'network' => 'CPAGrip',
+            'network_id' => $cpagripNetworkId,
 
             'external_offer_id' => $externalOfferId,
 
@@ -648,12 +740,7 @@ try {
 
             'network_payout' => $networkPayout,
 
-            'reward_rate' => $networkPayout > 0
-                ? round(
-                    ($workerReward / $networkPayout) * 100,
-                    2
-                )
-                : 0,
+            'reward_rate' => $rewardRate,
 
             'worker_reward' => $workerReward,
 
@@ -672,16 +759,305 @@ try {
             'approval_status' => 'APPROVED',
 
         ];
+
+
+        if (!isCampaignAllowed(
+            $pdo,
+            $safetyCandidate
+        )) {
+            continue;
+        }
+
+
+        // ==================================================
+        // FIND EXISTING CPAGRIP CAMPAIGN
+        // ==================================================
+
+        $existingCampaignStmt = $pdo->prepare(
+            'SELECT
+                id,
+                status,
+                approval_status
+             FROM campaigns
+             WHERE network_id = ?
+               AND external_offer_id = ?
+             LIMIT 1'
+        );
+
+        $existingCampaignStmt->execute([
+            $cpagripNetworkId,
+            $externalOfferId
+        ]);
+
+        $existingCampaign = $existingCampaignStmt->fetch();
+
+
+        // ==================================================
+        // EXISTING CAMPAIGN
+        // ==================================================
+
+        if ($existingCampaign) {
+
+            $campaignId = (int) $existingCampaign['id'];
+
+
+            // ----------------------------------------------
+            // Update operational offer information.
+            //
+            // IMPORTANT:
+            // status and approval_status are NOT changed.
+            // This protects administrator decisions.
+            // ----------------------------------------------
+
+            $updateCampaignStmt = $pdo->prepare(
+                'UPDATE campaigns
+                 SET
+                    network_offer_url = ?,
+                    image_url = ?,
+                    title = ?,
+                    description = ?,
+                    category = ?,
+                    instructions = ?,
+                    network_payout = ?,
+                    reward_rate = ?,
+                    worker_reward = ?,
+                    platform_margin = ?,
+                    countries = ?,
+                    devices = ?,
+                    os = ?,
+                    incentive_allowed = ?,
+                    updated_at = NOW()
+                 WHERE id = ?'
+            );
+
+            $updateCampaignStmt->execute([
+
+                $networkOfferUrl,
+
+                $imageUrl,
+
+                $title,
+
+                $description,
+
+                $category,
+
+                '',
+
+                $networkPayout,
+
+                $rewardRate,
+
+                $workerReward,
+
+                $platformMargin,
+
+                $countries,
+
+                $offerType,
+
+                '',
+
+                1,
+
+                $campaignId,
+
+            ]);
+
+
+            // ----------------------------------------------
+            // Reload authoritative DB campaign
+            // ----------------------------------------------
+
+            $databaseCampaign = getCampaign(
+                $pdo,
+                $campaignId
+            );
+
+
+            if (!$databaseCampaign) {
+                continue;
+            }
+
+
+            $existingStatus = strtoupper(
+                trim(
+                    (string) (
+                        isset($databaseCampaign['status'])
+                            ? $databaseCampaign['status']
+                            : ''
+                    )
+                )
+            );
+
+
+            $existingApproval = strtoupper(
+                trim(
+                    (string) (
+                        isset($databaseCampaign['approval_status'])
+                            ? $databaseCampaign['approval_status']
+                            : ''
+                    )
+                )
+            );
+
+
+            // ----------------------------------------------
+            // Only approved active campaigns are visible
+            // ----------------------------------------------
+
+            if (
+                $existingStatus !== 'ACTIVE' ||
+                $existingApproval !== 'APPROVED'
+            ) {
+                continue;
+            }
+
+
+            // ----------------------------------------------
+            // Final safety check
+            // ----------------------------------------------
+
+            if (!isCampaignAllowed(
+                $pdo,
+                $databaseCampaign
+            )) {
+                continue;
+            }
+
+
+            $databaseCampaign['network'] = 'CPAGrip';
+
+
+            $campaigns[] = $databaseCampaign;
+
+
+            continue;
+        }
+
+
+        // ==================================================
+        // NEW CPAGRIP CAMPAIGN
+        // ==================================================
+        //
+        // New network offers enter as PENDING.
+        //
+        // They will NOT appear to workers until an admin
+        // approves them.
+        // ==================================================
+
+        $insertCampaignStmt = $pdo->prepare(
+            'INSERT INTO campaigns (
+                source_type,
+                advertiser_id,
+                network_id,
+                external_offer_id,
+                network_offer_url,
+                image_url,
+                title,
+                description,
+                category,
+                instructions,
+                network_payout,
+                reward_rate,
+                worker_reward,
+                platform_margin,
+                budget,
+                spent,
+                countries,
+                devices,
+                os,
+                incentive_allowed,
+                status,
+                approval_status,
+                start_at,
+                end_at,
+                created_at,
+                updated_at
+             ) VALUES (
+                ?,
+                NULL,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                NULL,
+                0,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                NULL,
+                NULL,
+                NOW(),
+                NOW()
+             )'
+        );
+
+
+        $insertCampaignStmt->execute([
+
+            'CPA_NETWORK',
+
+            $cpagripNetworkId,
+
+            $externalOfferId,
+
+            $networkOfferUrl,
+
+            $imageUrl,
+
+            $title,
+
+            $description,
+
+            $category,
+
+            '',
+
+            $networkPayout,
+
+            $rewardRate,
+
+            $workerReward,
+
+            $platformMargin,
+
+            $countries,
+
+            $offerType,
+
+            '',
+
+            1,
+
+            'ACTIVE',
+
+            'PENDING',
+
+        ]);
     }
 
 
 } catch (Throwable $e) {
 
     $cpagripError = $e->getMessage();
-
-    $cpagripOffers = [];
 }
 
+
+// ==================================================
+// UI HELPERS
+// ==================================================
 
 
 // --------------------------------------------------
@@ -692,21 +1068,22 @@ function getOfferIcon(string $category): string
 {
     $category = strtolower(trim($category));
 
-    return match (true) {
+    if (
+        strpos($category, 'app') !== false ||
+        strpos($category, 'install') !== false
+    ) {
+        return '◎';
+    }
 
-        str_contains($category, 'app'),
-        str_contains($category, 'install')
-            => '◎',
+    if (strpos($category, 'survey') !== false) {
+        return '▤';
+    }
 
-        str_contains($category, 'survey')
-            => '▤',
+    if (strpos($category, 'submit') !== false) {
+        return '◇';
+    }
 
-        str_contains($category, 'submit')
-            => '◇',
-
-        default
-            => '◆',
-    };
+    return '◆';
 }
 
 
@@ -718,18 +1095,18 @@ function getOfferIconClass(string $category): string
 {
     $category = strtolower(trim($category));
 
-    return match (true) {
+    if (strpos($category, 'survey') !== false) {
+        return 'orange';
+    }
 
-        str_contains($category, 'survey')
-            => 'orange',
+    if (
+        strpos($category, 'special') !== false ||
+        strpos($category, 'featured') !== false
+    ) {
+        return 'cyan';
+    }
 
-        str_contains($category, 'special'),
-        str_contains($category, 'featured')
-            => 'cyan',
-
-        default
-            => '',
-    };
+    return '';
 }
 
 
@@ -740,148 +1117,177 @@ function getOfferIconClass(string $category): string
 function getOfferCategory(array $campaign): string
 {
     $category = trim(
-        (string) ($campaign['category'] ?? '')
+        (string) (
+            isset($campaign['category'])
+                ? $campaign['category']
+                : ''
+        )
     );
 
     if ($category !== '') {
         return $category;
     }
 
-    return match ($campaign['source_type'] ?? '') {
 
-        'DIRECT_ADVERTISER'
-            => 'Special Offer',
+    if (
+        isset($campaign['source_type']) &&
+        $campaign['source_type'] === 'DIRECT_ADVERTISER'
+    ) {
+        return 'Special Offer';
+    }
 
-        default
-            => 'Offer',
-    };
+
+    return 'Offer';
 }
 
-?>
+?><!doctype html>
 
-<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
 
-<html lang="en">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+>
 
-<head>
+<title>Offers — PoketFlow</title>
 
-    <meta charset="utf-8">
+<link
+    rel="stylesheet"
+    href="assets/poketflow.css"
+>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
+<link
+    rel="stylesheet"
+    href="assets/offers.css"
+>
 
-    <title>Offers — PoketFlow</title>
-
-    <link
-        rel="stylesheet"
-        href="assets/poketflow.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="assets/offers.css"
-    >
-
-</head>
-
-
-<body class="app-page">
-
-
-<!-- ==================================================
+</head><body class="app-page"><!-- ==================================================
      HEADER
-================================================== -->
+================================================== --><header class="app-header"><a
+    class="brand"
+    href="index.php"
+>
 
-<header class="app-header">
+    <span class="brand-mark">
+        P
+    </span>
+
+    <span>
+        Poket<span>Flow</span>
+    </span>
+
+</a>
+
+
+<nav class="app-header-nav">
+
+    <a href="dashboard.php">
+        Home
+    </a>
 
     <a
-        class="brand"
-        href="index.php"
+        class="active"
+        href="offers.php"
     >
+        Earn
+    </a>
 
-        <span class="brand-mark">
-            P
-        </span>
+    <a href="history.php">
+        History
+    </a>
 
-        <span>
-            Poket<span>Flow</span>
-        </span>
+    <a href="referrals.php">
+        Refer & Earn
+    </a>
 
+    <a href="withdraw.php">
+        Withdraw
+    </a>
+
+</nav>
+
+
+<div class="header-actions">
+
+    <a
+        class="btn btn-primary balance-button"
+        href="withdraw.php"
+    >
+        Balance $<?= number_format($availableBalance, 2) ?>
     </a>
 
 
-    <nav class="app-header-nav">
+    <button
+        type="button"
+        class="mobile-menu-button"
+        id="mobileMenuButton"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="mobileNavigation"
+    >
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
 
-        <a href="dashboard.php">
-            Home
-        </a>
+</div>
 
-        <a
-            class="active"
-            href="offers.php"
-        >
-            Earn
-        </a>
-
-        <a href="history.php">
-            History
-        </a>
-
-        <a href="referrals.php">
-            Refer & Earn
-        </a>
-
-        <a href="withdraw.php">
-            Withdraw
-        </a>
-
-    </nav>
-
-
-    <div class="header-actions">
-
-        <a
-            class="btn btn-primary balance-button"
-            href="withdraw.php"
-        >
-            Balance $<?= number_format($availableBalance, 2) ?>
-        </a>
-
-
-        <button
-            type="button"
-            class="mobile-menu-button"
-            id="mobileMenuButton"
-            aria-label="Open navigation menu"
-            aria-expanded="false"
-            aria-controls="mobileNavigation"
-        >
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-
-    </div>
-
-</header>
-
-
-<!-- ==================================================
+</header><!-- ==================================================
      MOBILE NAVIGATION
-================================================== -->
-
-<div
+================================================== --><div
     class="mobile-navigation"
     id="mobileNavigation"
     aria-hidden="true"
->
+><nav>
 
-    <nav>
+    <a href="dashboard.php">
+        <span class="mobile-nav-icon">⌂</span>
+        <span>Home</span>
+    </a>
+
+
+    <a
+        class="active"
+        href="offers.php"
+    >
+        <span class="mobile-nav-icon">▦</span>
+        <span>Earn Rewards</span>
+    </a>
+
+
+    <a href="history.php">
+        <span class="mobile-nav-icon">◷</span>
+        <span>History</span>
+    </a>
+
+
+    <a href="referrals.php">
+        <span class="mobile-nav-icon">♧</span>
+        <span>Refer & Earn</span>
+    </a>
+
+
+    <a href="withdraw.php">
+        <span class="mobile-nav-icon">▣</span>
+        <span>Withdraw</span>
+    </a>
+
+
+    <a href="logout.php">
+        <span class="mobile-nav-icon">↪</span>
+        <span>Log Out</span>
+    </a>
+
+</nav>
+
+</div><!-- ==================================================
+     APP LAYOUT
+================================================== --><main class="app-shell"><aside class="sidebar">
+
+    <div class="sidebar-nav">
 
         <a href="dashboard.php">
-            <span class="mobile-nav-icon">⌂</span>
+            ⌂
             <span>Home</span>
         </a>
 
@@ -890,237 +1296,313 @@ function getOfferCategory(array $campaign): string
             class="active"
             href="offers.php"
         >
-            <span class="mobile-nav-icon">▦</span>
-            <span>Earn Rewards</span>
+            ▦
+            <span>Offers</span>
         </a>
 
 
         <a href="history.php">
-            <span class="mobile-nav-icon">◷</span>
+            ◷
             <span>History</span>
         </a>
 
 
         <a href="referrals.php">
-            <span class="mobile-nav-icon">♧</span>
+            ♧
             <span>Refer & Earn</span>
         </a>
 
 
         <a href="withdraw.php">
-            <span class="mobile-nav-icon">▣</span>
+            ▣
             <span>Withdraw</span>
         </a>
 
 
         <a href="logout.php">
-            <span class="mobile-nav-icon">↪</span>
+            ↪
             <span>Log Out</span>
         </a>
 
-    </nav>
-
-</div>
+    </div>
 
 
-<!-- ==================================================
-     APP LAYOUT
-================================================== -->
+    <div class="side-balance">
 
-<main class="app-shell">
-
-
-    <aside class="sidebar">
-
-        <div class="sidebar-nav">
-
-            <a href="dashboard.php">
-                ⌂
-                <span>Home</span>
-            </a>
+        <small>
+            Your Balance
+        </small>
 
 
-            <a
-                class="active"
-                href="offers.php"
-            >
-                ▦
-                <span>Offers</span>
-            </a>
+        <strong>
+            $<?= number_format($availableBalance, 2) ?>
+        </strong>
 
 
-            <a href="history.php">
-                ◷
-                <span>History</span>
-            </a>
+        <span>
+            Available to withdraw
+        </span>
 
 
-            <a href="referrals.php">
-                ♧
-                <span>Refer & Earn</span>
-            </a>
-
-
-            <a href="withdraw.php">
-                ▣
-                <span>Withdraw</span>
-            </a>
-
-
-            <a href="logout.php">
-                ↪
-                <span>Log Out</span>
-            </a>
-
-        </div>
-
-
-        <div class="side-balance">
-
-            <small>
-                Your Balance
-            </small>
-
-
-            <strong>
-                $<?= number_format($availableBalance, 2) ?>
-            </strong>
-
-
-            <span>
-                Available to withdraw
-            </span>
-
-
-            <a href="withdraw.php">
-                Withdraw Funds →
-            </a>
-
-        </div>
-
-    </aside>
-
-
-    <section class="app-content">
-
-
-        <div class="page-title">
-
-            <div>
-
-                <span class="kicker">
-                    EARN REWARDS
-                </span>
-
-
-                <h1>
-                    Offers
-                </h1>
-
-
-                <p>
-                    Complete available offers to grow your balance.
-                    The list refreshes automatically.
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <?php if (
-    $ogadsError !== null &&
-    $cpagripError !== null
-): ?>
-
-    <div class="info-card">
-
-        <h3>
-            Offers temporarily unavailable
-        </h3>
-
-        <p>
-            We could not refresh the offer list right now.
-            Please try again shortly.
-        </p>
+        <a href="withdraw.php">
+            Withdraw Funds →
+        </a>
 
     </div>
 
-<?php endif; ?>
-
-        <div class="offer-tabs">
-
-            <button
-                type="button"
-                class="selected"
-                data-filter="all"
-            >
-                All Offers
-            </button>
+</aside>
 
 
-            <button
-                type="button"
-                data-filter="app"
-            >
-                App Install
-            </button>
+<section class="app-content">
 
 
-            <button
-                type="button"
-                data-filter="survey"
-            >
-                Survey
-            </button>
+    <div class="page-title">
+
+        <div>
+
+            <span class="kicker">
+                EARN REWARDS
+            </span>
 
 
-            <button
-                type="button"
-                data-filter="other"
-            >
-                Other Offers
-            </button>
+            <h1>
+                Offers
+            </h1>
+
+
+            <p>
+                Complete available offers to grow your balance.
+                The list refreshes automatically.
+            </p>
 
         </div>
 
-
-        <div class="dashboard-grid">
-
-
-            <div class="offer-grid dashboard-offers">
+    </div>
 
 
-                <?php if (empty($campaigns)): ?>
+    <?php if (
+        $ogadsError !== null &&
+        $cpagripError !== null
+    ): ?>
+
+        <div class="info-card">
+
+            <h3>
+                Offers temporarily unavailable
+            </h3>
+
+            <p>
+                We could not refresh the offer list right now.
+                Please try again shortly.
+            </p>
+
+        </div>
+
+    <?php endif; ?>
 
 
-                    <article class="offer-card empty-offer-card">
+    <div class="offer-tabs">
 
-                        <div class="offer-icon">
-                            ◷
+        <button
+            type="button"
+            class="selected"
+            data-filter="all"
+        >
+            All Offers
+        </button>
+
+
+        <button
+            type="button"
+            data-filter="app"
+        >
+            App Install
+        </button>
+
+
+        <button
+            type="button"
+            data-filter="survey"
+        >
+            Survey
+        </button>
+
+
+        <button
+            type="button"
+            data-filter="other"
+        >
+            Other Offers
+        </button>
+
+    </div>
+
+
+    <div class="dashboard-grid">
+
+
+        <div class="offer-grid dashboard-offers">
+
+
+            <?php if (empty($campaigns)): ?>
+
+
+                <article class="offer-card empty-offer-card">
+
+                    <div class="offer-icon">
+                        ◷
+                    </div>
+
+
+                    <div class="offer-body">
+
+                        <span class="offer-network">
+                            PoketFlow
+                        </span>
+
+
+                        <h3>
+                            No offers available right now
+                        </h3>
+
+
+                        <p>
+                            There are currently no approved offers
+                            available for your location.
+                            Please check again later.
+                        </p>
+
+                    </div>
+
+
+                    <div class="offer-bottom">
+
+                        <strong>
+                            Check back soon
+                        </strong>
+
+                    </div>
+
+                </article>
+
+
+            <?php else: ?>
+
+
+                <?php foreach ($campaigns as $campaign): ?>
+
+                    <?php
+
+                    $category = getOfferCategory(
+                        $campaign
+                    );
+
+
+                    $icon = getOfferIcon(
+                        $category
+                    );
+
+
+                    $iconClass = getOfferIconClass(
+                        $category
+                    );
+
+
+                    $title = trim(
+                        (string) (
+                            isset($campaign['title'])
+                                ? $campaign['title']
+                                : 'Available Offer'
+                        )
+                    );
+
+
+                    $description = getShortOfferDescription(
+                        (string) (
+                            isset($campaign['description'])
+                                ? $campaign['description']
+                                : ''
+                        ),
+                        $title
+                    );
+
+
+                    $reward = (float) (
+                        isset($campaign['worker_reward'])
+                            ? $campaign['worker_reward']
+                            : 0
+                    );
+
+
+                    $imageUrl = trim(
+                        (string) (
+                            isset($campaign['image_url'])
+                                ? $campaign['image_url']
+                                : ''
+                        )
+                    );
+
+
+                    $networkName = trim(
+                        (string) (
+                            isset($campaign['network'])
+                                ? $campaign['network']
+                                : 'PoketFlow'
+                        )
+                    );
+
+
+                    $networkIdForCard = (int) (
+                        isset($campaign['network_id'])
+                            ? $campaign['network_id']
+                            : 0
+                    );
+
+                    ?>
+
+
+                    <article
+                        class="offer-card"
+                        data-offer-category="<?= e(strtolower($category)) ?>"
+                    >
+
+                        <div
+                            class="offer-image <?= e($iconClass) ?>"
+                        >
+
+                            <?php if ($imageUrl !== ''): ?>
+
+                                <img
+                                    src="<?= e($imageUrl) ?>"
+                                    alt=""
+                                    loading="lazy"
+                                >
+
+                            <?php else: ?>
+
+                                <div class="offer-fallback-icon">
+                                    <?= e($icon) ?>
+                                </div>
+
+                            <?php endif; ?>
+
                         </div>
 
 
                         <div class="offer-body">
-                            <span 
-                          class="offer-network">
-                              <?= e((string) (
-                          $campaign['network']
-                                    ?? 'PoketFlow'
-                                )) ?>
-                             </span>
 
-                            
+                            <span class="offer-network">
+                                <?= e($networkName) ?>
+                            </span>
+
 
                             <h3>
-                                No offers available right now
+                                <?= e($title) ?>
                             </h3>
 
 
                             <p>
-                                There are currently no offers
-                                available for your location.
-                                Please check again later.
+                                <?= e($description) ?>
                             </p>
 
                         </div>
@@ -1129,201 +1611,90 @@ function getOfferCategory(array $campaign): string
                         <div class="offer-bottom">
 
                             <strong>
-                                Check back soon
+                                Earn
+                                $<?= number_format($reward, 2) ?>
                             </strong>
 
+
+                            <?php if (
+                                $networkIdForCard > 0 &&
+                                strtolower($networkName) === 'cpagrip'
+                            ): ?>
+
+                                <a
+                                    href="start-offer.php?network=cpagrip&offer_id=<?= e((string) $campaign['external_offer_id']) ?>"
+                                    class="btn btn-primary"
+                                >
+                                    Start →
+                                </a>
+
+                            <?php else: ?>
+
+                                <a
+                                    href="start-offer.php?network=ogads&offer_id=<?= e((string) $campaign['external_offer_id']) ?>"
+                                    class="btn btn-primary"
+                                >
+                                    Start →
+                                </a>
+
+                            <?php endif; ?>
+
                         </div>
+
 
                     </article>
 
 
-                <?php else: ?>
+                <?php endforeach; ?>
 
 
-                    <?php foreach ($campaigns as $campaign): ?>
-
-                        <?php
-
-                        $category = getOfferCategory(
-                            $campaign
-                        );
-
-
-                        $icon = getOfferIcon(
-                            $category
-                        );
-
-
-                        $iconClass = getOfferIconClass(
-                            $category
-                        );
-
-
-                        $title = trim(
-                            (string) (
-                                $campaign['title']
-                                ?? 'Available Offer'
-                            )
-                        );
-
-
-                        $description = getShortOfferDescription(
-                            (string) (
-                                $campaign['description']
-                                ?? ''
-                            ),
-                            $title
-                        );
-
-
-                        $reward = (float) (
-                            $campaign['worker_reward']
-                            ?? 0
-                        );
-
-
-                        $imageUrl = trim(
-                            (string) (
-                                $campaign['image_url']
-                                ?? ''
-                            )
-                        );
-
-                        ?>
-
-
-                        <article
-                            class="offer-card"
-                            data-offer-category="<?= e(strtolower($category)) ?>"
-                        >
-
-                            <div
-                                class="offer-image <?= e($iconClass) ?>"
-                            >
-
-                                <?php if ($imageUrl !== ''): ?>
-
-                                    <img
-                                        src="<?= e($imageUrl) ?>"
-                                        alt=""
-                                        loading="lazy"
-                                    >
-
-                                <?php else: ?>
-
-                                    <div class="offer-fallback-icon">
-                                        <?= e($icon) ?>
-                                    </div>
-
-                                <?php endif; ?>
-
-                            </div>
-
-
-                            <div class="offer-body">
-
-                                <h3>
-                                    <?= e($title) ?>
-                                </h3>
-
-
-                                <p>
-                                    <?= e($description) ?>
-                                </p>
-
-                            </div>
-
-
-                            <div class="offer-bottom">
-
-                                <strong>
-                                    Earn
-                                    $<?= number_format($reward, 2) ?>
-                                </strong>
-
-
-                                <?php if (
-    ($campaign['network'] ?? '') === 'CPAGrip'
-): ?>
-
-    <a
-        href="<?= e((string) $campaign['network_offer_url']) ?>"
-        class="btn btn-primary"
-        target="_blank"
-        rel="noopener noreferrer"
-    >
-        Start →
-    </a>
-
-<?php else: ?>
-
-    <a href="start-offer.php?offer_id=<?= e((string) $campaign['external_offer_id']) ?>"
-        class="btn btn-primary">
-        Start →
-    </a>
-
-<?php endif; ?>
-
-                            </div>
-
-
-                        </article>
-
-
-                    <?php endforeach; ?>
-
-
-                <?php endif; ?>
-
-
-            </div>
-
-
-            <aside class="info-card">
-
-                <div class="info-icon">
-                    ◷
-                </div>
-
-
-                <h3>
-                    Track your completions
-                </h3>
-
-
-                <p>
-                    Visit Offer History to see your recent
-                    activity and completion status.
-                </p>
-
-
-                <a href="history.php">
-                    View Offer History →
-                </a>
-
-
-                <hr>
-
-
-                <small>
-                    Completion tracking can take some time
-                    depending on the offer.
-                </small>
-
-
-            </aside>
+            <?php endif; ?>
 
 
         </div>
 
 
-    </section>
+        <aside class="info-card">
+
+            <div class="info-icon">
+                ◷
+            </div>
 
 
-</main>
+            <h3>
+                Track your completions
+            </h3>
 
 
-<script>
+            <p>
+                Visit Offer History to see your recent
+                activity and completion status.
+            </p>
+
+
+            <a href="history.php">
+                View Offer History →
+            </a>
+
+
+            <hr>
+
+
+            <small>
+                Completion tracking can take some time
+                depending on the offer.
+            </small>
+
+
+        </aside>
+
+
+    </div>
+
+
+</section>
+
+</main><script>
 
 document.addEventListener(
     'DOMContentLoaded',
@@ -1373,8 +1744,8 @@ document.addEventListener(
 
                                 const category =
                                     (
-                                        card.dataset.offerCategory
-                                        || ''
+                                        card.dataset.offerCategory ||
+                                        ''
                                     ).toLowerCase();
 
 
@@ -1391,8 +1762,8 @@ document.addEventListener(
                                 if (filter === 'app') {
 
                                     show =
-                                        category.includes('app') ||
-                                        category.includes('install');
+                                        category.indexOf('app') !== -1 ||
+                                        category.indexOf('install') !== -1;
 
                                 }
 
@@ -1400,7 +1771,7 @@ document.addEventListener(
                                 if (filter === 'survey') {
 
                                     show =
-                                        category.includes('survey');
+                                        category.indexOf('survey') !== -1;
 
                                 }
 
@@ -1408,9 +1779,9 @@ document.addEventListener(
                                 if (filter === 'other') {
 
                                     show =
-                                        !category.includes('app') &&
-                                        !category.includes('install') &&
-                                        !category.includes('survey');
+                                        category.indexOf('app') === -1 &&
+                                        category.indexOf('install') === -1 &&
+                                        category.indexOf('survey') === -1;
 
                                 }
 
@@ -1548,8 +1919,5 @@ document.addEventListener(
 );
 
 </script>
-
-
 </body>
-
 </html>
