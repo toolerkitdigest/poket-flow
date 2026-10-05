@@ -1028,23 +1028,25 @@ function getOfferCategory(array $campaign): string
         </div>
 
 
-        <?php if ($ogadsError !== null): ?>
+        <?php if (
+    $ogadsError !== null &&
+    $cpagripError !== null
+): ?>
 
-            <div class="info-card">
+    <div class="info-card">
 
-                <h3>
-                    Offers temporarily unavailable
-                </h3>
+        <h3>
+            Offers temporarily unavailable
+        </h3>
 
-                <p>
-                    We could not refresh the offer list right now.
-                    Please try again shortly.
-                </p>
+        <p>
+            We could not refresh the offer list right now.
+            Please try again shortly.
+        </p>
 
-            </div>
+    </div>
 
-        <?php endif; ?>
-
+<?php endif; ?>
 
         <div class="offer-tabs">
 
