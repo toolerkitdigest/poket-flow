@@ -1,55 +1,88 @@
 /* =========================================================
    POKETFLOW — OFFERS PAGE
    assets/offers.css
+
+   Designed for:
+   - PHP 8.3 offers.php
+   - Premium Dark SaaS UI
+   - Responsive desktop/tablet/mobile
+   - PoketFlow navigation
    ========================================================= */
 
-/* ---------------------------------------------------------
+
+/* =========================================================
    APP HEADER
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .app-header {
-    height: 72px;
-    padding: 0 28px;
-    display: flex;
-    align-items: center;
-    gap: 28px;
-
-    background: rgba(8, 13, 26, 0.94);
-    border-bottom: 1px solid var(--pf-border);
-
     position: sticky;
     top: 0;
     z-index: 200;
+
+    width: 100%;
+    height: 72px;
+
+    padding: 0 28px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 28px;
+
+    box-sizing: border-box;
+
+    background: rgba(8, 13, 26, 0.96);
+
+    border-bottom: 1px solid var(--pf-border);
 
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
 }
 
+
+/* ---------------------------------------------------------
+   BRAND
+   --------------------------------------------------------- */
+
 .app-header .brand {
-    flex-shrink: 0;
+    flex: 0 0 auto;
 }
 
-/* Desktop header navigation */
+
+/* =========================================================
+   DESKTOP HEADER NAVIGATION
+   ========================================================= */
 
 .app-header-nav {
+    flex: 1 1 auto;
+
     display: flex;
     align-items: center;
+    justify-content: center;
+
     gap: 26px;
-    margin: auto;
+
+    min-width: 0;
 }
 
 .app-header-nav a {
+    position: relative;
+
+    height: 72px;
+
+    padding: 0;
+
     display: flex;
     align-items: center;
 
-    height: 72px;
-    padding: 0;
+    color: #a7b1c2;
 
-    color: #aab5ca;
     font-size: 14px;
     font-weight: 600;
 
     text-decoration: none;
+
+    white-space: nowrap;
 
     border-bottom: 2px solid transparent;
 
@@ -64,27 +97,34 @@
 
 .app-header-nav a.active {
     color: #ffffff;
-    border-bottom-color: var(--pf-primary2);
+
+    border-bottom-color: var(--pf-primary);
 }
 
-/* ---------------------------------------------------------
+
+/* =========================================================
    HEADER ACTIONS
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .header-actions {
+    flex: 0 0 auto;
+
     display: flex;
     align-items: center;
+
     gap: 10px;
-    flex-shrink: 0;
 }
 
 .balance-button {
+    flex-shrink: 0;
+
     white-space: nowrap;
 }
 
-/* ---------------------------------------------------------
+
+/* =========================================================
    MOBILE MENU BUTTON
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .mobile-menu-button {
     display: none;
@@ -94,6 +134,14 @@
 
     padding: 0;
 
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    gap: 5px;
+
+    flex-shrink: 0;
+
     border: 1px solid var(--pf-border);
     border-radius: 11px;
 
@@ -101,17 +149,23 @@
 
     cursor: pointer;
 
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 5px;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
 
-    flex-shrink: 0;
+.mobile-menu-button:hover {
+    background: #111d34;
+    border-color: rgba(129, 140, 248, 0.45);
 }
 
 .mobile-menu-button span {
+    display: block;
+
     width: 19px;
     height: 2px;
+
+    flex: 0 0 auto;
 
     border-radius: 2px;
 
@@ -134,59 +188,66 @@
     transform: translateY(-7px) rotate(-45deg);
 }
 
-/* ---------------------------------------------------------
+
+/* =========================================================
    MOBILE NAVIGATION
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .mobile-navigation {
-    display: none;
-
     position: fixed;
 
     top: 72px;
     left: 0;
-    right: 0;
 
     width: 100%;
-
-    z-index: 190;
-
-    padding: 12px 14px 16px;
 
     box-sizing: border-box;
 
-    background: rgba(8, 13, 26, 0.98);
+    padding: 12px 14px 16px;
+
+    display: none;
+
+    z-index: 190;
+
+    background: rgba(8, 13, 26, 0.985);
 
     border-bottom: 1px solid var(--pf-border);
 
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+    box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.45);
+
+    overflow: hidden;
+}
+
+.mobile-navigation.open {
+    display: block;
 }
 
 .mobile-navigation nav {
-    display: grid;
+    width: 100%;
 
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
 
     gap: 5px;
-
-    width: 100%;
 
     margin: 0;
     padding: 0;
 }
 
 .mobile-navigation nav a {
-    display: flex;
-    align-items: center;
-
     width: 100%;
     min-height: 46px;
 
     box-sizing: border-box;
 
+    display: flex;
+    align-items: center;
+
     gap: 13px;
 
     padding: 12px 14px;
+
     margin: 0;
 
     border: 0;
@@ -202,8 +263,6 @@
 
     text-decoration: none;
 
-    white-space: nowrap;
-
     transition:
         background 0.2s ease,
         color 0.2s ease;
@@ -211,21 +270,26 @@
 
 .mobile-navigation nav a:hover {
     background: #111d34;
+
     color: #ffffff;
 }
 
 .mobile-navigation nav a.active {
     background: #111d34;
+
     color: #ffffff;
 
-    box-shadow: inset 3px 0 var(--pf-primary2);
+    box-shadow:
+        inset 3px 0 var(--pf-primary);
 }
 
 .mobile-navigation .mobile-nav-icon {
     width: 24px;
     min-width: 24px;
 
-    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
     color: #8c7cff;
 
@@ -237,17 +301,16 @@
     color: #a49cff;
 }
 
-.mobile-navigation.open {
-    display: block;
-}
 
-/* ---------------------------------------------------------
+/* =========================================================
    APPLICATION SHELL
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .app-shell {
     width: 100%;
     max-width: 1450px;
+
+    min-height: calc(100vh - 72px);
 
     margin: 0 auto;
 
@@ -255,12 +318,13 @@
 
     grid-template-columns: 225px minmax(0, 1fr);
 
-    min-height: calc(100vh - 72px);
+    box-sizing: border-box;
 }
 
-/* ---------------------------------------------------------
+
+/* =========================================================
    SIDEBAR
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .sidebar {
     min-width: 0;
@@ -270,17 +334,22 @@
     display: flex;
     flex-direction: column;
 
+    box-sizing: border-box;
+
     border-right: 1px solid var(--pf-border);
 }
 
 .sidebar-nav {
     display: grid;
+
     gap: 5px;
 }
 
 .sidebar-nav a {
     display: flex;
     align-items: center;
+
+    min-width: 0;
 
     padding: 12px 14px;
 
@@ -300,44 +369,55 @@
 
 .sidebar-nav a:hover {
     background: #111d34;
+
     color: #ffffff;
 }
 
 .sidebar-nav a.active {
     background: #111d34;
+
     color: #ffffff;
 
-    box-shadow: inset 2px 0 #7770ff;
+    box-shadow:
+        inset 2px 0 var(--pf-primary);
 }
 
 .sidebar-nav span {
     margin-left: 10px;
+
+    white-space: nowrap;
 }
 
-/* ---------------------------------------------------------
+
+/* =========================================================
    SIDEBAR BALANCE
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .side-balance {
     margin-top: auto;
 
-    padding: 15px;
+    padding: 16px;
 
     border: 1px solid var(--pf-border);
-    border-radius: 13px;
+    border-radius: 14px;
 
     background: #0d1628;
+
+    box-sizing: border-box;
 }
 
-.side-balance-label {
+.side-balance small {
     display: block;
 
-    margin-bottom: 5px;
+    margin-bottom: 6px;
 
     color: var(--pf-muted);
 
     font-size: 11px;
     font-weight: 600;
+
+    line-height: 1.4;
+
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -345,28 +425,78 @@
 .side-balance strong {
     display: block;
 
+    margin-bottom: 4px;
+
     color: #ffffff;
 
     font-size: 20px;
-    line-height: 1.2;
+    font-weight: 800;
+
+    line-height: 1.25;
 }
 
-/* ---------------------------------------------------------
+.side-balance span {
+    display: block;
+
+    margin-bottom: 13px;
+
+    color: #718096;
+
+    font-size: 11px;
+
+    line-height: 1.5;
+}
+
+.side-balance a {
+    display: inline-block;
+
+    color: #a49cff;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    transition: color 0.2s ease;
+}
+
+.side-balance a:hover {
+    color: #c4c0ff;
+}
+
+
+/* =========================================================
    MAIN CONTENT
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .app-content {
     min-width: 0;
 
     padding: 40px 42px;
+
+    box-sizing: border-box;
 }
 
-/* ---------------------------------------------------------
+
+/* =========================================================
    PAGE TITLE
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .page-title {
     margin-bottom: 28px;
+}
+
+.page-title .kicker {
+    display: inline-block;
+
+    margin-bottom: 7px;
+
+    color: var(--pf-primary);
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: 0.12em;
 }
 
 .page-title h1 {
@@ -375,27 +505,33 @@
     color: var(--pf-text);
 
     font-size: clamp(25px, 3vw, 34px);
+    font-weight: 800;
+
     line-height: 1.15;
 
     letter-spacing: -0.7px;
 }
 
 .page-title p {
-    margin: 0;
-
     max-width: 680px;
+
+    margin: 0;
 
     color: var(--pf-muted);
 
     font-size: 14px;
+
     line-height: 1.7;
 }
 
-/* ---------------------------------------------------------
+
+/* =========================================================
    OFFER TABS
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .offer-tabs {
+    width: 100%;
+
     display: flex;
     align-items: center;
 
@@ -412,7 +548,7 @@
     display: none;
 }
 
-.offer-tab {
+.offer-tabs button {
     flex: 0 0 auto;
 
     padding: 9px 14px;
@@ -424,62 +560,98 @@
 
     color: #8996ad;
 
+    font-family: inherit;
+
     font-size: 12px;
     font-weight: 600;
 
+    line-height: 1.2;
+
     cursor: pointer;
+
+    white-space: nowrap;
 
     transition:
         background 0.2s ease,
         border-color 0.2s ease,
-        color 0.2s ease;
+        color 0.2s ease,
+        transform 0.2s ease;
 }
 
-.offer-tab:hover {
-    color: #ffffff;
-    border-color: #3a4760;
-}
-
-.offer-tab.active {
+.offer-tabs button:hover {
     color: #ffffff;
 
-    background: #171f38;
+    border-color: rgba(129, 140, 248, 0.45);
 
-    border-color: #5f5bdc;
+    background: #111d34;
 }
 
-/* ---------------------------------------------------------
-   OFFER CONTENT GRID
-   --------------------------------------------------------- */
+.offer-tabs button:active {
+    transform: translateY(1px);
+}
+
+.offer-tabs button.selected {
+    color: #ffffff;
+
+    background: rgba(99, 102, 241, 0.16);
+
+    border-color: rgba(99, 102, 241, 0.65);
+
+    box-shadow:
+        0 0 0 1px rgba(99, 102, 241, 0.08);
+}
+
+
+/* =========================================================
+   DASHBOARD CONTENT GRID
+   ========================================================= */
 
 .dashboard-grid {
     display: grid;
 
-    grid-template-columns: minmax(0, 1fr) 280px;
+    grid-template-columns:
+        minmax(0, 1fr)
+        280px;
 
     gap: 24px;
 
     align-items: start;
 }
 
+
+/* =========================================================
+   OFFER GRID
+   ========================================================= */
+
 .offer-grid {
+    min-width: 0;
+
     display: grid;
 
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
 
     gap: 16px;
 }
 
-/* ---------------------------------------------------------
+
+/* =========================================================
    OFFER CARD
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .offer-card {
     position: relative;
 
     min-width: 0;
 
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+
     padding: 20px;
+
+    box-sizing: border-box;
 
     border: 1px solid var(--pf-border);
     border-radius: 16px;
@@ -496,136 +668,195 @@
 .offer-card:hover {
     transform: translateY(-2px);
 
-    border-color: #35415a;
+    border-color: rgba(129, 140, 248, 0.35);
 
     background: var(--pf-surface-2);
 
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.22);
+    box-shadow:
+        0 12px 35px rgba(0, 0, 0, 0.22);
 }
 
-.offer-card.hidden {
-    display: none;
-}
 
-/* ---------------------------------------------------------
-   OFFER ICON
-   --------------------------------------------------------- */
+/* =========================================================
+   OFFER IMAGE
+   ========================================================= */
 
-.offer-icon {
-    width: 46px;
-    height: 46px;
+.offer-image {
+    width: 52px;
+    height: 52px;
+
+    flex: 0 0 52px;
 
     display: grid;
     place-items: center;
 
     margin-bottom: 15px;
 
-    border-radius: 13px;
+    overflow: hidden;
 
-    background: #171f38;
+    border: 1px solid rgba(129, 140, 248, 0.14);
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(99, 102, 241, 0.18),
+            rgba(34, 211, 238, 0.08)
+        );
+
+    color: #a49cff;
+}
+
+.offer-image img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.offer-fallback-icon {
+    display: grid;
+    place-items: center;
+
+    width: 100%;
+    height: 100%;
 
     color: #a49cff;
 
-    font-size: 20px;
+    font-size: 21px;
+    font-weight: 700;
 }
 
-.offer-icon.blue {
-    color: #67d7ff;
-}
-
-.offer-icon.green {
-    color: #4ade80;
-}
-
-.offer-icon.orange {
+.offer-image.orange .offer-fallback-icon {
     color: #fb923c;
 }
 
-.offer-icon.purple {
-    color: #c084fc;
+.offer-image.cyan .offer-fallback-icon {
+    color: #22d3ee;
 }
 
-/* ---------------------------------------------------------
-   OFFER CARD CONTENT
-   --------------------------------------------------------- */
 
-.offer-card h3 {
+/* =========================================================
+   OFFER BODY
+   ========================================================= */
+
+.offer-body {
+    min-width: 0;
+
+    flex: 1 1 auto;
+}
+
+.offer-body h3 {
     margin: 0 0 8px;
 
     color: #ffffff;
 
     font-size: 16px;
+    font-weight: 700;
+
     line-height: 1.35;
+
+    overflow-wrap: anywhere;
 }
 
-.offer-card p {
+.offer-body p {
     margin: 0 0 17px;
 
     color: #8d99ae;
 
     font-size: 12px;
+
     line-height: 1.65;
 }
 
-/* ---------------------------------------------------------
-   OFFER META
-   --------------------------------------------------------- */
 
-.offer-meta {
+/* =========================================================
+   OFFER BOTTOM
+   ========================================================= */
+
+.offer-bottom {
+    margin-top: auto;
+
+    padding-top: 15px;
+
     display: flex;
     align-items: center;
     justify-content: space-between;
 
     gap: 12px;
 
-    margin-bottom: 16px;
+    border-top: 1px solid rgba(113, 128, 150, 0.12);
 }
 
-.offer-category {
-    color: #71809a;
+.offer-bottom strong {
+    display: block;
 
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.offer-reward {
     color: #4ade80;
 
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 800;
+
+    line-height: 1.3;
 
     white-space: nowrap;
 }
 
-/* ---------------------------------------------------------
-   OFFER BUTTON
-   --------------------------------------------------------- */
+.offer-bottom .btn {
+    flex: 0 0 auto;
 
-.offer-card .btn {
-    width: 100%;
-
-    justify-content: center;
+    white-space: nowrap;
 }
 
-/* ---------------------------------------------------------
+
+/* =========================================================
    INFORMATION CARD
-   --------------------------------------------------------- */
+   ========================================================= */
 
 .info-card {
+    min-width: 0;
+
     padding: 22px;
+
+    box-sizing: border-box;
 
     border: 1px solid var(--pf-border);
     border-radius: 16px;
 
     background: var(--pf-surface);
+
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.info-icon {
+    width: 42px;
+    height: 42px;
+
+    display: grid;
+    place-items: center;
+
+    margin-bottom: 15px;
+
+    border-radius: 12px;
+
+    background: rgba(99, 102, 241, 0.12);
+
+    color: #a49cff;
+
+    font-size: 19px;
 }
 
 .info-card h3 {
-    margin: 0 0 12px;
+    margin: 0 0 10px;
 
     color: #ffffff;
 
     font-size: 16px;
+    font-weight: 700;
+
+    line-height: 1.4;
 }
 
 .info-card p {
@@ -634,44 +865,50 @@
     color: #8996ad;
 
     font-size: 12px;
+
     line-height: 1.7;
 }
 
-.info-card ul {
-    margin: 0;
-    padding: 0;
-
-    list-style: none;
-}
-
-.info-card li {
-    position: relative;
-
-    padding-left: 20px;
-    margin-bottom: 11px;
-
-    color: #8996ad;
+.info-card a {
+    color: #a49cff;
 
     font-size: 12px;
-    line-height: 1.55;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    transition: color 0.2s ease;
 }
 
-.info-card li::before {
-    content: "✓";
-
-    position: absolute;
-
-    left: 0;
-    top: 0;
-
-    color: #4ade80;
-
-    font-weight: 800;
+.info-card a:hover {
+    color: #c4c0ff;
 }
 
-/* ---------------------------------------------------------
+.info-card hr {
+    margin: 18px 0;
+
+    border: 0;
+    border-top: 1px solid rgba(113, 128, 150, 0.14);
+}
+
+.info-card small {
+    display: block;
+
+    color: #718096;
+
+    font-size: 11px;
+
+    line-height: 1.6;
+}
+
+
+/* =========================================================
    ERROR / NOTICE
-   --------------------------------------------------------- */
+   ========================================================= */
+
+.info-card:has(h3) {
+    box-sizing: border-box;
+}
 
 .offer-error,
 .alert-error {
@@ -687,51 +924,88 @@
     color: #fca5a5;
 
     font-size: 13px;
+
     line-height: 1.5;
 }
 
-/* ---------------------------------------------------------
-   EMPTY STATE
-   --------------------------------------------------------- */
 
-.offer-empty {
-    grid-column: 1 / -1;
+/* =========================================================
+   EMPTY OFFER CARD
+   ========================================================= */
 
-    padding: 45px 25px;
+.empty-offer-card {
+    min-height: 210px;
+
+    justify-content: center;
 
     text-align: center;
 
-    border: 1px dashed var(--pf-border);
-    border-radius: 16px;
+    border-style: dashed;
 
-    background: rgba(17, 24, 39, 0.55);
+    background:
+        rgba(17, 24, 39, 0.55);
 }
 
-.offer-empty h3 {
-    margin: 0 0 8px;
-
-    color: #ffffff;
-
-    font-size: 17px;
+.empty-offer-card .offer-icon {
+    margin: 0 auto 15px;
 }
 
-.offer-empty p {
-    margin: 0;
+.empty-offer-card .offer-body h3 {
+    margin-bottom: 8px;
+}
 
+.empty-offer-card .offer-body p {
+    max-width: 420px;
+
+    margin-left: auto;
+    margin-right: auto;
+
+    margin-bottom: 0;
+}
+
+.empty-offer-card .offer-bottom {
+    justify-content: center;
+
+    margin-top: 18px;
+
+    padding-top: 0;
+
+    border-top: 0;
+}
+
+.empty-offer-card .offer-bottom strong {
     color: var(--pf-muted);
 
-    font-size: 13px;
-    line-height: 1.6;
+    font-size: 12px;
 }
 
-/* ---------------------------------------------------------
+
+/* =========================================================
+   KEYBOARD FOCUS
+   ========================================================= */
+
+.app-header-nav a:focus-visible,
+.sidebar-nav a:focus-visible,
+.mobile-navigation nav a:focus-visible,
+.info-card a:focus-visible,
+.offer-bottom a:focus-visible,
+.offer-tabs button:focus-visible,
+.mobile-menu-button:focus-visible {
+    outline: 2px solid var(--pf-primary);
+
+    outline-offset: 3px;
+}
+
+
+/* =========================================================
    TABLET
-   --------------------------------------------------------- */
+   ========================================================= */
 
 @media (max-width: 1100px) {
 
     .app-header {
-        padding: 0 20px;
+        padding-left: 20px;
+        padding-right: 20px;
     }
 
     .app-header-nav {
@@ -743,7 +1017,8 @@
     }
 
     .app-shell {
-        grid-template-columns: 75px minmax(0, 1fr);
+        grid-template-columns:
+            72px minmax(0, 1fr);
     }
 
     .sidebar {
@@ -754,8 +1029,6 @@
         justify-content: center;
 
         padding: 12px 8px;
-
-        text-align: center;
     }
 
     .sidebar-nav a span {
@@ -771,17 +1044,19 @@
     }
 
     .dashboard-grid {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns:
+            minmax(0, 1fr);
     }
 
     .info-card {
-        width: auto;
+        width: 100%;
     }
 }
 
-/* ---------------------------------------------------------
-   MOBILE / SMALL TABLET
-   --------------------------------------------------------- */
+
+/* =========================================================
+   SMALL TABLET / MOBILE
+   ========================================================= */
 
 @media (max-width: 900px) {
 
@@ -808,7 +1083,8 @@
     .app-shell {
         grid-template-columns: 1fr;
 
-        min-height: calc(100vh - 64px);
+        min-height:
+            calc(100vh - 64px);
     }
 
     .sidebar {
@@ -818,11 +1094,17 @@
     .app-content {
         padding: 28px 20px;
     }
+
+    .offer-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
 }
 
-/* ---------------------------------------------------------
+
+/* =========================================================
    MOBILE
-   --------------------------------------------------------- */
+   ========================================================= */
 
 @media (max-width: 680px) {
 
@@ -833,6 +1115,8 @@
     }
 
     .app-header .brand {
+        min-width: 0;
+
         font-size: 20px;
     }
 
@@ -868,6 +1152,10 @@
         margin-bottom: 22px;
     }
 
+    .page-title .kicker {
+        font-size: 10px;
+    }
+
     .page-title h1 {
         font-size: 26px;
     }
@@ -878,6 +1166,10 @@
 
     .offer-tabs {
         margin-bottom: 18px;
+    }
+
+    .offer-tabs button {
+        padding: 9px 12px;
     }
 
     .dashboard-grid {
@@ -894,16 +1186,30 @@
         padding: 18px;
     }
 
+    .offer-bottom {
+        align-items: center;
+    }
+
+    .offer-bottom strong {
+        font-size: 13px;
+    }
+
     .info-card {
         padding: 19px;
     }
 }
 
-/* ---------------------------------------------------------
+
+/* =========================================================
    VERY SMALL PHONES
-   --------------------------------------------------------- */
+   ========================================================= */
 
 @media (max-width: 400px) {
+
+    .app-header {
+        padding-left: 11px;
+        padding-right: 11px;
+    }
 
     .app-header .brand {
         font-size: 18px;
@@ -929,13 +1235,26 @@
         padding-left: 14px;
         padding-right: 14px;
     }
+
+    .offer-card {
+        padding: 16px;
+    }
+
+    .offer-bottom {
+        flex-wrap: wrap;
+    }
+
+    .offer-bottom .btn {
+        flex: 1 1 auto;
+    }
 }
 
-/* ---------------------------------------------------------
-   DESKTOP ONLY
-   --------------------------------------------------------- */
 
-@media (min-width: 1001px) {
+/* =========================================================
+   DESKTOP ONLY
+   ========================================================= */
+
+@media (min-width: 901px) {
 
     .mobile-navigation {
         display: none !important;
