@@ -466,6 +466,224 @@ function getShortOfferDescription(
 }
 
 
+// ==================================================
+// FETCH LIVE VISITOR-SPECIFIC CPAGRIP OFFERS
+// ==================================================
+
+try {
+
+    $cpagripOffers = require __DIR__ . '/includes/cpagrip.php';
+
+    if (!is_array($cpagripOffers)) {
+        $cpagripOffers = [];
+    }
+
+
+    // --------------------------------------------------
+    // Process CPAGrip offers
+    // --------------------------------------------------
+
+    foreach ($cpagripOffers as $offer) {
+
+        if (!is_array($offer)) {
+            continue;
+        }
+
+
+        // ----------------------------------------------
+        // External CPAGrip offer ID
+        // ----------------------------------------------
+
+        $externalOfferId = trim(
+            (string) (
+                $offer['offer_id']
+                ?? ''
+            )
+        );
+
+
+        if ($externalOfferId === '') {
+            continue;
+        }
+
+
+        // ----------------------------------------------
+        // Offer information
+        // ----------------------------------------------
+
+        $title = trim(
+            (string) (
+                $offer['title']
+                ?? 'CPAGrip Offer'
+            )
+        );
+
+
+        $description = trim(
+            (string) (
+                $offer['description']
+                ?? ''
+            )
+        );
+
+
+        $category = trim(
+            (string) (
+                $offer['category']
+                ?? 'Offer'
+            )
+        );
+
+
+        $networkOfferUrl = trim(
+            (string) (
+                $offer['offerlink']
+                ?? ''
+            )
+        );
+
+
+        $imageUrl = trim(
+            (string) (
+                $offer['image']
+                ?? ''
+            )
+        );
+
+
+        $offerType = trim(
+            (string) (
+                $offer['type']
+                ?? ''
+            )
+        );
+
+
+        $countries = trim(
+            (string) (
+                $offer['accepted_countries']
+                ?? ''
+            )
+        );
+
+
+        // ----------------------------------------------
+        // Validate offer
+        // ----------------------------------------------
+
+        if ($title === '') {
+            continue;
+        }
+
+
+        if ($networkOfferUrl === '') {
+            continue;
+        }
+
+
+        // ----------------------------------------------
+        // Network payout
+        // ----------------------------------------------
+
+        $networkPayout = round(
+            (float) (
+                $offer['payout']
+                ?? 0
+            ),
+            2
+        );
+
+
+        if ($networkPayout <= 0) {
+            continue;
+        }
+
+
+        // ----------------------------------------------
+        // PoketFlow reward
+        // ----------------------------------------------
+
+        $workerReward = round(
+            (float) (
+                $offer['reward']
+                ?? 0
+            ),
+            2
+        );
+
+
+        $platformMargin = round(
+            $networkPayout - $workerReward,
+            2
+        );
+
+
+        // ----------------------------------------------
+        // Build normalized campaign
+        // ----------------------------------------------
+
+        $campaigns[] = [
+
+            'id' => 'cpagrip_' . $externalOfferId,
+
+            'source_type' => 'CPA_NETWORK',
+
+            'network_id' => 0,
+
+            'network' => 'CPAGrip',
+
+            'external_offer_id' => $externalOfferId,
+
+            'network_offer_url' => $networkOfferUrl,
+
+            'image_url' => $imageUrl,
+
+            'title' => $title,
+
+            'description' => $description,
+
+            'category' => $category,
+
+            'instructions' => '',
+
+            'network_payout' => $networkPayout,
+
+            'reward_rate' => $networkPayout > 0
+                ? round(
+                    ($workerReward / $networkPayout) * 100,
+                    2
+                )
+                : 0,
+
+            'worker_reward' => $workerReward,
+
+            'platform_margin' => $platformMargin,
+
+            'countries' => $countries,
+
+            'devices' => $offerType,
+
+            'os' => '',
+
+            'incentive_allowed' => 1,
+
+            'status' => 'ACTIVE',
+
+            'approval_status' => 'APPROVED',
+
+        ];
+    }
+
+
+} catch (Throwable $e) {
+
+    $cpagripError = $e->getMessage();
+
+    $cpagripOffers = [];
+}
+
+
+
 // --------------------------------------------------
 // Determine offer icon
 // --------------------------------------------------
