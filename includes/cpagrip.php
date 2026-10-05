@@ -3,59 +3,43 @@
 declare(strict_types=1);
 
 /**
- * PoketFlow - CPAGrip Offer Feed
+ * PoketFlow CPAGrip Offer Integration
  *
  * PHP 7.2 compatible.
- *
- * IMPORTANT:
- * CPAGrip credentials are loaded from a private file
- * outside the public/GitHub project.
  */
 
-// --------------------------------------------------
-// Load CPAGrip private configuration
-// --------------------------------------------------
+$configPath = '/home/u541027683/private/poketflow-cpagrip.php';
 
-// CHANGE THIS to the exact private path used on your server.
-$cpagripConfigPath = '/home/YOUR_ACCOUNT/private/poketflow-cpagrip.php';
-
-if (!file_exists($cpagripConfigPath)) {
-    throw new RuntimeException(
-        'CPAGrip configuration file was not found.'
-    );
+if (!file_exists($configPath)) {
+    return [];
 }
 
-$cpagripConfig = require $cpagripConfigPath;
+$config = require $configPath;
+
+if (!is_array($config)) {
+    return [];
+}
 
 
 // --------------------------------------------------
-// CPAGrip settings
+// CPAGrip configuration
 // --------------------------------------------------
 
-$cpagripUserId = $cpagripConfig['user_id'];
-$cpagripPrivateKey = $cpagripConfig['private_key'];
+$userId = (string) $config['user_id'];
 
-$cpagripTrackingDomain = !empty(
-    $cpagripConfig['tracking_domain']
-)
-    ? $cpagripConfig['tracking_domain']
-    : 'www.cpagrip.com';
+$privateKey = (string) $config['private_key'];
 
-$cpagripRewardRate = isset(
-    $cpagripConfig['reward_rate']
-)
-    ? (float) $cpagripConfig['reward_rate']
+$rewardRate = isset($config['reward_rate'])
+    ? (float) $config['reward_rate']
     : 0.60;
 
-$cpagripLimit = isset(
-    $cpagripConfig['limit']
-)
-    ? (int) $cpagripConfig['limit']
+$limit = isset($config['limit'])
+    ? (int) $config['limit']
     : 20;
 
 
 // --------------------------------------------------
-// Get visitor information
+// Visitor information
 // --------------------------------------------------
 
 $visitorIp = isset($_SERVER['REMOTE_ADDR'])
@@ -68,7 +52,7 @@ $userAgent = isset($_SERVER['HTTP_USER_AGENT'])
 
 
 // --------------------------------------------------
-// Get logged-in PoketFlow user
+// PoketFlow tracking ID
 // --------------------------------------------------
 
 $trackingId = '';
@@ -83,28 +67,31 @@ if (!empty($_SESSION['user_id'])) {
 
 
 // --------------------------------------------------
-// Build CPAGrip JSON feed URL
+// Build request
 // --------------------------------------------------
 
-$query = [
-    'user_id' => $cpagripUserId,
-    'key' => $cpagripPrivateKey,
+$params = [
+    'user_id' => $userId,
+    'key' => $privateKey,
     'ip' => $visitorIp,
     'ua' => $userAgent,
-    'limit' => $cpagripLimit,
+    'limit' => $limit,
 ];
 
+
+// Pass logged-in PoketFlow user ID to CPAGrip.
 if ($trackingId !== '') {
-    $query['tracking_id'] = $trackingId;
+    $params['tracking_id'] = $trackingId;
 }
+
 
 $feedUrl =
     'https://www.cpagrip.com/common/offer_feed_json.php?'
-    . http_build_query($query);
+    . http_build_query($params);
 
 
 // --------------------------------------------------
-// Request JSON feed
+// Request CPAGrip
 // --------------------------------------------------
 
 $ch = curl_init();
@@ -115,10 +102,13 @@ curl_setopt_array(
         CURLOPT_URL => $feedUrl,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
+
         CURLOPT_CONNECTTIMEOUT => 10,
         CURLOPT_TIMEOUT => 20,
+
         CURLOPT_SSL_VERIFYPEER => true,
         CURLOPT_SSL_VERIFYHOST => 2,
+
         CURLOPT_HTTPHEADER => [
             'Accept: application/json',
         ],
@@ -132,16 +122,14 @@ $httpCode = (int) curl_getinfo(
     CURLINFO_HTTP_CODE
 );
 
-$curlError = curl_error($ch);
-
 curl_close($ch);
 
 
 // --------------------------------------------------
-// Handle request failure
+// Validate response
 // --------------------------------------------------
 
-if ($response === false || $curlError !== '') {
+if ($response === false) {
     return [];
 }
 
@@ -149,10 +137,6 @@ if ($httpCode < 200 || $httpCode >= 300) {
     return [];
 }
 
-
-// --------------------------------------------------
-// Decode JSON
-// --------------------------------------------------
 
 $data = json_decode(
     $response,
@@ -172,7 +156,7 @@ if (
 
 
 // --------------------------------------------------
-// Prepare offers
+// Prepare normalized offers
 // --------------------------------------------------
 
 $offers = [];
@@ -183,9 +167,14 @@ foreach ($data['offers'] as $offer) {
         continue;
     }
 
+
     // ----------------------------------------------
-    // Basic fields
+    // Basic information
     // ----------------------------------------------
+
+    $offerId = isset($offer['offer_id'])
+        ? (string) $offer['offer_id']
+        : '';
 
     $title = isset($offer['title'])
         ? trim((string) $offer['title'])
@@ -199,57 +188,73 @@ foreach ($data['offers'] as $offer) {
         ? trim((string) $offer['offerlink'])
         : '';
 
-    if ($title === '' || $offerLink === '') {
+    $image = isset($offer['offerphoto'])
+        ? trim((string) $offer['offerphoto'])
+        : '';
+
+    $type = isset($offer['type'])
+        ? trim((string) $offer['type'])
+        : '';
+
+    $category = isset($offer['category'])
+        ? trim((string) $offer['category'])
+        : '';
+
+    $countries = isset($offer['accepted_countries'])
+        ? trim((string) $offer['accepted_countries'])
+        : '';
+
+
+    // ----------------------------------------------
+    // Required fields
+    // ----------------------------------------------
+
+    if (
+        $offerId === '' ||
+        $title === '' ||
+        $offerLink === ''
+    ) {
         continue;
     }
 
 
     // ----------------------------------------------
-    // Payout
+    // Network payout
     // ----------------------------------------------
 
-    $payout = 0.0;
-
-    if (isset($offer['payout'])) {
-        $payout = (float) $offer['payout'];
-    }
+    $payout = isset($offer['payout'])
+        ? (float) $offer['payout']
+        : 0.00;
 
 
     // ----------------------------------------------
     // PoketFlow reward
     // ----------------------------------------------
 
-    $reward = $payout * $cpagripRewardRate;
-
-    $reward = round($reward, 2);
-
-
-    // ----------------------------------------------
-    // Replace tracking domain if configured
-    // ----------------------------------------------
-
-    if (
-        $cpagripTrackingDomain !== '' &&
-        strpos($offerLink, 'www.cpagrip.com') !== false
-    ) {
-        $offerLink = str_replace(
-            'www.cpagrip.com',
-            $cpagripTrackingDomain,
-            $offerLink
-        );
-    }
+    $reward = round(
+        $payout * $rewardRate,
+        2
+    );
 
 
     // ----------------------------------------------
-    // Build normalized offer
+    // Platform margin
+    // ----------------------------------------------
+
+    $margin = round(
+        $payout - $reward,
+        2
+    );
+
+
+    // ----------------------------------------------
+    // Normalized offer
     // ----------------------------------------------
 
     $offers[] = [
         'network' => 'CPAGrip',
 
-        'network_offer_id' => isset($offer['id'])
-            ? (string) $offer['id']
-            : '',
+        'offer_id' => $offerId,
 
         'title' => $title,
 
@@ -257,11 +262,19 @@ foreach ($data['offers'] as $offer) {
 
         'offerlink' => $offerLink,
 
+        'image' => $image,
+
+        'type' => $type,
+
+        'category' => $category,
+
+        'accepted_countries' => $countries,
+
         'payout' => $payout,
 
         'reward' => $reward,
 
-        'raw' => $offer,
+        'margin' => $margin,
     ];
 }
 
