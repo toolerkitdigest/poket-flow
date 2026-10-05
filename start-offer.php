@@ -5,9 +5,19 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/ogads.php';
 
+
+// --------------------------------------------------
+// Protect page
+// --------------------------------------------------
+
 if (!isLoggedIn()) {
     redirect('login.php');
 }
+
+
+// --------------------------------------------------
+// Get logged-in user
+// --------------------------------------------------
 
 $userId = (int) $_SESSION['user_id'];
 
@@ -16,39 +26,53 @@ $user = getUser(
     $userId
 );
 
+
 if (!$user) {
+
     $_SESSION = [];
+
     session_destroy();
 
     redirect('login.php');
 }
 
-/*
- * Read the live OGAds offer ID.
- */
+
+// --------------------------------------------------
+// Read OGAds offer ID
+// --------------------------------------------------
+
 $offerId = filter_input(
     INPUT_GET,
     'offer_id',
     FILTER_VALIDATE_INT
 );
 
+
 if (!$offerId || $offerId < 1) {
+
     http_response_code(400);
-    exit('Invalid offer.');
+
+    exit(
+        'Invalid offer.'
+    );
 }
+
 
 $offerId = (string) $offerId;
 
-/*
- * The offers page stores the visitor-specific
- * OGAds inventory in the session.
- */
+
+// ==================================================
+// READ SESSION OFFER
+// ==================================================
+
 $sessionOffers = $_SESSION['ogads_offers'] ?? null;
+
 
 if (
     !is_array($sessionOffers) ||
     empty($sessionOffers)
 ) {
+
     http_response_code(404);
 
     exit(
@@ -56,11 +80,13 @@ if (
     );
 }
 
-/*
- * Find the selected offer inside the visitor's
- * current OGAds offer list.
- */
+
+// --------------------------------------------------
+// Find selected offer
+// --------------------------------------------------
+
 $selectedOffer = null;
+
 
 foreach ($sessionOffers as $offer) {
 
@@ -71,13 +97,18 @@ foreach ($sessionOffers as $offer) {
         )
     );
 
+
     if ($externalOfferId === $offerId) {
+
         $selectedOffer = $offer;
+
         break;
     }
 }
 
+
 if ($selectedOffer === null) {
+
     http_response_code(404);
 
     exit(
@@ -85,16 +116,11 @@ if ($selectedOffer === null) {
     );
 }
 
-/*
- * Validate the offer again before starting it.
- *
- * We intentionally do NOT call canStartCampaign()
- * here because that function checks the user's
- * account country.
- *
- * OGAds has already supplied this offer specifically
- * for the visitor's current IP/GEO/device.
- */
+
+// ==================================================
+// BASIC OFFER VALIDATION
+// ==================================================
+
 $networkOfferUrl = trim(
     (string) (
         $selectedOffer['network_offer_url']
@@ -102,12 +128,15 @@ $networkOfferUrl = trim(
     )
 );
 
+
 $networkPayout = (float) (
     $selectedOffer['network_payout']
     ?? 0
 );
 
+
 if ($networkOfferUrl === '') {
+
     http_response_code(502);
 
     exit(
@@ -115,7 +144,9 @@ if ($networkOfferUrl === '') {
     );
 }
 
+
 if ($networkPayout <= 0) {
+
     http_response_code(400);
 
     exit(
@@ -124,14 +155,12 @@ if ($networkPayout <= 0) {
 }
 
 
-/*
- * Run the raw OGAds safety filter one more time.
- *
- * This is a visitor-specific live OGAds offer,
- * so we use isOgadsOfferSafe(), not the
- * database campaign safety/status gate.
- */
+// ==================================================
+// RAW OGADS SAFETY CHECK
+// ==================================================
+
 $ogadsOfferForSafety = [
+
     'offerid' => $offerId,
 
     'name_short' => (
@@ -155,12 +184,15 @@ $ogadsOfferForSafety = [
     ),
 
     'link' => $networkOfferUrl,
+
 ];
+
 
 if (!isOgadsOfferSafe(
     $pdo,
     $ogadsOfferForSafety
 )) {
+
     http_response_code(403);
 
     exit(
@@ -168,9 +200,11 @@ if (!isOgadsOfferSafe(
     );
 }
 
-/*
- * Get the OGAds network record.
- */
+
+// ==================================================
+// GET OGADS NETWORK
+// ==================================================
+
 try {
 
     $networkId = getOgadsNetworkId(
@@ -186,98 +220,318 @@ try {
     );
 }
 
-/*
- * Convert our session offer back into the
- * structure expected by syncOgadsOffer().
- *
- * This allows us to create/update a campaign
- * record only when a visitor actually starts
- * an offer.
- */
-$ogadsOffer = [
-    'offerid' => $offerId,
 
-    'name_short' => (
-        $selectedOffer['title']
-        ?? 'OGAds Offer'
-    ),
+// ==================================================
+// IMPORTANT ADMIN STATUS CHECK
+// ==================================================
+//
+// Before synchronizing anything, look for an existing
+// PoketFlow campaign.
+//
+// If the campaign exists, its database status is
+// authoritative.
+//
+// We NEVER overwrite an existing campaign's
+// status/approval decision just because OGAds is
+// currently returning the offer.
+//
+// ==================================================
 
-    'name' => (
-        $selectedOffer['title']
-        ?? 'OGAds Offer'
-    ),
-
-    'description' => (
-        $selectedOffer['description']
-        ?? ''
-    ),
-
-    'adcopy' => (
-        $selectedOffer['instructions']
-        ?? ''
-    ),
-
-    'country' => (
-        $selectedOffer['countries']
-        ?? ''
-    ),
-
-    'device' => (
-        $selectedOffer['devices']
-        ?? ''
-    ),
-
-    'link' => $networkOfferUrl,
-
-    'picture' => (
-        $selectedOffer['image_url']
-        ?? ''
-    ),
-
-    'payout' => $networkPayout,
-];
-
-/*
- * Create or update the campaign record.
- *
- * We only persist the offer here when the visitor
- * actually starts it. We are NOT importing the
- * entire live OGAds inventory into campaigns.
- */
-try {
-
-    $campaignId = syncOgadsOffer(
-        $pdo,
-        $networkId,
-        $ogadsOffer
-    );
-
-} catch (Throwable $e) {
-
-    http_response_code(500);
-
-    exit(
-        'Unable to prepare this offer. Please try again.'
-    );
-}
-
-if (!$campaignId) {
-    http_response_code(502);
-
-    exit(
-        'This offer could not be prepared.'
-    );
-}
-
-/*
- * Load the campaign record.
- */
-$campaign = getCampaign(
-    $pdo,
-    $campaignId
+$campaignStmt = $pdo->prepare(
+    'SELECT id
+     FROM campaigns
+     WHERE network_id = ?
+       AND external_offer_id = ?
+     LIMIT 1'
 );
 
-if (!$campaign) {
+
+$campaignStmt->execute([
+    $networkId,
+    $offerId
+]);
+
+
+$existingCampaignId = $campaignStmt->fetchColumn();
+
+
+// ==================================================
+// EXISTING CAMPAIGN
+// ==================================================
+
+if ($existingCampaignId !== false) {
+
+    $campaignId = (int) $existingCampaignId;
+
+
+    // --------------------------------------------------
+    // Load actual database campaign
+    // --------------------------------------------------
+
+    $campaign = getCampaign(
+        $pdo,
+        $campaignId
+    );
+
+
+    if (!$campaign) {
+
+        http_response_code(404);
+
+        exit(
+            'Offer not found.'
+        );
+    }
+
+
+    // --------------------------------------------------
+    // ADMIN STATUS IS AUTHORITATIVE
+    // --------------------------------------------------
+
+    $status = strtoupper(
+        trim(
+            (string) (
+                $campaign['status']
+                ?? ''
+            )
+        )
+    );
+
+
+    $approvalStatus = strtoupper(
+        trim(
+            (string) (
+                $campaign['approval_status']
+                ?? ''
+            )
+        )
+    );
+
+
+    if (
+        $status !== 'ACTIVE' ||
+        $approvalStatus !== 'APPROVED'
+    ) {
+
+        http_response_code(403);
+
+        exit(
+            'This offer is not currently available.'
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Final campaign safety check
+    // --------------------------------------------------
+
+    if (!isCampaignAllowed(
+        $pdo,
+        $campaign
+    )) {
+
+        http_response_code(403);
+
+        exit(
+            'This offer is not available.'
+        );
+    }
+
+
+// ==================================================
+// NEW CAMPAIGN
+// ==================================================
+
+} else {
+
+    /*
+     * This is a safe OGAds offer that has never
+     * been stored in the campaigns table.
+     *
+     * We can create the campaign here so the
+     * existing live-offer workflow continues to work.
+     */
+
+    $ogadsOffer = [
+
+        'offerid' => $offerId,
+
+        'name_short' => (
+            $selectedOffer['title']
+            ?? 'OGAds Offer'
+        ),
+
+        'name' => (
+            $selectedOffer['title']
+            ?? 'OGAds Offer'
+        ),
+
+        'description' => (
+            $selectedOffer['description']
+            ?? ''
+        ),
+
+        'adcopy' => (
+            $selectedOffer['instructions']
+            ?? ''
+        ),
+
+        'country' => (
+            $selectedOffer['countries']
+            ?? ''
+        ),
+
+        'device' => (
+            $selectedOffer['devices']
+            ?? ''
+        ),
+
+        'link' => $networkOfferUrl,
+
+        'picture' => (
+            $selectedOffer['image_url']
+            ?? ''
+        ),
+
+        'payout' => $networkPayout,
+
+    ];
+
+
+    try {
+
+        $campaignId = syncOgadsOffer(
+            $pdo,
+            $networkId,
+            $ogadsOffer
+        );
+
+    } catch (Throwable $e) {
+
+        http_response_code(500);
+
+        exit(
+            'Unable to prepare this offer. Please try again.'
+        );
+    }
+
+
+    if (!$campaignId) {
+
+        http_response_code(502);
+
+        exit(
+            'This offer could not be prepared.'
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Load newly-created campaign
+    // --------------------------------------------------
+
+    $campaign = getCampaign(
+        $pdo,
+        $campaignId
+    );
+
+
+    if (!$campaign) {
+
+        http_response_code(404);
+
+        exit(
+            'Offer not found.'
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Final status check
+    // --------------------------------------------------
+
+    $status = strtoupper(
+        trim(
+            (string) (
+                $campaign['status']
+                ?? ''
+            )
+        )
+    );
+
+
+    $approvalStatus = strtoupper(
+        trim(
+            (string) (
+                $campaign['approval_status']
+                ?? ''
+            )
+        )
+    );
+
+
+    if (
+        $status !== 'ACTIVE' ||
+        $approvalStatus !== 'APPROVED'
+    ) {
+
+        http_response_code(403);
+
+        exit(
+            'This offer is not currently available.'
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Final campaign safety check
+    // --------------------------------------------------
+
+    if (!isCampaignAllowed(
+        $pdo,
+        $campaign
+    )) {
+
+        http_response_code(403);
+
+        exit(
+            'This offer is not available.'
+        );
+    }
+}
+
+
+// ==================================================
+// FINAL FRESH DATABASE CHECK
+// ==================================================
+//
+// This protects against an admin pausing the campaign
+// after the earlier lookup but before the click is
+// created.
+//
+// ==================================================
+
+$freshCampaignStmt = $pdo->prepare(
+    'SELECT
+        id,
+        status,
+        approval_status
+     FROM campaigns
+     WHERE id = ?
+     LIMIT 1'
+);
+
+
+$freshCampaignStmt->execute([
+    $campaignId
+]);
+
+
+$freshCampaign = $freshCampaignStmt->fetch();
+
+
+if (!$freshCampaign) {
+
     http_response_code(404);
 
     exit(
@@ -285,52 +539,44 @@ if (!$campaign) {
     );
 }
 
-/*
- * Final campaign safety/status check.
- *
- * We do not check account-country eligibility here.
- * The offer came directly from the visitor-specific
- * OGAds inventory stored in the session.
- */
+
+$freshStatus = strtoupper(
+    trim(
+        (string) (
+            $freshCampaign['status']
+            ?? ''
+        )
+    )
+);
+
+
+$freshApprovalStatus = strtoupper(
+    trim(
+        (string) (
+            $freshCampaign['approval_status']
+            ?? ''
+        )
+    )
+);
+
+
 if (
-    ($campaign['status'] ?? '') !== 'ACTIVE' ||
-    ($campaign['approval_status'] ?? '') !== 'APPROVED'
+    $freshStatus !== 'ACTIVE' ||
+    $freshApprovalStatus !== 'APPROVED'
 ) {
+
     http_response_code(403);
 
     exit(
-        'This offer is not currently available.'
+        'This offer is no longer available.'
     );
 }
 
-if (!isCampaignAllowed(
-    $pdo,
-    $campaign
-)) {
-    http_response_code(403);
 
-    exit(
-        'This offer is not available.'
-    );
-}
+// ==================================================
+// CREATE CAMPAIGN CLICK
+// ==================================================
 
-/*
- * Create a unique tracking ID.
- *
- * This ID will be sent to OGAds as aff_sub4.
- *
- * Later:
- *
- * OGAds
- *   ↓
- * postback.php
- *   ↓
- * campaign_clicks
- *   ↓
- * conversions
- *   ↓
- * wallet_transactions
- */
 try {
 
     $trackingId = createCampaignClick(
@@ -350,32 +596,40 @@ try {
     );
 }
 
-/*
- * Keep the active tracking information in the session.
- */
+
+// ==================================================
+// STORE ACTIVE TRACKING INFORMATION
+// ==================================================
+
 $_SESSION['active_offer_tracking_id'] =
     $trackingId;
+
 
 $_SESSION['active_offer_campaign_id'] =
     $campaignId;
 
-/*
- * Add our tracking ID to the real OGAds URL.
- */
+
+// ==================================================
+// ADD OGADS TRACKING ID
+// ==================================================
+
 $separator = (
     strpos($networkOfferUrl, '?') !== false
 )
     ? '&'
     : '?';
 
+
 $networkOfferUrl .=
     $separator .
     'aff_sub4=' .
     rawurlencode($trackingId);
 
-/*
- * Send the visitor to the actual OGAds offer.
- */
+
+// ==================================================
+// REDIRECT TO OGADS
+// ==================================================
+
 header(
     'Location: ' . $networkOfferUrl,
     true,
