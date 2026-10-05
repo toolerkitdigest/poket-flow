@@ -38,7 +38,21 @@ if (!$user) {
 
 
 // --------------------------------------------------
-// Read OGAds offer ID
+// Read network
+// --------------------------------------------------
+
+$network = strtolower(
+    trim(
+        (string) (
+            $_GET['network']
+            ?? 'ogads'
+        )
+    )
+);
+
+
+// --------------------------------------------------
+// Read offer ID
 // --------------------------------------------------
 
 $offerId = filter_input(
@@ -62,8 +76,297 @@ $offerId = (string) $offerId;
 
 
 // ==================================================
-// READ SESSION OFFER
+// NETWORK ROUTING
 // ==================================================
+
+if (
+    $network !== 'ogads' &&
+    $network !== 'cpagrip'
+) {
+
+    http_response_code(400);
+
+    exit(
+        'Invalid offer network.'
+    );
+}
+
+
+// ==================================================
+// CPAGRIP
+// ==================================================
+
+if ($network === 'cpagrip') {
+
+    // --------------------------------------------------
+    // Find CPAGrip network
+    // --------------------------------------------------
+
+    $networkStmt = $pdo->prepare(
+        'SELECT
+            id,
+            slug,
+            status
+         FROM networks
+         WHERE slug = ?
+         LIMIT 1'
+    );
+
+
+    $networkStmt->execute([
+        'cpagrip'
+    ]);
+
+
+    $networkRow = $networkStmt->fetch();
+
+
+    if (!$networkRow) {
+
+        http_response_code(404);
+
+        exit(
+            'Offer network not found.'
+        );
+    }
+
+
+    $networkStatus = strtoupper(
+        trim(
+            (string) (
+                $networkRow['status']
+                ?? ''
+            )
+        )
+    );
+
+
+    if ($networkStatus !== 'ACTIVE') {
+
+        http_response_code(503);
+
+        exit(
+            'This offer network is temporarily unavailable.'
+        );
+    }
+
+
+    $networkId = (int) $networkRow['id'];
+
+
+    // --------------------------------------------------
+    // Load campaign from database
+    // --------------------------------------------------
+    //
+    // CPAGrip campaigns are synchronized into the
+    // campaigns table by offers.php.
+    //
+    // The database is authoritative here.
+    //
+    // --------------------------------------------------
+
+    $campaignStmt = $pdo->prepare(
+        'SELECT
+            id,
+            source_type,
+            network_id,
+            external_offer_id,
+            network_offer_url,
+            image_url,
+            title,
+            description,
+            category,
+            instructions,
+            network_payout,
+            worker_reward,
+            countries,
+            devices,
+            os,
+            incentive_allowed,
+            status,
+            approval_status,
+            start_at,
+            end_at
+         FROM campaigns
+         WHERE network_id = ?
+           AND external_offer_id = ?
+         LIMIT 1'
+    );
+
+
+    $campaignStmt->execute([
+        $networkId,
+        $offerId
+    ]);
+
+
+    $campaign = $campaignStmt->fetch();
+
+
+    if (!$campaign) {
+
+        http_response_code(404);
+
+        exit(
+            'This offer is no longer available.'
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Admin approval is authoritative
+    // --------------------------------------------------
+
+    $status = strtoupper(
+        trim(
+            (string) (
+                $campaign['status']
+                ?? ''
+            )
+        )
+    );
+
+
+    $approvalStatus = strtoupper(
+        trim(
+            (string) (
+                $campaign['approval_status']
+                ?? ''
+            )
+        )
+    );
+
+
+    if (
+        $status !== 'ACTIVE' ||
+        $approvalStatus !== 'APPROVED'
+    ) {
+
+        http_response_code(403);
+
+        exit(
+            'This offer is not currently available.'
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Final safety / eligibility check
+    // --------------------------------------------------
+
+    if (!canStartCampaign(
+        $pdo,
+        $campaign,
+        $user
+    )) {
+
+        http_response_code(403);
+
+        exit(
+            'This offer is not available for your account.'
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Get destination URL
+    // --------------------------------------------------
+
+    $networkOfferUrl = trim(
+        (string) (
+            $campaign['network_offer_url']
+            ?? ''
+        )
+    );
+
+
+    if ($networkOfferUrl === '') {
+
+        http_response_code(502);
+
+        exit(
+            'This offer is temporarily unavailable.'
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Create campaign click
+    // --------------------------------------------------
+
+    try {
+
+        $trackingId = createCampaignClick(
+            $pdo,
+            (int) $campaign['id'],
+            $userId,
+            $_SERVER['REMOTE_ADDR'] ?? null,
+            $_SERVER['HTTP_USER_AGENT'] ?? null
+        );
+
+    } catch (Throwable $e) {
+
+        http_response_code(500);
+
+        exit(
+            'Unable to start this offer. Please try again.'
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Store active tracking information
+    // --------------------------------------------------
+
+    $_SESSION['active_offer_tracking_id'] =
+        $trackingId;
+
+
+    $_SESSION['active_offer_campaign_id'] =
+        (int) $campaign['id'];
+
+
+    $_SESSION['active_offer_network'] =
+        'cpagrip';
+
+
+    // --------------------------------------------------
+    // CPAGrip redirect
+    // --------------------------------------------------
+    //
+    // IMPORTANT:
+    //
+    // We intentionally do NOT append tracking_id
+    // to the CPAGrip URL yet.
+    //
+    // We will connect the CPAGrip postback/sub-ID
+    // mechanism separately after confirming the exact
+    // CPAGrip tracking method.
+    //
+    // --------------------------------------------------
+
+    header(
+        'Location: ' . $networkOfferUrl,
+        true,
+        302
+    );
+
+    exit;
+}
+
+
+// ==================================================
+// OGADS
+// ==================================================
+//
+// Existing OGAds workflow remains here.
+//
+// ==================================================
+
+
+// --------------------------------------------------
+// Read session offer
+// --------------------------------------------------
 
 $sessionOffers = $_SESSION['ogads_offers'] ?? null;
 
@@ -82,7 +385,7 @@ if (
 
 
 // --------------------------------------------------
-// Find selected offer
+// Find selected OGAds offer
 // --------------------------------------------------
 
 $selectedOffer = null;
@@ -118,7 +421,7 @@ if ($selectedOffer === null) {
 
 
 // ==================================================
-// BASIC OFFER VALIDATION
+// BASIC OGADS OFFER VALIDATION
 // ==================================================
 
 $networkOfferUrl = trim(
@@ -224,18 +527,6 @@ try {
 // ==================================================
 // IMPORTANT ADMIN STATUS CHECK
 // ==================================================
-//
-// Before synchronizing anything, look for an existing
-// PoketFlow campaign.
-//
-// If the campaign exists, its database status is
-// authoritative.
-//
-// We NEVER overwrite an existing campaign's
-// status/approval decision just because OGAds is
-// currently returning the offer.
-//
-// ==================================================
 
 $campaignStmt = $pdo->prepare(
     'SELECT id
@@ -256,17 +547,13 @@ $existingCampaignId = $campaignStmt->fetchColumn();
 
 
 // ==================================================
-// EXISTING CAMPAIGN
+// EXISTING OGADS CAMPAIGN
 // ==================================================
 
 if ($existingCampaignId !== false) {
 
     $campaignId = (int) $existingCampaignId;
 
-
-    // --------------------------------------------------
-    // Load actual database campaign
-    // --------------------------------------------------
 
     $campaign = getCampaign(
         $pdo,
@@ -283,10 +570,6 @@ if ($existingCampaignId !== false) {
         );
     }
 
-
-    // --------------------------------------------------
-    // ADMIN STATUS IS AUTHORITATIVE
-    // --------------------------------------------------
 
     $status = strtoupper(
         trim(
@@ -321,10 +604,6 @@ if ($existingCampaignId !== false) {
     }
 
 
-    // --------------------------------------------------
-    // Final campaign safety check
-    // --------------------------------------------------
-
     if (!isCampaignAllowed(
         $pdo,
         $campaign
@@ -339,18 +618,10 @@ if ($existingCampaignId !== false) {
 
 
 // ==================================================
-// NEW CAMPAIGN
+// NEW OGADS CAMPAIGN
 // ==================================================
 
 } else {
-
-    /*
-     * This is a safe OGAds offer that has never
-     * been stored in the campaigns table.
-     *
-     * We can create the campaign here so the
-     * existing live-offer workflow continues to work.
-     */
 
     $ogadsOffer = [
 
@@ -426,10 +697,6 @@ if ($existingCampaignId !== false) {
     }
 
 
-    // --------------------------------------------------
-    // Load newly-created campaign
-    // --------------------------------------------------
-
     $campaign = getCampaign(
         $pdo,
         $campaignId
@@ -445,10 +712,6 @@ if ($existingCampaignId !== false) {
         );
     }
 
-
-    // --------------------------------------------------
-    // Final status check
-    // --------------------------------------------------
 
     $status = strtoupper(
         trim(
@@ -483,10 +746,6 @@ if ($existingCampaignId !== false) {
     }
 
 
-    // --------------------------------------------------
-    // Final campaign safety check
-    // --------------------------------------------------
-
     if (!isCampaignAllowed(
         $pdo,
         $campaign
@@ -503,12 +762,6 @@ if ($existingCampaignId !== false) {
 
 // ==================================================
 // FINAL FRESH DATABASE CHECK
-// ==================================================
-//
-// This protects against an admin pausing the campaign
-// after the earlier lookup but before the click is
-// created.
-//
 // ==================================================
 
 $freshCampaignStmt = $pdo->prepare(
@@ -574,7 +827,7 @@ if (
 
 
 // ==================================================
-// CREATE CAMPAIGN CLICK
+// CREATE OGADS CAMPAIGN CLICK
 // ==================================================
 
 try {
@@ -607,6 +860,10 @@ $_SESSION['active_offer_tracking_id'] =
 
 $_SESSION['active_offer_campaign_id'] =
     $campaignId;
+
+
+$_SESSION['active_offer_network'] =
+    'ogads';
 
 
 // ==================================================
