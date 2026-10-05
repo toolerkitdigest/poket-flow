@@ -10,7 +10,7 @@ echo '<h2>PoketFlow CPAGrip Test</h2>';
 
 echo '<p>PHP is running.</p>';
 
-$configPath = '/home/YOUR_ACCOUNT/private/poketflow-cpagrip.php';
+$configPath = '/home/u541027683/private/poketflow-cpagrip.php';
 
 echo '<p>Checking configuration file...</p>';
 
