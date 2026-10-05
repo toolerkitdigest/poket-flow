@@ -27,7 +27,8 @@ $user = getUser(
 );
 
 $ogadsError = null;
-
+$cpagripError = null;
+$cpagripOffers = [];
 
 // --------------------------------------------------
 // Safety check
