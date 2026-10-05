@@ -6,74 +6,114 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
-echo '<h2>PoketFlow CPAGrip Test</h2>';
-
-echo '<p>PHP is running.</p>';
+echo '<h2>PoketFlow CPAGrip Feed Test</h2>';
 
 $configPath = '/home/u541027683/private/poketflow-cpagrip.php';
 
-echo '<p>Checking configuration file...</p>';
-
 if (!file_exists($configPath)) {
-    die(
-        '<p style="color:red;">
-        ERROR: CPAGrip configuration file was not found.<br><br>
-        Current path being checked:<br>
-        <strong>' .
-        htmlspecialchars($configPath, ENT_QUOTES, 'UTF-8') .
-        '</strong>
-        </p>'
-    );
+    die('CPAGrip configuration file not found.');
 }
-
-echo '<p style="color:green;">Configuration file exists.</p>';
 
 $config = require $configPath;
 
-echo '<p style="color:green;">Configuration loaded successfully.</p>';
-
 if (!is_array($config)) {
-    die(
-        '<p style="color:red;">
-        ERROR: Configuration file must return an array.
-        </p>'
-    );
+    die('Invalid CPAGrip configuration.');
 }
 
-if (empty($config['user_id'])) {
-    die(
-        '<p style="color:red;">
-        ERROR: CPAGrip user_id is missing.
-        </p>'
-    );
+$userId = $config['user_id'];
+$privateKey = $config['private_key'];
+
+$ip = isset($_SERVER['REMOTE_ADDR'])
+    ? $_SERVER['REMOTE_ADDR']
+    : '';
+
+$userAgent = isset($_SERVER['HTTP_USER_AGENT'])
+    ? $_SERVER['HTTP_USER_AGENT']
+    : '';
+
+$params = [
+    'user_id' => $userId,
+    'key' => $privateKey,
+    'ip' => $ip,
+    'ua' => $userAgent,
+    'limit' => 20,
+];
+
+$url = 'https://www.cpagrip.com/common/offer_feed_json.php?'
+    . http_build_query($params);
+
+echo '<p>Requesting CPAGrip JSON feed...</p>';
+
+$ch = curl_init();
+
+curl_setopt_array(
+    $ch,
+    [
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_HTTPHEADER => [
+            'Accept: application/json',
+        ],
+    ]
+);
+
+$response = curl_exec($ch);
+
+$httpCode = (int) curl_getinfo(
+    $ch,
+    CURLINFO_HTTP_CODE
+);
+
+$curlError = curl_error($ch);
+
+curl_close($ch);
+
+echo '<p>HTTP Status: <strong>'
+    . htmlspecialchars((string) $httpCode, ENT_QUOTES, 'UTF-8')
+    . '</strong></p>';
+
+if ($response === false) {
+    echo '<p style="color:red;">cURL request failed.</p>';
+
+    echo '<pre>'
+        . htmlspecialchars($curlError, ENT_QUOTES, 'UTF-8')
+        . '</pre>';
+
+    exit;
 }
 
-if (empty($config['private_key'])) {
-    die(
-        '<p style="color:red;">
-        ERROR: CPAGrip private_key is missing.
-        </p>'
-    );
+if ($curlError !== '') {
+    echo '<p style="color:red;">cURL error:</p>';
+
+    echo '<pre>'
+        . htmlspecialchars($curlError, ENT_QUOTES, 'UTF-8')
+        . '</pre>';
+
+    exit;
 }
 
-echo '<p style="color:green;">CPAGrip credentials are present.</p>';
+echo '<p style="color:green;">CPAGrip responded.</p>';
 
-echo '<p>Testing cURL...</p>';
+echo '<h3>Raw CPAGrip Response</h3>';
 
-if (!function_exists('curl_init')) {
-    die(
-        '<p style="color:red;">
-        ERROR: PHP cURL extension is not enabled.
-        </p>'
-    );
-}
+echo '<pre style="
+    white-space: pre-wrap;
+    background: #111827;
+    color: #f8fafc;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+">';
 
-echo '<p style="color:green;">cURL is available.</p>';
+echo htmlspecialchars(
+    $response,
+    ENT_QUOTES,
+    'UTF-8'
+);
 
-echo '<hr>';
-
-echo '<p><strong>Configuration test completed.</strong></p>';
-
-echo '<p>
-No private key or credential value is displayed by this test.
-</p>';
+echo '</pre>';
