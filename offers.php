@@ -1102,6 +1102,14 @@ function getOfferCategory(array $campaign): string
 
 
                         <div class="offer-body">
+                            <span class="offer-network">
+    <?= e((string) (
+        $campaign['network']
+        ?? 'PoketFlow'
+    )) ?>
+</span>
+
+                            
 
                             <h3>
                                 No offers available right now
