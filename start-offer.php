@@ -313,6 +313,25 @@ if ($network === 'cpagrip') {
         );
     }
 
+    
+$separator = 
+    (strpos($campaign['network_offer_url'], '?') !== false)
+    ? '&'
+    : '?';
+
+$redirectUrl = 
+    $campaign['network_offer_url']
+    . $separator
+    . 'tracking_id='
+    . rawurlencode($trackingId);
+
+
+$_SESSION['active_campaign_tracking_id'] = $trackingId;
+$_SESSION['active_campaign_id'] = (int) $campaign['id'];
+$_SESSION['active_campaign_network'] = 'cpagrip';
+
+header('Location: ' . $redirectUrl);
+exit;
 
     // --------------------------------------------------
     // Store active tracking information
