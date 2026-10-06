@@ -112,14 +112,11 @@ if ($network === 'cpagrip') {
          LIMIT 1'
     );
 
-
     $networkStmt->execute([
         'cpagrip'
     ]);
 
-
     $networkRow = $networkStmt->fetch();
-
 
     if (!$networkRow) {
 
@@ -130,7 +127,6 @@ if ($network === 'cpagrip') {
         );
     }
 
-
     $networkStatus = strtoupper(
         trim(
             (string) (
@@ -140,7 +136,6 @@ if ($network === 'cpagrip') {
         )
     );
 
-
     if ($networkStatus !== 'ACTIVE') {
 
         http_response_code(503);
@@ -149,7 +144,6 @@ if ($network === 'cpagrip') {
             'This offer network is temporarily unavailable.'
         );
     }
-
 
     $networkId = (int) $networkRow['id'];
 
@@ -178,7 +172,9 @@ if ($network === 'cpagrip') {
             category,
             instructions,
             network_payout,
+            reward_rate,
             worker_reward,
+            platform_margin,
             countries,
             devices,
             os,
@@ -193,15 +189,12 @@ if ($network === 'cpagrip') {
          LIMIT 1'
     );
 
-
     $campaignStmt->execute([
         $networkId,
         $offerId
     ]);
 
-
     $campaign = $campaignStmt->fetch();
-
 
     if (!$campaign) {
 
@@ -226,7 +219,6 @@ if ($network === 'cpagrip') {
         )
     );
 
-
     $approvalStatus = strtoupper(
         trim(
             (string) (
@@ -235,7 +227,6 @@ if ($network === 'cpagrip') {
             )
         )
     );
-
 
     if (
         $status !== 'ACTIVE' ||
@@ -279,7 +270,6 @@ if ($network === 'cpagrip') {
         )
     );
 
-
     if ($networkOfferUrl === '') {
 
         http_response_code(502);
@@ -292,6 +282,11 @@ if ($network === 'cpagrip') {
 
     // --------------------------------------------------
     // Create campaign click
+    // --------------------------------------------------
+    //
+    // This creates the PoketFlow tracking ID that will
+    // later be returned by CPAGrip in the postback.
+    //
     // --------------------------------------------------
 
     try {
@@ -306,6 +301,11 @@ if ($network === 'cpagrip') {
 
     } catch (Throwable $e) {
 
+        error_log(
+            'PoketFlow CPAGrip click error: '
+            . $e->getMessage()
+        );
+
         http_response_code(500);
 
         exit(
@@ -313,25 +313,6 @@ if ($network === 'cpagrip') {
         );
     }
 
-    
-$separator = 
-    (strpos($campaign['network_offer_url'], '?') !== false)
-    ? '&'
-    : '?';
-
-$redirectUrl = 
-    $campaign['network_offer_url']
-    . $separator
-    . 'tracking_id='
-    . rawurlencode($trackingId);
-
-
-$_SESSION['active_campaign_tracking_id'] = $trackingId;
-$_SESSION['active_campaign_id'] = (int) $campaign['id'];
-$_SESSION['active_campaign_network'] = 'cpagrip';
-
-header('Location: ' . $redirectUrl);
-exit;
 
     // --------------------------------------------------
     // Store active tracking information
@@ -340,39 +321,51 @@ exit;
     $_SESSION['active_offer_tracking_id'] =
         $trackingId;
 
-
     $_SESSION['active_offer_campaign_id'] =
         (int) $campaign['id'];
-
 
     $_SESSION['active_offer_network'] =
         'cpagrip';
 
 
     // --------------------------------------------------
-    // CPAGrip redirect
+    // Add CPAGrip tracking ID
     // --------------------------------------------------
     //
-    // IMPORTANT:
+    // CPAGrip expects:
     //
-    // We intentionally do NOT append tracking_id
-    // to the CPAGrip URL yet.
+    // &tracking_id=YOUR_TRACKING_ID
     //
-    // We will connect the CPAGrip postback/sub-ID
-    // mechanism separately after confirming the exact
-    // CPAGrip tracking method.
+    // This same tracking ID is returned to our
+    // postback.php when the offer converts.
     //
     // --------------------------------------------------
 
+    $separator = (
+        strpos($networkOfferUrl, '?') !== false
+    )
+        ? '&'
+        : '?';
+
+    $redirectUrl =
+        $networkOfferUrl
+        . $separator
+        . 'tracking_id='
+        . rawurlencode($trackingId);
+
+
+    // --------------------------------------------------
+    // Redirect to CPAGrip
+    // --------------------------------------------------
+
     header(
-        'Location: ' . $networkOfferUrl,
+        'Location: ' . $redirectUrl,
         true,
         302
     );
 
     exit;
 }
-
 
 // ==================================================
 // OGADS
