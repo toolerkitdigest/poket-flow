@@ -140,23 +140,7 @@ if (!isCampaignAllowed(
     $existingId = $stmt->fetchColumn();
 
 
-    echo '<pre>';
-
-    echo "=== CPAGrip Campaign Lookup ===\n\n";
-
-    echo "Network ID: ";
-    var_dump($networkId);
-
-    echo "External Offer ID: ";
-    var_dump($externalOfferId);
-
-    echo "\nExisting Campaign ID: ";
-    var_dump($existingId);
-
-    echo '</pre>';
-
-    exit;
-
+    
     if ($existingId !== false) {
 
         $platformMargin = round(
@@ -208,6 +192,34 @@ if (!isCampaignAllowed(
             '',
             (int) $existingId,
         ]);
+
+        echo '<pre>';
+
+        echo "=== CPAGrip UPDATE Result ===\n\n";
+
+        echo "Updated Campaign ID: ";
+        var_dump($existingId);
+
+        echo "Rows affected: ";
+        var_dump($stmt->rowCount());
+
+        echo "\nNow loading campaign...\n";
+
+        $testCampaign = getCampaign(
+        $pdo,
+       (int) $existingId
+       );
+
+       echo "\ngetCampaign() result:\n";
+       print_r($testCampaign);
+
+       echo '</pre>';
+
+       exit;
+
+
+
+        
 
         return (int) $existingId;
     }
