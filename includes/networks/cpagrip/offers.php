@@ -8,18 +8,12 @@ declare(strict_types=1);
  *
  * PHP 8.3
  *
- * Diagnostic version
+ * TEMPORARY DIAGNOSTIC VERSION
  */
 
 require_once dirname(__DIR__, 2) . '/cpagrip.php';
 
 
-/**
- * Synchronize one CPAGrip offer into campaigns.
- *
- * Existing status and approval_status are never
- * overwritten by a network refresh.
- */
 function syncCpagripDisplayOffer(
     PDO $pdo,
     int $networkId,
@@ -33,7 +27,6 @@ function syncCpagripDisplayOffer(
     if ($externalOfferId === '') {
         return null;
     }
-
 
     $title = trim(
         (string) ($offer['title'] ?? 'CPAGrip Offer')
@@ -51,7 +44,6 @@ function syncCpagripDisplayOffer(
         $category = 'Offer';
     }
 
-
     $networkOfferUrl = trim(
         (string) ($offer['offerlink'] ?? '')
     );
@@ -68,19 +60,12 @@ function syncCpagripDisplayOffer(
         (string) ($offer['accepted_countries'] ?? '')
     );
 
-
-    /*
-     * CPAGrip feed does not currently provide
-     * a separate OS field in our normalized data.
-     */
     $devices = $offerType;
-
 
     $networkPayout = round(
         (float) ($offer['payout'] ?? 0),
         2
     );
-
 
     if (
         $title === ''
@@ -90,20 +75,11 @@ function syncCpagripDisplayOffer(
         return null;
     }
 
-
-    /*
-     * The existing CPAGrip integration calculates
-     * the worker reward before returning the offer.
-     */
     $workerReward = round(
         (float) ($offer['reward'] ?? 0),
         2
     );
 
-
-    /*
-     * Safety candidate.
-     */
     $safetyCandidate = [
         'source_type' => 'CPA_NETWORK',
         'network_id' => $networkId,
@@ -134,11 +110,6 @@ function syncCpagripDisplayOffer(
         'approval_status' => 'APPROVED',
     ];
 
-
-    /*
-     * Apply the existing PoketFlow campaign
-     * safety rules before saving the offer.
-     */
     if (!isCampaignAllowed(
         $pdo,
         $safetyCandidate
@@ -146,10 +117,6 @@ function syncCpagripDisplayOffer(
         return null;
     }
 
-
-    /*
-     * Look for an existing CPAGrip campaign.
-     */
     $stmt = $pdo->prepare(
         'SELECT id
          FROM campaigns
@@ -165,15 +132,6 @@ function syncCpagripDisplayOffer(
 
     $existingId = $stmt->fetchColumn();
 
-
-    /*
-     * Existing campaign:
-     *
-     * Update operational information only.
-     *
-     * IMPORTANT:
-     * status and approval_status remain untouched.
-     */
     if ($existingId !== false) {
 
         $platformMargin = round(
@@ -187,7 +145,6 @@ function syncCpagripDisplayOffer(
                 2
             )
             : 0;
-
 
         $stmt = $pdo->prepare(
             'UPDATE campaigns
@@ -227,14 +184,9 @@ function syncCpagripDisplayOffer(
             (int) $existingId,
         ]);
 
-
         return (int) $existingId;
     }
 
-
-    /*
-     * New CPAGrip offers require administrator approval.
-     */
     $platformMargin = round(
         $networkPayout - $workerReward,
         2
@@ -246,7 +198,6 @@ function syncCpagripDisplayOffer(
             2
         )
         : 0;
-
 
     $stmt = $pdo->prepare(
         'INSERT INTO campaigns (
@@ -320,42 +271,32 @@ function syncCpagripDisplayOffer(
         $devices,
     ]);
 
-
     return (int) $pdo->lastInsertId();
 }
 
 
-/**
- * Fetch, synchronize, and prepare CPAGrip offers
- * for display on PoketFlow.
- */
 function getCpagripDisplayOffers(
     PDO $pdo
 ): array {
 
-    /*
-     * cpagrip.php remains responsible for:
-     *
-     * - private credentials
-     * - visitor IP
-     * - user agent
-     * - tracking ID
-     * - CPAGrip API request
-     * - JSON parsing
-     * - reward calculation
-     * - normalization
-     */
     $offers = require dirname(__DIR__, 2) . '/cpagrip.php';
-
 
     if (!is_array($offers)) {
         return [];
     }
 
-
     /*
-     * Find the active CPAGrip network record.
+     * TEMPORARY DIAGNOSTIC
+     *
+     * Stop immediately after CPAGrip feed loading.
      */
+    echo '<pre>';
+    echo "CPAGrip feed count: " . count($offers) . "\n\n";
+    print_r($offers);
+    echo '</pre>';
+    exit;
+
+
     $stmt = $pdo->prepare(
         'SELECT id
          FROM networks
@@ -371,18 +312,15 @@ function getCpagripDisplayOffers(
 
     $networkId = $stmt->fetchColumn();
 
-
     if ($networkId === false) {
         throw new RuntimeException(
             'CPAGrip network is not configured.'
         );
     }
 
-
     $networkId = (int) $networkId;
 
     $campaigns = [];
-
 
     foreach ($offers as $offer) {
 
@@ -390,46 +328,25 @@ function getCpagripDisplayOffers(
             continue;
         }
 
-    
-        
-        echo '<pre>';
-        echo "CPAGrip LIVE OFFER:\n\n";
-        print_r($offer);
-        echo '</pre>';
-        exit;
-        
-
-
         $campaignId = syncCpagripDisplayOffer(
             $pdo,
             $networkId,
             $offer
         );
 
-
         if ($campaignId === null) {
             continue;
         }
 
-
-        /*
-         * Reload the authoritative campaign record.
-         */
         $campaign = getCampaign(
             $pdo,
             $campaignId
         );
-        
 
         if (!$campaign) {
             continue;
         }
 
-
-        /*
-         * Only approved active offers may reach
-         * the public offers page.
-         */
         if (
             strtoupper((string) ($campaign['status'] ?? ''))
                 !== 'ACTIVE'
@@ -444,10 +361,6 @@ function getCpagripDisplayOffers(
             continue;
         }
 
-
-        /*
-         * Final campaign safety check.
-         */
         if (!isCampaignAllowed(
             $pdo,
             $campaign
@@ -455,40 +368,10 @@ function getCpagripDisplayOffers(
             continue;
         }
 
-
         $campaign['network'] = 'CPAGrip';
-
 
         $campaigns[] = $campaign;
     }
 
-
     return $campaigns;
 }
-
-Now test it
-
-Upload/save that file at:
-
-"public_html/includes/networks/cpagrip/offers.php"
-
-Then open:
-
-"https://poketflow.com/offers.php"
-
-Because we already established that CPAGrip is returning offer 70075, we expect the diagnostic to show something like:
-
-CPAGrip campaign ID: 92
-
-Array
-(
-    [id] => 92
-    [source_type] => CPA_NETWORK
-    [network_id] => 2
-    [external_offer_id] => 70075
-    ...
-    [status] => ACTIVE
-    [approval_status] => APPROVED
-)
-
-Send me exactly what appears on the page. Don't change anything else yet. That result will tell us whether the problem is before or after "getCampaign()".
