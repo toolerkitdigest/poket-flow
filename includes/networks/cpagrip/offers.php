@@ -20,6 +20,27 @@ function syncCpagripDisplayOffer(
     array $offer
 ): ?int {
 
+    echo '<pre>';
+
+    echo "=== CPAGrip Sync Diagnostic ===\n\n";
+
+    echo "Network ID: ";
+    var_dump($networkId);
+
+    echo "\nOffer:\n";
+    print_r($offer);
+
+    $externalOfferId = trim(
+        (string) ($offer['offer_id'] ?? '')
+    );
+
+    echo "\nExternal Offer ID: ";
+    var_dump($externalOfferId);
+
+    echo '</pre>';
+
+    exit;
+
     $externalOfferId = trim(
         (string) ($offer['offer_id'] ?? '')
     );
@@ -319,15 +340,6 @@ function getCpagripDisplayOffers(
         }
 
 
-        echo '<pre>';
-        echo "CPAGrip offer before sync:\n\n";
-        print_r($offer);
-
-        echo "\n\nNetwork ID: ";
-        var_dump($networkId);
-
-        echo '</pre>';
-        exit;
         
 
         $campaignId = syncCpagripDisplayOffer(
