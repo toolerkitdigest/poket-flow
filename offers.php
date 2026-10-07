@@ -865,6 +865,40 @@ function getOfferCategory(array $campaign): string
                             )
                         );
 
+
+                        // ------------------------------------------
+                        // Prepare unified Start Offer URL.
+                        //
+                        // Both OGAds and CPAGrip now use:
+                        //
+                        // start-offer.php
+                        //
+                        // The network parameter tells the launch
+                        // controller which CPA network to use.
+                        // ------------------------------------------
+
+                        $launchNetwork = strtolower(
+                            $network
+                        );
+
+
+                        $launchOfferId = (string) (
+                            $campaign[
+                                'external_offer_id'
+                            ] ?? ''
+                        );
+
+
+                        $startOfferUrl =
+                            'start-offer.php?network=' .
+                            rawurlencode(
+                                $launchNetwork
+                            ) .
+                            '&offer_id=' .
+                            rawurlencode(
+                                $launchOfferId
+                            );
+
                         ?>
 
 
@@ -943,46 +977,27 @@ function getOfferCategory(array $campaign): string
                                 </strong>
 
 
-                                <?php if (
-                                    strtolower($network)
-                                    === 'cpagrip'
-                                ): ?>
+                                <!--
+                                    UNIFIED START OFFER BUTTON
 
+                                    OGAds:
+                                    start-offer.php?network=ogads&offer_id=...
 
-                                    <a
-                                        href="<?= e(
-                                            (string) (
-                                                $campaign[
-                                                    'network_offer_url'
-                                                ] ?? ''
-                                            )
-                                        ) ?>"
-                                        class="btn btn-primary"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        Start →
-                                    </a>
+                                    CPAGrip:
+                                    start-offer.php?network=cpagrip&offer_id=...
 
+                                    Both networks therefore pass through
+                                    the same secure launch controller.
+                                -->
 
-                                <?php else: ?>
-
-
-                                    <a
-                                        href="start-offer.php?offer_id=<?= e(
-                                            (string) (
-                                                $campaign[
-                                                    'external_offer_id'
-                                                ] ?? ''
-                                            )
-                                        ) ?>"
-                                        class="btn btn-primary"
-                                    >
-                                        Start →
-                                    </a>
-
-
-                                <?php endif; ?>
+                                <a
+                                    href="<?= e(
+                                        $startOfferUrl
+                                    ) ?>"
+                                    class="btn btn-primary"
+                                >
+                                    Start →
+                                </a>
 
 
                             </div>
