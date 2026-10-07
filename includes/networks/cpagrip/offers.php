@@ -390,6 +390,15 @@ function getCpagripDisplayOffers(
             continue;
         }
 
+    
+        
+        echo '<pre>';
+        echo "CPAGrip LIVE OFFER:\n\n";
+        print_r($offer);
+        echo '</pre>';
+        exit;
+        
+
 
         $campaignId = syncCpagripDisplayOffer(
             $pdo,
@@ -410,20 +419,7 @@ function getCpagripDisplayOffers(
             $pdo,
             $campaignId
         );
-
-
-        /*
-         * TEMPORARY DIAGNOSTIC
-         *
-         * We are checking exactly what campaign
-         * record CPAGrip returns after synchronization.
-         */
-        echo '<pre>';
-        echo "CPAGrip campaign ID: " . $campaignId . "\n\n";
-        print_r($campaign);
-        echo '</pre>';
-        exit;
-
+        
 
         if (!$campaign) {
             continue;
