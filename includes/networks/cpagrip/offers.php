@@ -285,17 +285,7 @@ function getCpagripDisplayOffers(
         return [];
     }
 
-    /*
-     * TEMPORARY DIAGNOSTIC
-     *
-     * Stop immediately after CPAGrip feed loading.
-     */
-    echo '<pre>';
-    echo "CPAGrip feed count: " . count($offers) . "\n\n";
-    print_r($offers);
-    echo '</pre>';
-    exit;
-
+    
 
     $stmt = $pdo->prepare(
         'SELECT id
@@ -327,6 +317,18 @@ function getCpagripDisplayOffers(
         if (!is_array($offer)) {
             continue;
         }
+
+
+        echo '<pre>';
+        echo "CPAGrip offer before sync:\n\n";
+        print_r($offer);
+
+        echo "\n\nNetwork ID: ";
+        var_dump($networkId);
+
+        echo '</pre>';
+        exit;
+        
 
         $campaignId = syncCpagripDisplayOffer(
             $pdo,
