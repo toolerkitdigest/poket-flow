@@ -355,20 +355,7 @@ function getCpagripDisplayOffers(
      */
     $offers = require dirname(__DIR__, 2) . '/cpagrip.php';
 
-    echo '<pre>';
-echo "CPAGrip feed count: " . count($offers) . "\n\n";
-
-foreach ($offers as $offer) {
-    echo "Offer ID: " . ($offer['offer_id'] ?? 'N/A') . "\n";
-    echo "Title: " . ($offer['title'] ?? 'N/A') . "\n";
-    echo "Countries: " . ($offer['accepted_countries'] ?? 'N/A') . "\n";
-    echo "Payout: " . ($offer['payout'] ?? 'N/A') . "\n";
-    echo "-------------------------\n";
-}
-
-echo '</pre>';
-exit;
-
+    
 
     if (!is_array($offers)) {
         return [];
