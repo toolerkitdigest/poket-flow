@@ -116,20 +116,14 @@ function syncCpagripDisplayOffer(
     $pdo,
     $safetyCandidate
 );
-
-echo '<pre>';
-
-echo "=== CPAGrip Safety Result ===\n\n";
-
-echo "isCampaignAllowed(): ";
-var_dump($safetyAllowed);
-
-echo "\nSafety Candidate:\n";
-print_r($safetyCandidate);
-
-echo '</pre>';
-
-exit;
+    
+if (!isCampaignAllowed(
+    $pdo,
+    $safetyCandidate
+)) {
+    return null;
+}
+    
     $stmt = $pdo->prepare(
         'SELECT id
          FROM campaigns
@@ -144,6 +138,24 @@ exit;
     ]);
 
     $existingId = $stmt->fetchColumn();
+
+
+    echo '<pre>';
+
+    echo "=== CPAGrip Campaign Lookup ===\n\n";
+
+    echo "Network ID: ";
+    var_dump($networkId);
+
+    echo "External Offer ID: ";
+    var_dump($externalOfferId);
+
+    echo "\nExisting Campaign ID: ";
+    var_dump($existingId);
+
+    echo '</pre>';
+
+    exit;
 
     if ($existingId !== false) {
 
