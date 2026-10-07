@@ -116,14 +116,36 @@ function syncCpagripDisplayOffer(
     $pdo,
     $safetyCandidate
 );
-    
-if (!isCampaignAllowed(
+$finalSafetyCheck = isCampaignAllowed(
     $pdo,
-    $safetyCandidate
-)) {
-    return null;
-}
-    
+    $campaign
+);
+
+echo '<pre>';
+
+echo "=== FINAL CPAGrip SAFETY CHECK ===\n\n";
+
+echo "Campaign ID: ";
+var_dump($campaign['id']);
+
+echo "Status: ";
+var_dump($campaign['status']);
+
+echo "Approval Status: ";
+var_dump($campaign['approval_status']);
+
+echo "Countries: ";
+var_dump($campaign['countries']);
+
+echo "\nisCampaignAllowed(): ";
+var_dump($finalSafetyCheck);
+
+echo "\nComplete Campaign:\n";
+print_r($campaign);
+
+echo '</pre>';
+
+exit;
     $stmt = $pdo->prepare(
         'SELECT id
          FROM campaigns
@@ -192,32 +214,6 @@ if (!isCampaignAllowed(
             '',
             (int) $existingId,
         ]);
-
-        echo '<pre>';
-
-        echo "=== CPAGrip UPDATE Result ===\n\n";
-
-        echo "Updated Campaign ID: ";
-        var_dump($existingId);
-
-        echo "Rows affected: ";
-        var_dump($stmt->rowCount());
-
-        echo "\nNow loading campaign...\n";
-
-        $testCampaign = getCampaign(
-        $pdo,
-       (int) $existingId
-       );
-
-       echo "\ngetCampaign() result:\n";
-       print_r($testCampaign);
-
-       echo '</pre>';
-
-       exit;
-
-
 
         
 
