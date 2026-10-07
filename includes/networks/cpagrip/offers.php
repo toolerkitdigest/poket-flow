@@ -80,37 +80,6 @@ function syncCpagripDisplayOffer(
         (float) ($offer['reward'] ?? 0),
         2
     );
-    echo '<pre>';
-
-    echo "=== CPAGrip Safety Diagnostic ===\n\n";
-
-    echo "External Offer ID: ";
-    var_dump($externalOfferId);
-
-    echo "Title: ";
-    var_dump($title);
-
-    echo "Offer URL: ";
-    var_dump($networkOfferUrl);
-
-    echo "Category: ";
-    var_dump($category);
-
-    echo "Countries: ";
-    var_dump($countries);
-
-    echo "Payout: ";
-    var_dump($networkPayout);
-
-    echo "Worker Reward: ";
-    var_dump($workerReward);
-
-    echo "\nBuilding safety candidate...\n";
-
-    echo '</pre>';
-
-    exit;
-
     
 
     $safetyCandidate = [
@@ -143,13 +112,24 @@ function syncCpagripDisplayOffer(
         'approval_status' => 'APPROVED',
     ];
 
-    if (!isCampaignAllowed(
-        $pdo,
-        $safetyCandidate
-    )) {
-        return null;
-    }
+    $safetyAllowed = isCampaignAllowed(
+    $pdo,
+    $safetyCandidate
+);
 
+echo '<pre>';
+
+echo "=== CPAGrip Safety Result ===\n\n";
+
+echo "isCampaignAllowed(): ";
+var_dump($safetyAllowed);
+
+echo "\nSafety Candidate:\n";
+print_r($safetyCandidate);
+
+echo '</pre>';
+
+exit;
     $stmt = $pdo->prepare(
         'SELECT id
          FROM campaigns
