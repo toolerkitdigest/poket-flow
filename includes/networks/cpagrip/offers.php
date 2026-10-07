@@ -122,6 +122,12 @@ $finalSafetyCheck = isCampaignAllowed(
 );
 
 echo '<pre>';
+$finalSafetyCheck = isCampaignAllowed(
+    $pdo,
+    $campaign
+);
+
+echo '<pre>';
 
 echo "=== FINAL CPAGrip SAFETY CHECK ===\n\n";
 
@@ -145,8 +151,7 @@ print_r($campaign);
 
 echo '</pre>';
 
-exit;
-    $stmt = $pdo->prepare(
+exit;prepare(
         'SELECT id
          FROM campaigns
          WHERE network_id = ?
