@@ -20,26 +20,6 @@ function syncCpagripDisplayOffer(
     array $offer
 ): ?int {
 
-    echo '<pre>';
-
-    echo "=== CPAGrip Sync Diagnostic ===\n\n";
-
-    echo "Network ID: ";
-    var_dump($networkId);
-
-    echo "\nOffer:\n";
-    print_r($offer);
-
-    $externalOfferId = trim(
-        (string) ($offer['offer_id'] ?? '')
-    );
-
-    echo "\nExternal Offer ID: ";
-    var_dump($externalOfferId);
-
-    echo '</pre>';
-
-    exit;
 
     $externalOfferId = trim(
         (string) ($offer['offer_id'] ?? '')
@@ -100,6 +80,38 @@ function syncCpagripDisplayOffer(
         (float) ($offer['reward'] ?? 0),
         2
     );
+    echo '<pre>';
+
+    echo "=== CPAGrip Safety Diagnostic ===\n\n";
+
+    echo "External Offer ID: ";
+    var_dump($externalOfferId);
+
+    echo "Title: ";
+    var_dump($title);
+
+    echo "Offer URL: ";
+    var_dump($networkOfferUrl);
+
+    echo "Category: ";
+    var_dump($category);
+
+    echo "Countries: ";
+    var_dump($countries);
+
+    echo "Payout: ";
+    var_dump($networkPayout);
+
+    echo "Worker Reward: ";
+    var_dump($workerReward);
+
+    echo "\nBuilding safety candidate...\n";
+
+    echo '</pre>';
+
+    exit;
+
+    
 
     $safetyCandidate = [
         'source_type' => 'CPA_NETWORK',
