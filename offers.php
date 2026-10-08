@@ -607,7 +607,7 @@ $pageTitle = 'Earn Rewards';
 
     <link
         rel="stylesheet"
-        href="offers.css"
+        href="css/offers.css"
     >
 </head>
 
