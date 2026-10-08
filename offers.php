@@ -30,6 +30,7 @@ $ogadsError = null;
 $cpagripError = null;
 $cpagripOffers = [];
 
+
 // --------------------------------------------------
 // Safety check
 // --------------------------------------------------
@@ -202,13 +203,7 @@ try {
 
 
         // ==================================================
-        // IMPORTANT:
-        //
-        // Check whether this OGAds offer already has a
-        // PoketFlow campaign record.
-        //
-        // If an administrator paused/rejected it, we MUST
-        // respect that decision.
+        // Check existing PoketFlow campaign
         // ==================================================
 
         $existingCampaignStmt = $pdo->prepare(
@@ -258,9 +253,6 @@ try {
 
             // ----------------------------------------------
             // ADMIN CONTROL IS AUTHORITATIVE
-            //
-            // Paused, rejected, pending, completed or
-            // expired campaigns must not appear.
             // ----------------------------------------------
 
             if (
@@ -272,7 +264,7 @@ try {
 
 
             // ----------------------------------------------
-            // Load the actual database campaign.
+            // Load actual database campaign
             // ----------------------------------------------
 
             $databaseCampaign = getCampaign(
@@ -287,7 +279,7 @@ try {
 
 
             // ----------------------------------------------
-            // Final database safety check.
+            // Final database safety check
             // ----------------------------------------------
 
             if (!isCampaignAllowed(
@@ -414,7 +406,9 @@ function getShortOfferDescription(
             is_array($cleaned) &&
             isset($cleaned[0])
         ) {
-            $description = trim($cleaned[0]);
+            $description = trim(
+                $cleaned[0]
+            );
         }
     }
 
@@ -683,30 +677,32 @@ try {
 }
 
 
-
 // --------------------------------------------------
 // Determine offer icon
 // --------------------------------------------------
 
 function getOfferIcon(string $category): string
 {
-    $category = strtolower(trim($category));
+    $category = strtolower(
+        trim($category)
+    );
 
-    return match (true) {
-
-        str_contains($category, 'app'),
+    if (
+        str_contains($category, 'app') ||
         str_contains($category, 'install')
-            => '◎',
+    ) {
+        return '◎';
+    }
 
-        str_contains($category, 'survey')
-            => '▤',
+    if (str_contains($category, 'survey')) {
+        return '▤';
+    }
 
-        str_contains($category, 'submit')
-            => '◇',
+    if (str_contains($category, 'submit')) {
+        return '◇';
+    }
 
-        default
-            => '◆',
-    };
+    return '◆';
 }
 
 
@@ -716,20 +712,22 @@ function getOfferIcon(string $category): string
 
 function getOfferIconClass(string $category): string
 {
-    $category = strtolower(trim($category));
+    $category = strtolower(
+        trim($category)
+    );
 
-    return match (true) {
+    if (str_contains($category, 'survey')) {
+        return 'orange';
+    }
 
-        str_contains($category, 'survey')
-            => 'orange',
-
-        str_contains($category, 'special'),
+    if (
+        str_contains($category, 'special') ||
         str_contains($category, 'featured')
-            => 'cyan',
+    ) {
+        return 'cyan';
+    }
 
-        default
-            => '',
-    };
+    return '';
 }
 
 
@@ -740,7 +738,10 @@ function getOfferIconClass(string $category): string
 function getOfferCategory(array $campaign): string
 {
     $category = trim(
-        (string) ($campaign['category'] ?? '')
+        (string) (
+            $campaign['category']
+            ?? ''
+        )
     );
 
     if ($category !== '') {
@@ -757,128 +758,149 @@ function getOfferCategory(array $campaign): string
     };
 }
 
-?>
+?><!doctype html>
 
-<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
 
-<html lang="en">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+>
 
-<head>
+<title>Offers — PoketFlow</title>
 
-    <meta charset="utf-8">
+<link
+    rel="stylesheet"
+    href="css/offers.css"
+>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
-
-    <title>Offers — PoketFlow</title>
-
-    <link
-        rel="stylesheet"
-        href="css/offers.css"
-    >
-
-    
-
-</head>
-
-
-<body class="app-page">
-
-
-<!-- ==================================================
+</head><body class="app-page"><!-- ==================================================
      HEADER
-================================================== -->
+================================================== --><header class="app-header"><a
+    class="brand"
+    href="index.php"
+>
 
-<header class="app-header">
+    <span class="brand-mark">
+        P
+    </span>
+
+    <span>
+        Poket<span>Flow</span>
+    </span>
+
+</a>
+
+
+<nav class="app-header-nav">
+
+    <a href="dashboard.php">
+        Home
+    </a>
 
     <a
-        class="brand"
-        href="index.php"
+        class="active"
+        href="offers.php"
     >
+        Earn
+    </a>
 
-        <span class="brand-mark">
-            P
-        </span>
+    <a href="history.php">
+        History
+    </a>
 
-        <span>
-            Poket<span>Flow</span>
-        </span>
+    <a href="referrals.php">
+        Refer &amp; Earn
+    </a>
 
+    <a href="withdraw.php">
+        Withdraw
+    </a>
+
+</nav>
+
+
+<div class="header-actions">
+
+    <a
+        class="btn btn-primary balance-button"
+        href="withdraw.php"
+    >
+        Balance $<?= number_format($availableBalance, 2) ?>
     </a>
 
 
-    <nav class="app-header-nav">
+    <button
+        type="button"
+        class="mobile-menu-button"
+        id="mobileMenuButton"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="mobileNavigation"
+    >
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
 
-        <a href="dashboard.php">
-            Home
-        </a>
+</div>
 
-        <a
-            class="active"
-            href="offers.php"
-        >
-            Earn
-        </a>
-
-        <a href="history.php">
-            History
-        </a>
-
-        <a href="referrals.php">
-            Refer & Earn
-        </a>
-
-        <a href="withdraw.php">
-            Withdraw
-        </a>
-
-    </nav>
-
-
-    <div class="header-actions">
-
-        <a
-            class="btn btn-primary balance-button"
-            href="withdraw.php"
-        >
-            Balance $<?= number_format($availableBalance, 2) ?>
-        </a>
-
-
-        <button
-            type="button"
-            class="mobile-menu-button"
-            id="mobileMenuButton"
-            aria-label="Open navigation menu"
-            aria-expanded="false"
-            aria-controls="mobileNavigation"
-        >
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-
-    </div>
-
-</header>
-
-
-<!-- ==================================================
+</header><!-- ==================================================
      MOBILE NAVIGATION
-================================================== -->
-
-<div
+================================================== --><div
     class="mobile-navigation"
     id="mobileNavigation"
     aria-hidden="true"
->
+><nav>
 
-    <nav>
+    <a href="dashboard.php">
+        <span class="mobile-nav-icon">⌂</span>
+        <span>Home</span>
+    </a>
+
+
+    <a
+        class="active"
+        href="offers.php"
+    >
+        <span class="mobile-nav-icon">▦</span>
+        <span>Earn Rewards</span>
+    </a>
+
+
+    <a href="history.php">
+        <span class="mobile-nav-icon">◷</span>
+        <span>History</span>
+    </a>
+
+
+    <a href="referrals.php">
+        <span class="mobile-nav-icon">♧</span>
+        <span>Refer &amp; Earn</span>
+    </a>
+
+
+    <a href="withdraw.php">
+        <span class="mobile-nav-icon">▣</span>
+        <span>Withdraw</span>
+    </a>
+
+
+    <a href="logout.php">
+        <span class="mobile-nav-icon">↪</span>
+        <span>Log Out</span>
+    </a>
+
+</nav>
+
+</div><!-- ==================================================
+     APP LAYOUT
+================================================== --><main class="app-shell"><aside class="sidebar">
+
+    <div class="sidebar-nav">
 
         <a href="dashboard.php">
-            <span class="mobile-nav-icon">⌂</span>
+            ⌂
             <span>Home</span>
         </a>
 
@@ -887,211 +909,160 @@ function getOfferCategory(array $campaign): string
             class="active"
             href="offers.php"
         >
-            <span class="mobile-nav-icon">▦</span>
-            <span>Earn Rewards</span>
+            ▦
+            <span>Offers</span>
         </a>
 
 
         <a href="history.php">
-            <span class="mobile-nav-icon">◷</span>
+            ◷
             <span>History</span>
         </a>
 
 
         <a href="referrals.php">
-            <span class="mobile-nav-icon">♧</span>
-            <span>Refer & Earn</span>
+            ♧
+            <span>Refer &amp; Earn</span>
         </a>
 
 
         <a href="withdraw.php">
-            <span class="mobile-nav-icon">▣</span>
+            ▣
             <span>Withdraw</span>
         </a>
 
 
         <a href="logout.php">
-            <span class="mobile-nav-icon">↪</span>
+            ↪
             <span>Log Out</span>
         </a>
 
-    </nav>
-
-</div>
+    </div>
 
 
-<!-- ==================================================
-     APP LAYOUT
-================================================== -->
+    <div class="side-balance">
 
-<main class="app-shell">
-
-
-    <aside class="sidebar">
-
-        <div class="sidebar-nav">
-
-            <a href="dashboard.php">
-                ⌂
-                <span>Home</span>
-            </a>
+        <small>
+            Your Balance
+        </small>
 
 
-            <a
-                class="active"
-                href="offers.php"
-            >
-                ▦
-                <span>Offers</span>
-            </a>
+        <strong>
+            $<?= number_format($availableBalance, 2) ?>
+        </strong>
 
 
-            <a href="history.php">
-                ◷
-                <span>History</span>
-            </a>
+        <span>
+            Available to withdraw
+        </span>
 
 
-            <a href="referrals.php">
-                ♧
-                <span>Refer & Earn</span>
-            </a>
-
-
-            <a href="withdraw.php">
-                ▣
-                <span>Withdraw</span>
-            </a>
-
-
-            <a href="logout.php">
-                ↪
-                <span>Log Out</span>
-            </a>
-
-        </div>
-
-
-        <div class="side-balance">
-
-            <small>
-                Your Balance
-            </small>
-
-
-            <strong>
-                $<?= number_format($availableBalance, 2) ?>
-            </strong>
-
-
-            <span>
-                Available to withdraw
-            </span>
-
-
-            <a href="withdraw.php">
-                Withdraw Funds →
-            </a>
-
-        </div>
-
-    </aside>
-
-
-    <section class="app-content">
-
-
-        <div class="page-title">
-
-            <div>
-
-                <span class="kicker">
-                    EARN REWARDS
-                </span>
-
-
-                <h1>
-                    Offers
-                </h1>
-
-
-                <p>
-                    Complete available offers to grow your balance.
-                    The list refreshes automatically.
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <?php if (
-    $ogadsError !== null &&
-    $cpagripError !== null
-): ?>
-
-    <div class="info-card">
-
-        <h3>
-            Offers temporarily unavailable
-        </h3>
-
-        <p>
-            We could not refresh the offer list right now.
-            Please try again shortly.
-        </p>
+        <a href="withdraw.php">
+            Withdraw Funds →
+        </a>
 
     </div>
 
-<?php endif; ?>
-
-        <div class="offer-tabs">
-
-            <button
-                type="button"
-                class="selected"
-                data-filter="all"
-            >
-                All Offers
-            </button>
+</aside>
 
 
-            <button
-                type="button"
-                data-filter="app"
-            >
-                App Install
-            </button>
+<section class="app-content">
 
 
-            <button
-                type="button"
-                data-filter="survey"
-            >
-                Survey
-            </button>
+    <div class="page-title">
+
+        <div>
+
+            <span class="kicker">
+                EARN REWARDS
+            </span>
 
 
-            <button
-                type="button"
-                data-filter="other"
-            >
-                Other Offers
-            </button>
+            <h1>
+                Offers
+            </h1>
+
+
+            <p>
+                Complete available offers to grow your balance.
+                The list refreshes automatically.
+            </p>
 
         </div>
 
-
-        <div class="dashboard-grid">
-
-
-            <div class="offer-grid dashboard-offers">
+    </div>
 
 
-                <?php if (empty($campaigns)): ?>
+    <?php if (
+        $ogadsError !== null &&
+        $cpagripError !== null
+    ): ?>
+
+        <div class="info-card">
+
+            <h3>
+                Offers temporarily unavailable
+            </h3>
+
+            <p>
+                We could not refresh the offer list right now.
+                Please try again shortly.
+            </p>
+
+        </div>
+
+    <?php endif; ?>
 
 
-                    <article class="offer-card empty-offer-card">
+    <div class="offer-tabs">
+
+        <button
+            type="button"
+            class="selected"
+            data-filter="all"
+        >
+            All Offers
+        </button>
+
+
+        <button
+            type="button"
+            data-filter="app"
+        >
+            App Install
+        </button>
+
+
+        <button
+            type="button"
+            data-filter="survey"
+        >
+            Survey
+        </button>
+
+
+        <button
+            type="button"
+            data-filter="other"
+        >
+            Other Offers
+        </button>
+
+    </div>
+
+
+    <div class="dashboard-grid">
+
+
+        <div class="offer-grid dashboard-offers">
+
+
+            <?php if (empty($campaigns)): ?>
+
+
+                <article class="offer-card empty-offer-card">
+
+                    <div>
 
                         <div class="offer-icon">
                             ◷
@@ -1099,15 +1070,6 @@ function getOfferCategory(array $campaign): string
 
 
                         <div class="offer-body">
-                            <span 
-                          class="offer-network">
-                              <?= e((string) (
-                          $campaign['network']
-                                    ?? 'PoketFlow'
-                                )) ?>
-                             </span>
-
-                            
 
                             <h3>
                                 No offers available right now
@@ -1131,200 +1093,204 @@ function getOfferCategory(array $campaign): string
 
                         </div>
 
+                    </div>
+
+                </article>
+
+
+            <?php else: ?>
+
+
+                <?php foreach ($campaigns as $campaign): ?>
+
+                    <?php
+
+                    $category = getOfferCategory(
+                        $campaign
+                    );
+
+
+                    $icon = getOfferIcon(
+                        $category
+                    );
+
+
+                    $iconClass = getOfferIconClass(
+                        $category
+                    );
+
+
+                    $title = trim(
+                        (string) (
+                            $campaign['title']
+                            ?? 'Available Offer'
+                        )
+                    );
+
+
+                    $description = getShortOfferDescription(
+                        (string) (
+                            $campaign['description']
+                            ?? ''
+                        ),
+                        $title
+                    );
+
+
+                    $reward = (float) (
+                        $campaign['worker_reward']
+                        ?? 0
+                    );
+
+
+                    $imageUrl = trim(
+                        (string) (
+                            $campaign['image_url']
+                            ?? ''
+                        )
+                    );
+
+                    ?>
+
+
+                    <article
+                        class="offer-card"
+                        data-offer-category="<?= e(strtolower($category)) ?>"
+                    >
+
+                        <div
+                            class="offer-image <?= e($iconClass) ?>"
+                        >
+
+                            <?php if ($imageUrl !== ''): ?>
+
+                                <img
+                                    src="<?= e($imageUrl) ?>"
+                                    alt=""
+                                    loading="lazy"
+                                >
+
+                            <?php else: ?>
+
+                                <div class="offer-fallback-icon">
+                                    <?= e($icon) ?>
+                                </div>
+
+                            <?php endif; ?>
+
+                        </div>
+
+
+                        <div class="offer-body">
+
+                            <h3>
+                                <?= e($title) ?>
+                            </h3>
+
+
+                            <p>
+                                <?= e($description) ?>
+                            </p>
+
+                        </div>
+
+
+                        <div class="offer-bottom">
+
+                            <strong>
+                                Earn
+                                $<?= number_format($reward, 2) ?>
+                            </strong>
+
+
+                            <?php if (
+                                ($campaign['network'] ?? '') === 'CPAGrip'
+                            ): ?>
+
+                                <a
+                                    href="<?= e((string) $campaign['network_offer_url']) ?>"
+                                    class="btn btn-primary"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Start →
+                                </a>
+
+                            <?php else: ?>
+
+                                <a
+                                    href="start-offer.php?offer_id=<?= e((string) $campaign['external_offer_id']) ?>"
+                                    class="btn btn-primary"
+                                >
+                                    Start →
+                                </a>
+
+                            <?php endif; ?>
+
+                        </div>
+
+
                     </article>
 
 
-                <?php else: ?>
+                <?php endforeach; ?>
 
 
-                    <?php foreach ($campaigns as $campaign): ?>
-
-                        <?php
-
-                        $category = getOfferCategory(
-                            $campaign
-                        );
-
-
-                        $icon = getOfferIcon(
-                            $category
-                        );
-
-
-                        $iconClass = getOfferIconClass(
-                            $category
-                        );
-
-
-                        $title = trim(
-                            (string) (
-                                $campaign['title']
-                                ?? 'Available Offer'
-                            )
-                        );
-
-
-                        $description = getShortOfferDescription(
-                            (string) (
-                                $campaign['description']
-                                ?? ''
-                            ),
-                            $title
-                        );
-
-
-                        $reward = (float) (
-                            $campaign['worker_reward']
-                            ?? 0
-                        );
-
-
-                        $imageUrl = trim(
-                            (string) (
-                                $campaign['image_url']
-                                ?? ''
-                            )
-                        );
-
-                        ?>
-
-
-                        <article
-                            class="offer-card"
-                            data-offer-category="<?= e(strtolower($category)) ?>"
-                        >
-
-                            <div
-                                class="offer-image <?= e($iconClass) ?>"
-                            >
-
-                                <?php if ($imageUrl !== ''): ?>
-
-                                    <img
-                                        src="<?= e($imageUrl) ?>"
-                                        alt=""
-                                        loading="lazy"
-                                    >
-
-                                <?php else: ?>
-
-                                    <div class="offer-fallback-icon">
-                                        <?= e($icon) ?>
-                                    </div>
-
-                                <?php endif; ?>
-
-                            </div>
-
-
-                            <div class="offer-body">
-
-                                <h3>
-                                    <?= e($title) ?>
-                                </h3>
-
-
-                                <p>
-                                    <?= e($description) ?>
-                                </p>
-
-                            </div>
-
-
-                            <div class="offer-bottom">
-
-                                <strong>
-                                    Earn
-                                    $<?= number_format($reward, 2) ?>
-                                </strong>
-
-
-                                <?php if (
-    ($campaign['network'] ?? '') === 'CPAGrip'
-): ?>
-
-    <a
-        href="<?= e((string) $campaign['network_offer_url']) ?>"
-        class="btn btn-primary"
-        target="_blank"
-        rel="noopener noreferrer"
-    >
-        Start →
-    </a>
-
-<?php else: ?>
-
-    <a href="start-offer.php?offer_id=<?= e((string) $campaign['external_offer_id']) ?>"
-        class="btn btn-primary">
-        Start →
-    </a>
-
-<?php endif; ?>
-
-                            </div>
-
-
-                        </article>
-
-
-                    <?php endforeach; ?>
-
-
-                <?php endif; ?>
-
-
-            </div>
-
-
-            <aside class="info-card">
-
-                <div class="info-icon">
-                    ◷
-                </div>
-
-
-                <h3>
-                    Track your completions
-                </h3>
-
-
-                <p>
-                    Visit Offer History to see your recent
-                    activity and completion status.
-                </p>
-
-
-                <a href="history.php">
-                    View Offer History →
-                </a>
-
-
-                <hr>
-
-
-                <small>
-                    Completion tracking can take some time
-                    depending on the offer.
-                </small>
-
-
-            </aside>
+            <?php endif; ?>
 
 
         </div>
 
 
-    </section>
+        <aside class="info-card">
+
+            <div class="info-icon">
+                ◷
+            </div>
 
 
-</main>
+            <h3>
+                Track your completions
+            </h3>
 
 
-<script>
+            <p>
+                Visit Offer History to see your recent
+                activity and completion status.
+            </p>
+
+
+            <a href="history.php">
+                View Offer History →
+            </a>
+
+
+            <hr>
+
+
+            <small>
+                Completion tracking can take some time
+                depending on the offer.
+            </small>
+
+
+        </aside>
+
+
+    </div>
+
+
+</section>
+
+</main><script>
 
 document.addEventListener(
     'DOMContentLoaded',
     function () {
+
+        // ==================================================
+        // OFFER FILTERS
+        // ==================================================
 
         const filterButtons =
             document.querySelectorAll(
@@ -1346,7 +1312,7 @@ document.addEventListener(
                     function () {
 
                         const filter =
-                            button.dataset.filter;
+                            button.dataset.filter || 'all';
 
 
                         filterButtons.forEach(
@@ -1424,6 +1390,10 @@ document.addEventListener(
             }
         );
 
+
+        // ==================================================
+        // MOBILE NAVIGATION
+        // ==================================================
 
         const menuButton =
             document.getElementById(
@@ -1544,9 +1514,4 @@ document.addEventListener(
     }
 );
 
-</script>
-
-
-</body>
-
-</html>
+</script></body></html>
