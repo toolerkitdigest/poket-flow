@@ -906,9 +906,9 @@ button {
 
 .offer-image {
 
-    height: 80px;
+    height: 110px;
 
-    width: 85%;
+    width: 100%;
 
     display: flex;
 
@@ -934,9 +934,9 @@ button {
 
     display: block;
 
-    width: 75%;
+    width: 100%;
 
-    height: 75%;
+    height: 100%;
 
     object-fit: contain;
 
@@ -1518,7 +1518,7 @@ button {
 
     .offer-image {
 
-        height: 75px;
+        height: 105px;
 
     }
 
@@ -1639,7 +1639,7 @@ button {
 
     .offer-image {
 
-        height: 75px;
+        height: 105px;
 
     }
 
@@ -1707,7 +1707,7 @@ button {
 
     .offer-image {
 
-        height: 75px;
+        height: 95px;
 
     }
 
