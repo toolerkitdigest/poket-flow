@@ -1,6 +1,56 @@
 /* =========================================================
    POKETFLOW — OFFERS PAGE
-   Standalone offer-page styling
+   Standalone Premium SaaS UI
+   ========================================================= */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+    background: #080d1a;
+    color-scheme: dark;
+}
+
+body.app-page {
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: hidden;
+
+    background:
+        radial-gradient(
+            circle at 12% 0%,
+            rgba(99, 102, 241, 0.10),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 88% 8%,
+            rgba(34, 211, 238, 0.055),
+            transparent 25%
+        ),
+        #080d1a;
+
+    color: #f8fafc;
+
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+
+/* =========================================================
+   VARIABLES
    ========================================================= */
 
 .app-page {
@@ -21,24 +71,669 @@
     --pf-muted: #718096;
 
     --pf-border: rgba(255, 255, 255, 0.08);
-    --pf-border-strong: rgba(255, 255, 255, 0.13);
+    --pf-border-hover: rgba(129, 140, 248, 0.28);
 
     --pf-success: #34d399;
-    --pf-warning: #f59e0b;
     --pf-orange: #fb923c;
 
+    --pf-container: 1180px;
+
     --pf-radius: 18px;
-    --pf-radius-small: 13px;
+    --pf-radius-small: 12px;
 
     --pf-shadow:
         0 20px 60px rgba(0, 0, 0, 0.28);
-
-    --pf-container: 1180px;
 }
 
 
 /* =========================================================
-   PAGE CONTENT
+   GLOBAL ELEMENTS
+   ========================================================= */
+
+.app-page a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.app-page button,
+.app-page input,
+.app-page select,
+.app-page textarea {
+    font: inherit;
+}
+
+.app-page img {
+    max-width: 100%;
+}
+
+.app-page ::selection {
+    color: #ffffff;
+    background: rgba(99, 102, 241, 0.45);
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.app-page .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    display: grid;
+    grid-template-columns:
+        auto
+        minmax(0, 1fr)
+        auto;
+
+    align-items: center;
+
+    width: 100%;
+    min-height: 74px;
+
+    padding:
+        0
+        max(
+            20px,
+            calc((100% - var(--pf-container)) / 2)
+        );
+
+    gap: 28px;
+
+    background:
+        rgba(8, 13, 26, 0.90);
+
+    border-bottom:
+        1px solid var(--pf-border);
+
+    box-shadow:
+        0 10px 35px rgba(0, 0, 0, 0.16);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.app-page .brand {
+    display: inline-flex;
+    align-items: center;
+
+    min-width: 0;
+
+    gap: 10px;
+
+    color: #ffffff;
+
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+
+    white-space: nowrap;
+}
+
+.app-page .brand-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 39px;
+
+    width: 39px;
+    height: 39px;
+
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1 0%,
+            #4f46e5 48%,
+            #22d3ee 100%
+        );
+
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+
+    box-shadow:
+        0 9px 24px rgba(79, 70, 229, 0.28);
+
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.app-page .brand > span:last-child {
+    min-width: 0;
+}
+
+.app-page .brand > span:last-child > span {
+    color: var(--pf-accent);
+}
+
+
+/* =========================================================
+   DESKTOP NAVIGATION
+   ========================================================= */
+
+.app-page .app-header-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 0;
+
+    gap: 4px;
+}
+
+.app-page .app-header-nav a {
+    position: relative;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 42px;
+    padding: 0 13px;
+
+    color: var(--pf-secondary);
+
+    border-radius: 10px;
+
+    font-size: 13px;
+    font-weight: 650;
+
+    white-space: nowrap;
+
+    transition:
+        color 160ms ease,
+        background 160ms ease;
+}
+
+.app-page .app-header-nav a:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.app-page .app-header-nav a.active {
+    color: #ffffff;
+}
+
+.app-page .app-header-nav a.active::after {
+    content: "";
+
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 3px;
+
+    height: 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--pf-primary),
+            var(--pf-accent)
+        );
+
+    border-radius: 999px;
+}
+
+
+/* =========================================================
+   HEADER ACTIONS
+   ========================================================= */
+
+.app-page .header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    min-width: 0;
+}
+
+.app-page .balance-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 42px;
+
+    padding: 0 16px;
+
+    color: #ffffff !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--pf-primary),
+            var(--pf-primary-dark)
+        );
+
+    border:
+        1px solid rgba(255, 255, 255, 0.10);
+
+    border-radius: 11px;
+
+    box-shadow:
+        0 9px 24px rgba(79, 70, 229, 0.22);
+
+    font-size: 12px;
+    font-weight: 800;
+
+    white-space: nowrap;
+
+    transition:
+        transform 160ms ease,
+        box-shadow 160ms ease,
+        background 160ms ease;
+}
+
+.app-page .balance-button:hover {
+    color: #ffffff !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--pf-primary-hover),
+            var(--pf-primary)
+        );
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 12px 28px rgba(79, 70, 229, 0.30);
+}
+
+
+/* =========================================================
+   MOBILE MENU BUTTON
+   ========================================================= */
+
+.app-page .mobile-menu-button {
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    width: 42px;
+    height: 42px;
+
+    padding: 0;
+
+    background: var(--pf-surface);
+
+    border: 1px solid var(--pf-border);
+    border-radius: 11px;
+
+    cursor: pointer;
+
+    gap: 5px;
+}
+
+.app-page .mobile-menu-button span {
+    display: block;
+
+    width: 18px;
+    height: 2px;
+
+    background: #f8fafc;
+
+    border-radius: 999px;
+
+    transition:
+        transform 180ms ease,
+        opacity 180ms ease;
+}
+
+.app-page .mobile-menu-button:hover {
+    border-color: var(--pf-border-hover);
+    background: var(--pf-surface-2);
+}
+
+.app-page .mobile-menu-button.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.app-page .mobile-menu-button.open span:nth-child(2) {
+    opacity: 0;
+}
+
+.app-page .mobile-menu-button.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+
+/* =========================================================
+   MOBILE NAVIGATION
+   ========================================================= */
+
+.app-page .mobile-navigation {
+    display: none;
+
+    position: fixed;
+    top: 74px;
+    left: 0;
+    right: 0;
+
+    z-index: 999;
+
+    padding: 12px 14px 16px;
+
+    background:
+        rgba(8, 13, 26, 0.97);
+
+    border-bottom:
+        1px solid var(--pf-border);
+
+    box-shadow:
+        0 20px 45px rgba(0, 0, 0, 0.30);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.app-page .mobile-navigation.open {
+    display: block;
+}
+
+.app-page .mobile-navigation nav {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 8px;
+
+    width: min(100%, 560px);
+
+    margin: 0 auto;
+}
+
+.app-page .mobile-navigation nav a {
+    display: flex;
+    align-items: center;
+
+    min-height: 48px;
+
+    padding: 0 14px;
+
+    color: var(--pf-secondary);
+
+    background: rgba(255, 255, 255, 0.025);
+
+    border:
+        1px solid rgba(255, 255, 255, 0.055);
+
+    border-radius: 12px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    transition:
+        color 160ms ease,
+        background 160ms ease,
+        border-color 160ms ease;
+}
+
+.app-page .mobile-navigation nav a:hover {
+    color: #ffffff;
+
+    background:
+        rgba(99, 102, 241, 0.10);
+
+    border-color:
+        rgba(99, 102, 241, 0.18);
+}
+
+.app-page .mobile-navigation nav a.active {
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(99, 102, 241, 0.20),
+            rgba(79, 70, 229, 0.10)
+        );
+
+    border-color:
+        rgba(99, 102, 241, 0.26);
+}
+
+.app-page .mobile-nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 29px;
+    height: 29px;
+
+    margin-right: 9px;
+
+    color: var(--pf-primary-hover);
+
+    background:
+        rgba(99, 102, 241, 0.10);
+
+    border-radius: 8px;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   MAIN APP SHELL
+   ========================================================= */
+
+.app-page .app-shell {
+    display: grid;
+
+    grid-template-columns:
+        230px
+        minmax(0, 1fr);
+
+    align-items: start;
+
+    width: min(
+        calc(100% - 40px),
+        var(--pf-container)
+    );
+
+    margin: 0 auto;
+
+    padding:
+        28px 0
+        60px;
+
+    gap: 24px;
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.app-page .sidebar {
+    position: sticky;
+    top: 98px;
+
+    min-width: 0;
+
+    padding: 12px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.018),
+            rgba(255, 255, 255, 0)
+        ),
+        var(--pf-surface);
+
+    border:
+        1px solid var(--pf-border);
+
+    border-radius: var(--pf-radius);
+
+    box-shadow:
+        0 15px 45px rgba(0, 0, 0, 0.18);
+}
+
+
+/* =========================================================
+   SIDEBAR NAV
+   ========================================================= */
+
+.app-page .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.app-page .sidebar-nav a {
+    display: flex;
+    align-items: center;
+
+    min-height: 45px;
+
+    padding: 0 11px;
+
+    color: var(--pf-secondary);
+
+    border-radius: 11px;
+
+    font-size: 13px;
+    font-weight: 650;
+
+    transition:
+        color 160ms ease,
+        background 160ms ease,
+        transform 160ms ease;
+}
+
+.app-page .sidebar-nav a:hover {
+    color: #ffffff;
+
+    background:
+        rgba(255, 255, 255, 0.045);
+
+    transform: translateX(2px);
+}
+
+.app-page .sidebar-nav a.active {
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(99, 102, 241, 0.22),
+            rgba(79, 70, 229, 0.10)
+        );
+
+    box-shadow:
+        inset 0 0 0 1px
+        rgba(99, 102, 241, 0.14);
+}
+
+.app-page .sidebar-nav a::first-letter {
+    color: var(--pf-primary-hover);
+}
+
+.app-page .sidebar-nav a span {
+    margin-left: 9px;
+}
+
+
+/* =========================================================
+   SIDEBAR BALANCE
+   ========================================================= */
+
+.app-page .side-balance {
+    margin-top: 14px;
+
+    padding: 17px;
+
+    background:
+        radial-gradient(
+            circle at 100% 0%,
+            rgba(34, 211, 238, 0.08),
+            transparent 45%
+        ),
+        linear-gradient(
+            145deg,
+            rgba(99, 102, 241, 0.13),
+            rgba(99, 102, 241, 0.025)
+        );
+
+    border:
+        1px solid rgba(99, 102, 241, 0.15);
+
+    border-radius: 14px;
+}
+
+.app-page .side-balance small {
+    display: block;
+
+    color: var(--pf-muted);
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.app-page .side-balance strong {
+    display: block;
+
+    margin-top: 7px;
+
+    color: #ffffff;
+
+    font-size: 23px;
+    font-weight: 850;
+    letter-spacing: -0.035em;
+}
+
+.app-page .side-balance > span {
+    display: block;
+
+    margin-top: 3px;
+
+    color: var(--pf-muted);
+
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.app-page .side-balance > a {
+    display: inline-flex;
+
+    margin-top: 13px;
+
+    color: var(--pf-primary-hover);
+
+    font-size: 11px;
+    font-weight: 750;
+
+    transition:
+        color 160ms ease,
+        transform 160ms ease;
+}
+
+.app-page .side-balance > a:hover {
+    color: var(--pf-accent);
+    transform: translateX(2px);
+}
+
+
+/* =========================================================
+   MAIN CONTENT
    ========================================================= */
 
 .app-page .app-content {
@@ -52,24 +747,19 @@
    ========================================================= */
 
 .app-page .page-title {
-    width: 100%;
-    margin-bottom: 24px;
+    margin-bottom: 23px;
 }
 
-.app-page .page-title > div {
-    min-width: 0;
-}
-
-.app-page .page-title .kicker {
+.app-page .kicker {
     display: inline-block;
-    margin-bottom: 9px;
+
+    margin-bottom: 8px;
 
     color: var(--pf-primary-hover);
 
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.16em;
-    line-height: 1.3;
     text-transform: uppercase;
 }
 
@@ -78,44 +768,48 @@
 
     color: var(--pf-text);
 
-    font-size: clamp(30px, 4vw, 42px);
-    font-weight: 800;
-    letter-spacing: -0.035em;
-    line-height: 1.1;
+    font-size: clamp(31px, 4vw, 42px);
+    font-weight: 850;
+    letter-spacing: -0.045em;
+    line-height: 1.08;
 }
 
 .app-page .page-title p {
-    max-width: 680px;
+    max-width: 700px;
+
     margin: 10px 0 0;
 
     color: var(--pf-secondary);
 
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.7;
 }
 
 
 /* =========================================================
-   INFORMATION / ERROR CARD
+   INFO CARD
    ========================================================= */
 
 .app-page .info-card {
     min-width: 0;
 
-    padding: 24px;
+    padding: 23px;
 
     background:
         linear-gradient(
             145deg,
-            rgba(99, 102, 241, 0.075),
-            rgba(34, 211, 238, 0.025)
+            rgba(99, 102, 241, 0.055),
+            rgba(34, 211, 238, 0.018)
         ),
         var(--pf-surface);
 
-    border: 1px solid var(--pf-border);
+    border:
+        1px solid var(--pf-border);
+
     border-radius: var(--pf-radius);
 
-    box-shadow: var(--pf-shadow);
+    box-shadow:
+        0 15px 45px rgba(0, 0, 0, 0.17);
 }
 
 .app-page .info-card h3 {
@@ -124,8 +818,8 @@
     color: var(--pf-text);
 
     font-size: 17px;
-    font-weight: 750;
-    line-height: 1.35;
+    font-weight: 800;
+    letter-spacing: -0.015em;
 }
 
 .app-page .info-card p {
@@ -133,34 +827,33 @@
 
     color: var(--pf-secondary);
 
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.65;
 }
 
-.app-page .info-card > a {
+.app-page .info-card a {
     display: inline-flex;
-    align-items: center;
 
-    margin-top: 18px;
+    margin-top: 16px;
 
     color: var(--pf-primary-hover);
 
-    font-size: 13px;
-    font-weight: 700;
-    text-decoration: none;
+    font-size: 12px;
+    font-weight: 750;
 
     transition:
         color 160ms ease,
         transform 160ms ease;
 }
 
-.app-page .info-card > a:hover {
+.app-page .info-card a:hover {
     color: var(--pf-accent);
     transform: translateX(2px);
 }
 
 .app-page .info-card hr {
     height: 1px;
+
     margin: 20px 0;
 
     border: 0;
@@ -173,14 +866,9 @@
 
     color: var(--pf-muted);
 
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.6;
 }
-
-
-/* =========================================================
-   INFO ICON
-   ========================================================= */
 
 .app-page .info-icon {
     display: flex;
@@ -189,36 +877,36 @@
 
     width: 44px;
     height: 44px;
-    margin-bottom: 17px;
+
+    margin-bottom: 16px;
 
     color: var(--pf-accent);
 
     background:
-        linear-gradient(
-            145deg,
-            rgba(34, 211, 238, 0.15),
-            rgba(99, 102, 241, 0.10)
-        );
+        rgba(34, 211, 238, 0.09);
 
-    border: 1px solid rgba(34, 211, 238, 0.14);
+    border:
+        1px solid rgba(34, 211, 238, 0.14);
+
     border-radius: 13px;
 
     font-size: 19px;
-    font-weight: 700;
 }
 
 
 /* =========================================================
-   OFFER FILTER TABS
+   OFFER FILTERS
    ========================================================= */
 
 .app-page .offer-tabs {
     display: flex;
     align-items: center;
+
     gap: 8px;
 
     width: 100%;
-    margin-bottom: 22px;
+
+    margin-bottom: 20px;
 
     overflow-x: auto;
 
@@ -232,18 +920,22 @@
 .app-page .offer-tabs button {
     flex: 0 0 auto;
 
-    min-height: 42px;
-    padding: 0 16px;
+    min-height: 41px;
+
+    padding: 0 15px;
 
     color: var(--pf-secondary);
 
-    background: var(--pf-surface);
-    border: 1px solid var(--pf-border);
+    background:
+        var(--pf-surface);
+
+    border:
+        1px solid var(--pf-border);
+
     border-radius: 999px;
 
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 750;
 
     cursor: pointer;
 
@@ -251,15 +943,17 @@
         color 160ms ease,
         background 160ms ease,
         border-color 160ms ease,
-        transform 160ms ease,
-        box-shadow 160ms ease;
+        transform 160ms ease;
 }
 
 .app-page .offer-tabs button:hover {
-    color: var(--pf-text);
+    color: #ffffff;
 
-    background: var(--pf-surface-2);
-    border-color: var(--pf-border-strong);
+    background:
+        var(--pf-surface-2);
+
+    border-color:
+        var(--pf-border-hover);
 
     transform: translateY(-1px);
 }
@@ -277,29 +971,26 @@
     border-color: transparent;
 
     box-shadow:
-        0 8px 22px rgba(79, 70, 229, 0.22);
-}
-
-.app-page .offer-tabs button:focus-visible {
-    outline: 2px solid var(--pf-accent);
-    outline-offset: 3px;
+        0 8px 20px rgba(79, 70, 229, 0.22);
 }
 
 
 /* =========================================================
-   MAIN OFFERS LAYOUT
+   OFFER + INFO LAYOUT
    ========================================================= */
 
 .app-page .dashboard-grid {
     display: grid;
+
     grid-template-columns:
         minmax(0, 1fr)
-        280px;
+        270px;
 
     align-items: start;
-    gap: 22px;
 
-    width: 100%;
+    gap: 20px;
+
+    min-width: 0;
 }
 
 
@@ -307,16 +998,19 @@
    OFFER GRID
    ========================================================= */
 
+.app-page .offer-grid {
+    min-width: 0;
+}
+
 .app-page .dashboard-offers {
     display: grid;
 
     grid-template-columns:
         repeat(2, minmax(0, 1fr));
 
-    align-items: stretch;
     gap: 16px;
 
-    min-width: 0;
+    align-items: stretch;
 }
 
 
@@ -325,8 +1019,6 @@
    ========================================================= */
 
 .app-page .offer-card {
-    position: relative;
-
     display: flex;
     flex-direction: column;
 
@@ -343,7 +1035,9 @@
         ),
         var(--pf-surface);
 
-    border: 1px solid var(--pf-border);
+    border:
+        1px solid var(--pf-border);
+
     border-radius: var(--pf-radius);
 
     box-shadow:
@@ -352,8 +1046,8 @@
     transition:
         transform 180ms ease,
         border-color 180ms ease,
-        background 180ms ease,
-        box-shadow 180ms ease;
+        box-shadow 180ms ease,
+        background 180ms ease;
 }
 
 .app-page .offer-card:hover {
@@ -387,7 +1081,7 @@
     justify-content: center;
 
     width: 100%;
-    height: 168px;
+    height: 170px;
 
     overflow: hidden;
 
@@ -399,7 +1093,8 @@
         ),
         var(--pf-surface-2);
 
-    border-bottom: 1px solid var(--pf-border);
+    border-bottom:
+        1px solid var(--pf-border);
 }
 
 .app-page .offer-image::after {
@@ -414,7 +1109,7 @@
         linear-gradient(
             180deg,
             transparent 50%,
-            rgba(8, 13, 26, 0.24)
+            rgba(8, 13, 26, 0.28)
         );
 }
 
@@ -436,7 +1131,7 @@
 
 
 /* =========================================================
-   OFFER FALLBACK ICON
+   FALLBACK OFFER ICON
    ========================================================= */
 
 .app-page .offer-fallback-icon {
@@ -459,14 +1154,16 @@
             var(--pf-primary-dark)
         );
 
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border:
+        1px solid rgba(255, 255, 255, 0.13);
+
     border-radius: 18px;
 
     box-shadow:
         0 15px 35px rgba(79, 70, 229, 0.30);
 
     font-size: 25px;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 
@@ -478,7 +1175,7 @@
     background:
         radial-gradient(
             circle at 50% 35%,
-            rgba(251, 146, 60, 0.20),
+            rgba(251, 146, 60, 0.18),
             transparent 62%
         ),
         var(--pf-surface-2);
@@ -500,7 +1197,7 @@
     background:
         radial-gradient(
             circle at 50% 35%,
-            rgba(34, 211, 238, 0.20),
+            rgba(34, 211, 238, 0.18),
             transparent 62%
         ),
         var(--pf-surface-2);
@@ -515,9 +1212,6 @@
             var(--pf-accent),
             #67e8f9
         );
-
-    box-shadow:
-        0 15px 35px rgba(34, 211, 238, 0.20);
 }
 
 
@@ -532,7 +1226,10 @@
 
     min-width: 0;
 
-    padding: 19px 19px 12px;
+    padding:
+        18px
+        18px
+        11px;
 }
 
 .app-page .offer-body h3 {
@@ -543,8 +1240,8 @@
     color: var(--pf-text);
 
     font-size: 16px;
-    font-weight: 750;
-    letter-spacing: -0.01em;
+    font-weight: 800;
+    letter-spacing: -0.015em;
     line-height: 1.4;
 
     overflow: hidden;
@@ -556,7 +1253,7 @@
 .app-page .offer-body p {
     display: -webkit-box;
 
-    margin: 9px 0 0;
+    margin: 8px 0 0;
 
     color: var(--pf-secondary);
 
@@ -578,13 +1275,18 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+
     gap: 12px;
 
     min-width: 0;
 
-    padding: 14px 19px 19px;
+    padding:
+        14px
+        18px
+        18px;
 
-    border-top: 1px solid rgba(255, 255, 255, 0.055);
+    border-top:
+        1px solid rgba(255, 255, 255, 0.055);
 }
 
 .app-page .offer-bottom strong {
@@ -592,29 +1294,74 @@
 
     color: var(--pf-success);
 
-    font-size: 15px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 850;
+
     line-height: 1.35;
 }
 
 .app-page .offer-bottom .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
     flex: 0 0 auto;
 
-    min-height: 40px;
+    min-height: 39px;
+
     padding: 0 15px;
 
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--pf-primary),
+            var(--pf-primary-dark)
+        );
+
+    border:
+        1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius: 10px;
+
+    box-shadow:
+        0 8px 20px rgba(79, 70, 229, 0.18);
+
     font-size: 12px;
+    font-weight: 800;
+
+    transition:
+        transform 160ms ease,
+        box-shadow 160ms ease,
+        background 160ms ease;
+}
+
+.app-page .offer-bottom .btn:hover {
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--pf-primary-hover),
+            var(--pf-primary)
+        );
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 11px 25px rgba(79, 70, 229, 0.28);
 }
 
 
 /* =========================================================
-   EMPTY OFFER STATE
+   EMPTY OFFER CARD
    ========================================================= */
 
 .app-page .empty-offer-card {
     grid-column: 1 / -1;
 
-    min-height: 310px;
+    min-height: 320px;
 
     align-items: center;
     justify-content: center;
@@ -633,14 +1380,17 @@
 
     width: 62px;
     height: 62px;
-    margin-bottom: 18px;
+
+    margin-bottom: 16px;
 
     color: var(--pf-primary-hover);
 
     background:
-        rgba(99, 102, 241, 0.11);
+        rgba(99, 102, 241, 0.10);
 
-    border: 1px solid rgba(99, 102, 241, 0.16);
+    border:
+        1px solid rgba(99, 102, 241, 0.17);
+
     border-radius: 18px;
 
     font-size: 24px;
@@ -649,15 +1399,17 @@
 .app-page .empty-offer-card .offer-body {
     flex: 0 1 auto;
 
-    max-width: 460px;
+    max-width: 480px;
 
-    padding: 0 22px;
+    padding:
+        0
+        22px;
 }
 
 .app-page .empty-offer-card .offer-body h3 {
     display: block;
 
-    font-size: 18px;
+    font-size: 19px;
 }
 
 .app-page .empty-offer-card .offer-body p {
@@ -674,19 +1426,18 @@
 .app-page .empty-offer-card .offer-bottom {
     border-top: 0;
 
-    padding-top: 8px;
+    padding-top: 7px;
 }
 
 .app-page .empty-offer-card .offer-bottom strong {
     color: var(--pf-muted);
 
-    font-size: 13px;
+    font-size: 12px;
 }
 
 
 /* =========================================================
-   OFFER NETWORK LABEL
-   Supports future use without cluttering cards
+   NETWORK LABEL
    ========================================================= */
 
 .app-page .offer-network {
@@ -695,93 +1446,37 @@
 
     width: fit-content;
     max-width: 100%;
+
     margin-bottom: 8px;
-    padding: 5px 8px;
+
+    padding:
+        5px
+        8px;
 
     color: var(--pf-muted);
 
-    background: rgba(255, 255, 255, 0.035);
-    border: 1px solid rgba(255, 255, 255, 0.055);
+    background:
+        rgba(255, 255, 255, 0.035);
+
+    border:
+        1px solid rgba(255, 255, 255, 0.055);
+
     border-radius: 999px;
 
-    font-size: 10px;
-    font-weight: 750;
-    letter-spacing: 0.05em;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 
 
 /* =========================================================
-   RIGHT INFORMATION PANEL
+   TRACKING INFO PANEL
    ========================================================= */
 
 .app-page .dashboard-grid > .info-card {
     position: sticky;
-    top: 96px;
-
-    min-width: 0;
-}
-
-.app-page .dashboard-grid > .info-card h3 {
-    font-size: 18px;
-    letter-spacing: -0.015em;
-}
-
-.app-page .dashboard-grid > .info-card p {
-    margin-top: 10px;
-}
-
-
-/* =========================================================
-   BUTTON CONSISTENCY
-   ========================================================= */
-
-.app-page .offer-bottom .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    color: #ffffff;
-    text-decoration: none;
-
-    background:
-        linear-gradient(
-            135deg,
-            var(--pf-primary),
-            var(--pf-primary-dark)
-        );
-
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 11px;
-
-    box-shadow:
-        0 8px 20px rgba(79, 70, 229, 0.18);
-
-    transition:
-        transform 160ms ease,
-        box-shadow 160ms ease,
-        background 160ms ease;
-}
-
-.app-page .offer-bottom .btn-primary:hover {
-    color: #ffffff;
-
-    background:
-        linear-gradient(
-            135deg,
-            var(--pf-primary-hover),
-            var(--pf-primary)
-        );
-
-    transform: translateY(-1px);
-
-    box-shadow:
-        0 11px 25px rgba(79, 70, 229, 0.28);
-}
-
-.app-page .offer-bottom .btn-primary:focus-visible {
-    outline: 2px solid var(--pf-accent);
-    outline-offset: 3px;
+    top: 98px;
 }
 
 
@@ -789,32 +1484,123 @@
    TABLET
    ========================================================= */
 
-@media (max-width: 1050px) {
+@media (max-width: 1080px) {
+
+    .app-page .app-header {
+        gap: 16px;
+    }
+
+    .app-page .app-header-nav a {
+        padding: 0 9px;
+    }
+
+    .app-page .app-shell {
+        grid-template-columns:
+            215px
+            minmax(0, 1fr);
+
+        gap: 18px;
+    }
 
     .app-page .dashboard-grid {
         grid-template-columns:
             minmax(0, 1fr)
-            245px;
+            240px;
 
-        gap: 17px;
-    }
-
-    .app-page .dashboard-offers {
-        gap: 13px;
-    }
-
-    .app-page .offer-image {
-        height: 150px;
+        gap: 15px;
     }
 
 }
 
 
 /* =========================================================
-   SMALL TABLET
+   TABLET / MOBILE NAVIGATION
    ========================================================= */
 
 @media (max-width: 900px) {
+
+    .app-page .app-header {
+        grid-template-columns:
+            minmax(0, 1fr)
+            auto;
+
+        min-height: 70px;
+    }
+
+    .app-page .app-header-nav {
+        display: none;
+    }
+
+    .app-page .mobile-menu-button {
+        display: flex;
+    }
+
+    .app-page .mobile-navigation {
+        top: 70px;
+    }
+
+    .app-page .app-shell {
+        grid-template-columns: 1fr;
+
+        width:
+            min(
+                calc(100% - 32px),
+                var(--pf-container)
+            );
+
+        padding-top: 22px;
+    }
+
+    .app-page .sidebar {
+        position: static;
+
+        width: 100%;
+    }
+
+    .app-page .sidebar-nav {
+        display: grid;
+
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+        gap: 6px;
+    }
+
+    .app-page .sidebar-nav a {
+        justify-content: center;
+    }
+
+    .app-page .sidebar-nav a:hover {
+        transform: none;
+    }
+
+    .app-page .side-balance {
+        display: grid;
+
+        grid-template-columns:
+            auto
+            auto
+            minmax(0, 1fr)
+            auto;
+
+        align-items: center;
+
+        gap: 10px;
+
+        margin-top: 10px;
+    }
+
+    .app-page .side-balance strong {
+        margin-top: 0;
+    }
+
+    .app-page .side-balance > span {
+        margin-top: 0;
+    }
+
+    .app-page .side-balance > a {
+        margin-top: 0;
+    }
 
     .app-page .dashboard-grid {
         grid-template-columns: 1fr;
@@ -829,10 +1615,6 @@
             repeat(2, minmax(0, 1fr));
     }
 
-    .app-page .offer-image {
-        height: 165px;
-    }
-
 }
 
 
@@ -842,8 +1624,74 @@
 
 @media (max-width: 680px) {
 
+    .app-page .app-header {
+        padding:
+            0
+            14px;
+    }
+
+    .app-page .brand {
+        font-size: 18px;
+    }
+
+    .app-page .brand-mark {
+        width: 37px;
+        height: 37px;
+
+        flex-basis: 37px;
+
+        border-radius: 11px;
+    }
+
+    .app-page .balance-button {
+        min-height: 40px;
+
+        padding: 0 12px;
+
+        font-size: 11px;
+    }
+
+    .app-page .app-shell {
+        width:
+            calc(100% - 28px);
+
+        padding:
+            18px 0
+            45px;
+    }
+
+    .app-page .sidebar-nav {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .app-page .side-balance {
+        grid-template-columns:
+            1fr
+            auto;
+
+        align-items: start;
+    }
+
+    .app-page .side-balance strong {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+
+    .app-page .side-balance > span {
+        grid-column: 1;
+        grid-row: 3;
+    }
+
+    .app-page .side-balance > a {
+        grid-column: 2;
+        grid-row: 3;
+
+        align-self: center;
+    }
+
     .app-page .page-title {
-        margin-bottom: 20px;
+        margin-bottom: 19px;
     }
 
     .app-page .page-title h1 {
@@ -851,18 +1699,11 @@
     }
 
     .app-page .page-title p {
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .app-page .offer-tabs {
-        margin-bottom: 18px;
-    }
-
-    .app-page .offer-tabs button {
-        min-height: 40px;
-        padding: 0 14px;
-
-        font-size: 12px;
+        margin-bottom: 17px;
     }
 
     .app-page .dashboard-offers {
@@ -873,17 +1714,6 @@
         height: 180px;
     }
 
-    .app-page .offer-body {
-        padding: 18px 17px 12px;
-    }
-
-    .app-page .offer-bottom {
-        padding:
-            13px
-            17px
-            17px;
-    }
-
 }
 
 
@@ -892,6 +1722,41 @@
    ========================================================= */
 
 @media (max-width: 480px) {
+
+    .app-page .brand > span:last-child {
+        font-size: 17px;
+    }
+
+    .app-page .balance-button {
+        max-width: 120px;
+
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .app-page .mobile-navigation nav {
+        grid-template-columns: 1fr;
+    }
+
+    .app-page .sidebar-nav {
+        grid-template-columns: 1fr;
+    }
+
+    .app-page .side-balance {
+        display: block;
+    }
+
+    .app-page .side-balance strong {
+        margin-top: 7px;
+    }
+
+    .app-page .side-balance > span {
+        margin-top: 3px;
+    }
+
+    .app-page .side-balance > a {
+        margin-top: 12px;
+    }
 
     .app-page .page-title h1 {
         font-size: 29px;
@@ -906,10 +1771,6 @@
         flex-direction: column;
     }
 
-    .app-page .offer-bottom strong {
-        font-size: 14px;
-    }
-
     .app-page .offer-bottom .btn {
         width: 100%;
     }
@@ -919,7 +1780,7 @@
     }
 
     .app-page .empty-offer-card {
-        min-height: 280px;
+        min-height: 285px;
     }
 
 }
@@ -931,16 +1792,34 @@
 
 @media (max-width: 360px) {
 
+    .app-page .app-header {
+        padding:
+            0
+            10px;
+    }
+
+    .app-page .brand {
+        gap: 7px;
+    }
+
+    .app-page .brand-mark {
+        width: 35px;
+        height: 35px;
+
+        flex-basis: 35px;
+    }
+
+    .app-page .balance-button {
+        padding: 0 9px;
+    }
+
+    .app-page .app-shell {
+        width:
+            calc(100% - 20px);
+    }
+
     .app-page .page-title h1 {
         font-size: 27px;
-    }
-
-    .app-page .offer-tabs {
-        gap: 6px;
-    }
-
-    .app-page .offer-tabs button {
-        padding: 0 12px;
     }
 
 }
