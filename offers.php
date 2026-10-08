@@ -676,48 +676,46 @@ function getShortOfferDescription(
 
 function getOfferIcon(string $category): string
 {
-    $category = strtolower(
-        trim($category)
-    );
+    $category = strtolower(trim($category));
 
     if (
-        str_contains($category, 'survey') ||
-        str_contains($category, 'research')
+        strpos($category, 'survey') !== false ||
+        strpos($category, 'research') !== false
     ) {
         return 'fa-clipboard-list';
     }
 
     if (
-        str_contains($category, 'app') ||
-        str_contains($category, 'mobile')
+        strpos($category, 'app') !== false ||
+        strpos($category, 'mobile') !== false
     ) {
         return 'fa-mobile-screen-button';
     }
 
     if (
-        str_contains($category, 'game') ||
-        str_contains($category, 'gaming')
+        strpos($category, 'game') !== false ||
+        strpos($category, 'gaming') !== false
     ) {
         return 'fa-gamepad';
     }
 
     if (
-        str_contains($category, 'shopping') ||
-        str_contains($category, 'retail')
+        strpos($category, 'shopping') !== false ||
+        strpos($category, 'retail') !== false
     ) {
         return 'fa-bag-shopping';
     }
 
     if (
-        str_contains($category, 'video') ||
-        str_contains($category, 'entertainment')
+        strpos($category, 'video') !== false ||
+        strpos($category, 'entertainment') !== false
     ) {
         return 'fa-play';
     }
 
     if (
-        str_contains($category, 'finance') ||
-        str_contains($category, 'money')
+        strpos($category, 'finance') !== false ||
+        strpos($category, 'money') !== false
     ) {
         return 'fa-wallet';
     }
