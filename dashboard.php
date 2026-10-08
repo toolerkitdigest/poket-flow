@@ -99,7 +99,7 @@ $totalEarned = getUserTotalEarned(
 
     <link
         rel="stylesheet"
-        href="assets/poketflow.css"
+        href="idex.css"
     >
 
 </head>
