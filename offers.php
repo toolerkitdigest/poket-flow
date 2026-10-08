@@ -783,7 +783,7 @@ function getOfferCategory(array $campaign): string
 </head>
 
 
-<body class="app-page">
+<body/>
 
 
 <!-- ==================================================
