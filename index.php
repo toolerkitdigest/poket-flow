@@ -28,13 +28,7 @@ declare(strict_types=1);
 <link rel="stylesheet" href="/assets/poketflow.css">
 <link rel="stylesheet" href="/assets/featured-offers.css">
 
-<style>
-body {
-    background: red !important;
-}
-</style>
-</head>
-  
+
   
 
 </head>
