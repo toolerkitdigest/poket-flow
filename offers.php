@@ -776,8 +776,7 @@ function getOfferCategory(array $campaign): string
 
     <link
         rel="stylesheet"
-        href="assets/poketflow.css"
-    >
+        href="index.css">
 
     <link
         rel="stylesheet"
