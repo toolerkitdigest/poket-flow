@@ -979,7 +979,7 @@
 .offer-image {
     position: relative;
 
-    height: 82px;
+    height: 90px;
 
     display: flex;
     align-items: center;
@@ -1010,11 +1010,11 @@
 .offer-image img {
     display: block;
 
-    width: 58px;
-    height: 58px;
+    width: 60px;
+    height: 60px;
 
-    max-width: 58px;
-    max-height: 58px;
+    max-width: 60px;
+    max-height: 60px;
 
     padding: 0;
 
