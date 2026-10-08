@@ -99,7 +99,7 @@ $totalEarned = getUserTotalEarned(
 
     <link
         rel="stylesheet"
-        href="index.css"
+        href="dashboard.css"
     >
 
 </head>
