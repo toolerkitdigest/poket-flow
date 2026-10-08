@@ -56,14 +56,19 @@ if (!$user) {
 // User information
 // --------------------------------------------------
 
-$userName = trim($user['name'] ?? 'Member');
+$userName = trim(
+    (string) ($user['name'] ?? 'Member')
+);
 
-$nameParts = explode(' ', $userName);
+$nameParts = explode(
+    ' ',
+    $userName
+);
 
 $firstName = $nameParts[0] ?? 'Member';
 
 
-/// --------------------------------------------------
+// --------------------------------------------------
 // Dashboard earnings
 // --------------------------------------------------
 
@@ -81,419 +86,660 @@ $totalEarned = getUserTotalEarned(
     $pdo,
     $userId
 );
-?>
-<!doctype html>
 
-<html lang="en">
+?><!doctype html>
 
-<head>
+<html lang="en"><head><meta charset="utf-8">
 
-    <meta charset="utf-8">
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+>
 
-    <meta
-        name="viewport"
-        content="width=device-width,initial-scale=1"
-    >
+<title>Dashboard — PoketFlow</title>
 
-    <title>Dashboard — PoketFlow</title>
+<link
+    rel="stylesheet"
+    href="css/dashboard.css"
+>
 
-    <link
-        rel="stylesheet"
-        href="css/dashboard.css"
-    >
-
-</head>
-
-
-<body class="app-page">
-
-
-<!-- ==================================================
+</head><body class="app-page"><!-- ==================================================
      HEADER
-================================================== -->
+================================================== --><header class="app-header"><a
+    class="brand"
+    href="index.php"
+>
 
-<header class="app-header">
+    <span class="brand-mark">
+        P
+    </span>
+
+    <span>
+        Poket<span>Flow</span>
+    </span>
+
+</a>
+
+
+<!-- Desktop navigation -->
+
+<nav class="desktop-navigation">
+
+    <a
+        class="active"
+        href="dashboard.php"
+    >
+        Home
+    </a>
+
+
+    <a href="offers.php">
+        Earn
+    </a>
+
+
+    <a href="history.php">
+        History
+    </a>
+
+
+    <a href="referrals.php">
+        Refer &amp; Earn
+    </a>
+
+
+    <a href="withdraw.php">
+        Withdraw
+    </a>
+
+</nav>
+
+
+<div class="header-actions">
 
 
     <a
-        class="brand"
-        href="index.php"
+        class="btn btn-primary balance-button"
+        href="withdraw.php"
+    >
+        $<?= number_format($availableBalance, 2) ?>
+    </a>
+
+
+    <!-- Mobile hamburger -->
+
+    <button
+        type="button"
+        class="mobile-menu-button"
+        id="mobileMenuButton"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="mobileNavigation"
     >
 
-        <span class="brand-mark">
-            P
+        <span></span>
+        <span></span>
+        <span></span>
+
+    </button>
+
+
+</div>
+
+</header><!-- ==================================================
+     MOBILE NAVIGATION
+================================================== --><div
+    class="mobile-navigation"
+    id="mobileNavigation"
+    aria-hidden="true"
+><nav>
+
+
+    <a
+        class="active"
+        href="dashboard.php"
+    >
+
+        <span class="mobile-nav-icon">
+            ⌂
         </span>
 
         <span>
-            Poket<span>Flow</span>
+            Home
         </span>
 
     </a>
 
 
-    <nav>
+    <a href="offers.php">
+
+        <span class="mobile-nav-icon">
+            ▦
+        </span>
+
+        <span>
+            Earn Rewards
+        </span>
+
+    </a>
+
+
+    <a href="history.php">
+
+        <span class="mobile-nav-icon">
+            ◷
+        </span>
+
+        <span>
+            History
+        </span>
+
+    </a>
+
+
+    <a href="referrals.php">
+
+        <span class="mobile-nav-icon">
+            ♧
+        </span>
+
+        <span>
+            Refer &amp; Earn
+        </span>
+
+    </a>
+
+
+    <a href="withdraw.php">
+
+        <span class="mobile-nav-icon">
+            ▣
+        </span>
+
+        <span>
+            Withdraw
+        </span>
+
+    </a>
+
+
+    <a href="logout.php">
+
+        <span class="mobile-nav-icon">
+            ↪
+        </span>
+
+        <span>
+            Log Out
+        </span>
+
+    </a>
+
+
+</nav>
+
+</div><!-- ==================================================
+     DASHBOARD LAYOUT
+================================================== --><main class="app-shell"><!-- ==================================================
+     SIDEBAR
+================================================== -->
+
+<aside class="sidebar">
+
+
+    <div class="sidebar-nav">
+
 
         <a
             class="active"
             href="dashboard.php"
         >
-            Home
+            ⌂
+            <span>
+                Home
+            </span>
         </a>
+
 
         <a href="offers.php">
-            Earn
+            ▦
+            <span>
+                Offers
+            </span>
         </a>
+
 
         <a href="history.php">
-            History
+            ◷
+            <span>
+                History
+            </span>
         </a>
+
 
         <a href="referrals.php">
-            Refer & Earn
+            ♧
+            <span>
+                Refer &amp; Earn
+            </span>
         </a>
+
 
         <a href="withdraw.php">
-            Withdraw
+            ▣
+            <span>
+                Withdraw
+            </span>
         </a>
 
-    </nav>
+
+        <a href="logout.php">
+            ↪
+            <span>
+                Log Out
+            </span>
+        </a>
 
 
-    <div class="header-actions">
+    </div>
 
-        <a
-            class="btn btn-primary"
-            href="withdraw.php"
-        >
+
+    <!-- Sidebar Balance -->
+
+    <div class="side-balance">
+
+        <small>
+            Your Balance
+        </small>
+
+
+        <strong>
             $<?= number_format($availableBalance, 2) ?>
+        </strong>
+
+
+        <span>
+            Available to withdraw
+        </span>
+
+
+        <a href="withdraw.php">
+            Withdraw Funds →
         </a>
 
     </div>
 
-</header>
+
+</aside>
 
 
 <!-- ==================================================
-     DASHBOARD LAYOUT
+     MAIN CONTENT
 ================================================== -->
 
-<main class="app-shell">
+<section class="app-content">
 
 
-    <!-- ==================================================
-         SIDEBAR
-    ================================================== -->
+    <!-- Welcome -->
 
-    <aside class="sidebar">
+    <div class="welcome">
 
 
-        <div class="sidebar-nav">
+        <div>
+
+            <span class="kicker">
+                YOUR POKETFLOW DASHBOARD
+            </span>
 
 
-            <a
-                class="active"
-                href="dashboard.php"
-            >
-                ⌂
-                <span>
-                    Home
-                </span>
-            </a>
+            <h1>
+                Welcome back,
+                <?= e($firstName) ?>
+                👋
+            </h1>
 
 
-            <a href="offers.php">
-                ▦
-                <span>
-                    Offers
-                </span>
-            </a>
-
-
-            <a href="history.php">
-                ◷
-                <span>
-                    History
-                </span>
-            </a>
-
-
-            <a href="referrals.php">
-                ♧
-                <span>
-                    Refer & Earn
-                </span>
-            </a>
-
-
-            <a href="withdraw.php">
-                ▣
-                <span>
-                    Withdraw
-                </span>
-            </a>
-
-
-            <!-- Logout -->
-
-            <a href="logout.php">
-                ↪
-                <span>
-                    Log Out
-                </span>
-            </a>
-
+            <p>
+                Explore the latest earning opportunities
+                available to you.
+            </p>
 
         </div>
 
 
-        <!-- Sidebar Balance -->
+        <a
+            class="btn btn-primary"
+            href="offers.php"
+        >
+            Find Offers →
+        </a>
 
-        <div class="side-balance">
 
-            <small>
-                Your Balance
-            </small>
+    </div>
+
+
+    <!-- ==================================================
+         STATISTICS
+    ================================================== -->
+
+    <div class="stats-row">
+
+
+        <div class="stat-card">
+
+            <span>
+                Available Balance
+            </span>
 
             <strong>
                 $<?= number_format($availableBalance, 2) ?>
             </strong>
 
-            <span>
-                Available to withdraw
-            </span>
-
-            <a href="withdraw.php">
-                Withdraw Funds →
-            </a>
+            <small>
+                Ready when eligible
+            </small>
 
         </div>
 
 
-    </aside>
+        <div class="stat-card">
+
+            <span>
+                Pending
+            </span>
+
+            <strong>
+                $<?= number_format($pendingBalance, 2) ?>
+            </strong>
+
+            <small>
+                Awaiting approval
+            </small>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <span>
+                Total Earned
+            </span>
+
+            <strong>
+                $<?= number_format($totalEarned, 2) ?>
+            </strong>
+
+            <small>
+                Your lifetime rewards
+            </small>
+
+        </div>
+
+
+    </div>
 
 
     <!-- ==================================================
-         MAIN CONTENT
+         WAYS TO EARN
     ================================================== -->
 
-    <section class="app-content">
+    <div class="content-heading">
 
 
-        <!-- Welcome -->
+        <h2>
+            Ways to Earn
+        </h2>
 
-        <div class="welcome">
 
+        <a href="offers.php">
+            View all →
+        </a>
 
-            <div>
 
-                <span class="kicker">
-                    YOUR POKETFLOW DASHBOARD
-                </span>
+    </div>
 
 
-                <h1>
-                    Welcome back,
-                    <?= e($firstName) ?>
-                    👋
-                </h1>
+    <div class="earn-grid">
 
 
-                <p>
-                    Explore the latest earning opportunities
-                    available to you.
-                </p>
+        <!-- Offers -->
 
-            </div>
+        <a
+            href="offers.php"
+            class="earn-card"
+        >
 
+            <span>
+                ▤
+            </span>
 
-            <a
-                class="btn btn-primary"
-                href="offers.php"
-            >
-                Find Offers →
-            </a>
 
+            <h3>
+                Offers
+            </h3>
 
-        </div>
 
+            <p>
+                Browse available opportunities.
+            </p>
 
-        <!-- ==================================================
-             STATISTICS
-        ================================================== -->
 
-        <div class="stats-row">
+            <b>
+                Explore →
+            </b>
 
+        </a>
 
-            <!-- Available Balance -->
 
-            <div class="stat-card">
+        <!-- Surveys -->
 
-                <span>
-                    Available Balance
-                </span>
+        <a
+            href="offers.php"
+            class="earn-card"
+        >
 
-                <strong>
-                    $<?= number_format($availableBalance, 2) ?>
-                </strong>
+            <span>
+                ◎
+            </span>
 
-                <small>
-                    Ready when eligible
-                </small>
 
-            </div>
+            <h3>
+                Surveys
+            </h3>
 
 
-            <!-- Pending -->
+            <p>
+                Share your opinions.
+            </p>
 
-            <div class="stat-card">
 
-                <span>
-                    Pending
-                </span>
+            <b>
+                Explore →
+            </b>
 
-                <strong>
-                    $<?= number_format($pendingBalance, 2) ?>
-                </strong>
+        </a>
 
-                <small>
-                    Awaiting approval
-                </small>
 
-            </div>
+        <!-- Referrals -->
 
+        <a
+            href="referrals.php"
+            class="earn-card"
+        >
 
-            <!-- Total Earned -->
+            <span>
+                ♧
+            </span>
 
-            <div class="stat-card">
 
-                <span>
-                    Total Earned
-                </span>
+            <h3>
+                Refer &amp; Earn
+            </h3>
 
-                <strong>
-                    $<?= number_format($totalEarned, 2) ?>
-                </strong>
 
-                <small>
-                    Your lifetime rewards
-                </small>
+            <p>
+                Invite friends when eligible.
+            </p>
 
-            </div>
 
+            <b>
+                Learn more →
+            </b>
 
-        </div>
+        </a>
 
 
-        <!-- ==================================================
-             WAYS TO EARN
-        ================================================== -->
+    </div>
 
-        <div class="content-heading">
 
+</section>
 
-            <h2>
-                Ways to Earn
-            </h2>
+</main><!-- ==================================================
+     MOBILE MENU SCRIPT
+================================================== --><script>
 
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
 
-            <a href="offers.php">
-                View all →
-            </a>
+        const menuButton =
+            document.getElementById(
+                'mobileMenuButton'
+            );
 
 
-        </div>
+        const mobileNavigation =
+            document.getElementById(
+                'mobileNavigation'
+            );
 
 
-        <div class="earn-grid">
+        if (
+            !menuButton ||
+            !mobileNavigation
+        ) {
+            return;
+        }
 
 
-            <!-- Offers -->
+        // --------------------------------------------------
+        // Open / close menu
+        // --------------------------------------------------
 
-            <a
-                href="offers.php"
-                class="earn-card"
-            >
+        menuButton.addEventListener(
+            'click',
+            function () {
 
-                <span>
-                    ▤
-                </span>
+                const isOpen =
+                    menuButton.classList.toggle(
+                        'open'
+                    );
 
-                <h3>
-                    Offers
-                </h3>
 
-                <p>
-                    Browse available opportunities.
-                </p>
+                mobileNavigation.classList.toggle(
+                    'open',
+                    isOpen
+                );
 
-                <b>
-                    Explore →
-                </b>
 
-            </a>
+                menuButton.setAttribute(
+                    'aria-expanded',
+                    isOpen ? 'true' : 'false'
+                );
 
 
-            <!-- Surveys -->
+                mobileNavigation.setAttribute(
+                    'aria-hidden',
+                    isOpen ? 'false' : 'true'
+                );
 
-            <a
-                href="offers.php"
-                class="earn-card"
-            >
+            }
+        );
 
-                <span>
-                    ◎
-                </span>
 
-                <h3>
-                    Surveys
-                </h3>
+        // --------------------------------------------------
+        // Close after selecting a link
+        // --------------------------------------------------
 
-                <p>
-                    Share your opinions.
-                </p>
+        mobileNavigation
+            .querySelectorAll('a')
+            .forEach(
+                function (link) {
 
-                <b>
-                    Explore →
-                </b>
+                    link.addEventListener(
+                        'click',
+                        function () {
 
-            </a>
+                            menuButton.classList.remove(
+                                'open'
+                            );
 
 
-            <!-- Referrals -->
+                            mobileNavigation.classList.remove(
+                                'open'
+                            );
 
-            <a
-                href="referrals.php"
-                class="earn-card"
-            >
 
-                <span>
-                    ♧
-                </span>
+                            menuButton.setAttribute(
+                                'aria-expanded',
+                                'false'
+                            );
 
-                <h3>
-                    Refer & Earn
-                </h3>
 
-                <p>
-                    Invite friends when eligible.
-                </p>
+                            mobileNavigation.setAttribute(
+                                'aria-hidden',
+                                'true'
+                            );
 
-                <b>
-                    Learn more →
-                </b>
+                        }
+                    );
 
-            </a>
+                }
+            );
 
 
-        </div>
+        // --------------------------------------------------
+        // Close when clicking outside
+        // --------------------------------------------------
 
+        document.addEventListener(
+            'click',
+            function (event) {
 
-    </section>
+                if (
+                    !mobileNavigation.contains(event.target) &&
+                    !menuButton.contains(event.target)
+                ) {
 
+                    menuButton.classList.remove(
+                        'open'
+                    );
 
-</main>
 
+                    mobileNavigation.classList.remove(
+                        'open'
+                    );
 
+
+                    menuButton.setAttribute(
+                        'aria-expanded',
+                        'false'
+                    );
+
+
+                    mobileNavigation.setAttribute(
+                        'aria-hidden',
+                        'true'
+                    );
+
+                }
+
+            }
+        );
+
+    }
+);
+
+</script>
 </body>
-
 </html>
