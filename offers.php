@@ -778,7 +778,7 @@ function getOfferCategory(array $campaign): string
    
 <link
         rel="stylesheet"
-        href="assets/offers.css"
+        href="offers.css"
     >
 
     
