@@ -1,0 +1,1600 @@
+/* =========================================================
+   POKETFLOW DASHBOARD
+   Standalone Dashboard CSS
+   Premium Dark SaaS / Responsive
+========================================================= */
+
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+:root {
+
+    --pf-bg: #080d1a;
+    --pf-bg-soft: #0c1324;
+
+    --pf-surface: #111827;
+    --pf-surface-2: #151e31;
+    --pf-surface-hover: #1a253b;
+
+    --pf-primary: #6366f1;
+    --pf-primary-hover: #818cf8;
+    --pf-primary-dark: #4f46e5;
+
+    --pf-accent: #22d3ee;
+
+    --pf-text: #f8fafc;
+    --pf-secondary: #a7b1c2;
+    --pf-muted: #718096;
+
+    --pf-border: rgba(255,255,255,.08);
+
+    --pf-success: #34d399;
+    --pf-warning: #fbbf24;
+    --pf-danger: #f87171;
+
+    --pf-radius: 16px;
+
+    --pf-container: 1440px;
+
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+
+html {
+    width: 100%;
+    min-width: 0;
+    scroll-behavior: smooth;
+}
+
+
+body {
+    width: 100%;
+    min-width: 0;
+    min-height: 100vh;
+
+    margin: 0;
+    padding: 0;
+
+    background:
+        radial-gradient(
+            circle at 15% 0%,
+            rgba(99,102,241,.08),
+            transparent 25%
+        ),
+        radial-gradient(
+            circle at 90% 15%,
+            rgba(34,211,238,.045),
+            transparent 22%
+        ),
+        var(--pf-bg);
+
+    color: var(--pf-text);
+
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    line-height: 1.6;
+
+    overflow-x: hidden;
+
+}
+
+
+body *,
+body *::before,
+body *::after {
+    box-sizing: border-box;
+}
+
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+
+button {
+    border: 0;
+}
+
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.app-header {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 1000;
+
+    width: 100%;
+
+    min-height: 72px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 30px;
+
+    padding:
+        0 30px;
+
+    background:
+        rgba(8,13,26,.94);
+
+    border-bottom:
+        1px solid var(--pf-border);
+
+    backdrop-filter:
+        blur(18px);
+
+    -webkit-backdrop-filter:
+        blur(18px);
+
+}
+
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.app-header .brand {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    flex: 0 0 auto;
+
+    color: var(--pf-text);
+
+    font-size: 20px;
+
+    font-weight: 800;
+
+    letter-spacing: -.5px;
+
+    white-space: nowrap;
+
+}
+
+
+.brand-mark {
+
+    width: 38px;
+    height: 38px;
+
+    min-width: 38px;
+
+    display: grid;
+
+    place-items: center;
+
+    border-radius: 11px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--pf-primary),
+            var(--pf-accent)
+        );
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: 900;
+
+    box-shadow:
+        0 8px 25px
+        rgba(99,102,241,.25);
+
+}
+
+
+.app-header .brand > span:last-child > span {
+
+    color: var(--pf-accent);
+
+}
+
+
+/* =========================================================
+   HEADER NAVIGATION
+========================================================= */
+
+.app-header nav {
+
+    flex: 1 1 auto;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 4px;
+
+}
+
+
+.app-header nav a {
+
+    position: relative;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-height: 40px;
+
+    padding:
+        0 12px;
+
+    border-radius: 9px;
+
+    color: var(--pf-secondary);
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    transition:
+        color .2s ease,
+        background .2s ease;
+
+}
+
+
+.app-header nav a:hover {
+
+    color: var(--pf-text);
+
+    background:
+        rgba(255,255,255,.05);
+
+}
+
+
+.app-header nav a.active {
+
+    color: var(--pf-text);
+
+    background:
+        rgba(99,102,241,.08);
+
+}
+
+
+.app-header nav a.active::after {
+
+    content: "";
+
+    position: absolute;
+
+    left: 12px;
+    right: 12px;
+
+    bottom: 3px;
+
+    height: 2px;
+
+    border-radius: 10px;
+
+    background:
+        var(--pf-primary);
+
+}
+
+
+/* =========================================================
+   HEADER ACTION
+========================================================= */
+
+.app-header .header-actions {
+
+    flex: 0 0 auto;
+
+    display: flex;
+
+    align-items: center;
+
+}
+
+
+.app-header .header-actions .btn {
+
+    min-height: 40px;
+
+    padding:
+        0 16px;
+
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.btn {
+
+    min-height: 42px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    padding:
+        0 17px;
+
+    border-radius: 10px;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    line-height: 1;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        transform .2s ease,
+        background .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease;
+
+}
+
+
+.btn:hover {
+
+    transform:
+        translateY(-1px);
+
+}
+
+
+.btn-primary {
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--pf-primary),
+            var(--pf-primary-dark)
+        );
+
+    box-shadow:
+        0 10px 25px
+        rgba(79,70,229,.20);
+
+}
+
+
+.btn-primary:hover {
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--pf-primary-hover),
+            var(--pf-primary)
+        );
+
+}
+
+
+/* =========================================================
+   APPLICATION LAYOUT
+========================================================= */
+
+.app-shell {
+
+    width: 100%;
+
+    max-width:
+        var(--pf-container);
+
+    min-height:
+        calc(100vh - 72px);
+
+    margin: 0 auto;
+
+    display: grid;
+
+    grid-template-columns:
+        230px minmax(0, 1fr);
+
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.sidebar {
+
+    position: sticky;
+
+    top: 72px;
+
+    height:
+        calc(100vh - 72px);
+
+    min-width: 0;
+
+    padding:
+        28px 18px;
+
+    border-right:
+        1px solid var(--pf-border);
+
+    background:
+        rgba(12,19,36,.42);
+
+}
+
+
+/* =========================================================
+   SIDEBAR NAV
+========================================================= */
+
+.sidebar-nav {
+
+    display: grid;
+
+    gap: 5px;
+
+}
+
+
+.sidebar-nav a {
+
+    min-height: 45px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    padding:
+        0 13px;
+
+    border-radius: 11px;
+
+    color: var(--pf-secondary);
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    transition:
+        color .2s ease,
+        background .2s ease,
+        transform .2s ease;
+
+}
+
+
+.sidebar-nav a:hover {
+
+    color: var(--pf-text);
+
+    background:
+        rgba(255,255,255,.045);
+
+    transform:
+        translateX(2px);
+
+}
+
+
+.sidebar-nav a.active {
+
+    color: var(--pf-text);
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(99,102,241,.16),
+            rgba(99,102,241,.05)
+        );
+
+    border:
+        1px solid
+        rgba(99,102,241,.13);
+
+}
+
+
+.sidebar-nav a > span {
+
+    flex: 1;
+
+}
+
+
+.sidebar-nav a::first-letter {
+
+    color:
+        var(--pf-primary-hover);
+
+}
+
+
+/* =========================================================
+   SIDEBAR BALANCE
+========================================================= */
+
+.side-balance {
+
+    margin-top: 30px;
+
+    padding: 18px;
+
+    border:
+        1px solid var(--pf-border);
+
+    border-radius:
+        var(--pf-radius);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(99,102,241,.10),
+            rgba(17,24,39,.75)
+        );
+
+}
+
+
+.side-balance small {
+
+    display: block;
+
+    color:
+        var(--pf-muted);
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: .8px;
+
+}
+
+
+.side-balance strong {
+
+    display: block;
+
+    margin-top: 6px;
+
+    color:
+        var(--pf-text);
+
+    font-size: 25px;
+
+    line-height: 1.1;
+
+    letter-spacing: -.8px;
+
+}
+
+
+.side-balance > span {
+
+    display: block;
+
+    margin-top: 5px;
+
+    color:
+        var(--pf-muted);
+
+    font-size: 10px;
+
+}
+
+
+.side-balance a {
+
+    display: block;
+
+    margin-top: 16px;
+
+    color:
+        var(--pf-primary-hover);
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+}
+
+
+.side-balance a:hover {
+
+    color:
+        var(--pf-accent);
+
+}
+
+
+/* =========================================================
+   MAIN CONTENT
+========================================================= */
+
+.app-content {
+
+    min-width: 0;
+
+    padding:
+        42px 42px 70px;
+
+}
+
+
+/* =========================================================
+   WELCOME
+========================================================= */
+
+.welcome {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 30px;
+
+    margin-bottom: 32px;
+
+}
+
+
+.kicker {
+
+    display: inline-block;
+
+    margin-bottom: 9px;
+
+    color:
+        var(--pf-primary-hover);
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.5px;
+
+}
+
+
+.welcome h1 {
+
+    margin: 0;
+
+    color:
+        var(--pf-text);
+
+    font-size:
+        clamp(27px, 3vw, 38px);
+
+    line-height: 1.15;
+
+    letter-spacing:
+        -1.3px;
+
+}
+
+
+.welcome p {
+
+    max-width: 600px;
+
+    margin:
+        9px 0 0;
+
+    color:
+        var(--pf-secondary);
+
+    font-size: 13px;
+
+}
+
+
+.welcome > .btn {
+
+    flex: 0 0 auto;
+
+}
+
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+
+.stats-row {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 15px;
+
+    margin-bottom: 42px;
+
+}
+
+
+.stat-card {
+
+    position: relative;
+
+    min-width: 0;
+
+    min-height: 145px;
+
+    padding: 21px;
+
+    overflow: hidden;
+
+    border:
+        1px solid var(--pf-border);
+
+    border-radius:
+        var(--pf-radius);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(17,24,39,.96),
+            rgba(12,19,36,.85)
+        );
+
+    box-shadow:
+        0 15px 45px rgba(0,0,0,.12);
+
+    transition:
+        transform .2s ease,
+        border-color .2s ease;
+
+}
+
+
+.stat-card::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 100px;
+    height: 100px;
+
+    right: -45px;
+    top: -45px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(99,102,241,.08);
+
+    pointer-events: none;
+
+}
+
+
+.stat-card:hover {
+
+    transform:
+        translateY(-3px);
+
+    border-color:
+        rgba(99,102,241,.28);
+
+}
+
+
+.stat-card > span {
+
+    display: block;
+
+    color:
+        var(--pf-secondary);
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+}
+
+
+.stat-card strong {
+
+    display: block;
+
+    margin-top: 8px;
+
+    color:
+        var(--pf-text);
+
+    font-size: 28px;
+
+    line-height: 1.1;
+
+    letter-spacing: -1px;
+
+}
+
+
+.stat-card small {
+
+    display: block;
+
+    margin-top: 10px;
+
+    color:
+        var(--pf-muted);
+
+    font-size: 10px;
+
+}
+
+
+/* =========================================================
+   CONTENT HEADING
+========================================================= */
+
+.content-heading {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 17px;
+
+}
+
+
+.content-heading h2 {
+
+    margin: 0;
+
+    color:
+        var(--pf-text);
+
+    font-size: 18px;
+
+    letter-spacing: -.4px;
+
+}
+
+
+.content-heading a {
+
+    color:
+        var(--pf-primary-hover);
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+}
+
+
+.content-heading a:hover {
+
+    color:
+        var(--pf-accent);
+
+}
+
+
+/* =========================================================
+   EARN GRID
+========================================================= */
+
+.earn-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 15px;
+
+}
+
+
+.earn-card {
+
+    position: relative;
+
+    min-width: 0;
+
+    min-height: 190px;
+
+    padding: 21px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    border:
+        1px solid var(--pf-border);
+
+    border-radius:
+        var(--pf-radius);
+
+    background:
+        var(--pf-surface);
+
+    transition:
+        transform .2s ease,
+        border-color .2s ease,
+        background .2s ease;
+
+}
+
+
+.earn-card:hover {
+
+    transform:
+        translateY(-4px);
+
+    border-color:
+        rgba(99,102,241,.30);
+
+    background:
+        var(--pf-surface-hover);
+
+}
+
+
+.earn-card > span {
+
+    width: 40px;
+    height: 40px;
+
+    display: grid;
+
+    place-items: center;
+
+    border-radius: 11px;
+
+    background:
+        rgba(99,102,241,.10);
+
+    color:
+        var(--pf-primary-hover);
+
+    font-size: 16px;
+
+}
+
+
+.earn-card h3 {
+
+    margin:
+        17px 0 5px;
+
+    color:
+        var(--pf-text);
+
+    font-size: 15px;
+
+    letter-spacing: -.2px;
+
+}
+
+
+.earn-card p {
+
+    margin: 0;
+
+    color:
+        var(--pf-muted);
+
+    font-size: 11px;
+
+    line-height: 1.65;
+
+}
+
+
+.earn-card b {
+
+    margin-top: auto;
+
+    padding-top: 17px;
+
+    color:
+        var(--pf-primary-hover);
+
+    font-size: 11px;
+
+}
+
+
+.earn-card:hover b {
+
+    color:
+        var(--pf-accent);
+
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    .app-header {
+
+        padding:
+            0 20px;
+
+        gap: 18px;
+
+    }
+
+
+    .app-header nav a {
+
+        padding:
+            0 8px;
+
+        font-size: 12px;
+
+    }
+
+
+    .app-shell {
+
+        grid-template-columns:
+            205px minmax(0, 1fr);
+
+    }
+
+
+    .app-content {
+
+        padding:
+            35px 28px 60px;
+
+    }
+
+}
+
+
+/* =========================================================
+   TABLET / SMALL LAPTOP
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .app-header {
+
+        min-height: 66px;
+
+    }
+
+
+    .app-header nav {
+
+        display: none;
+
+    }
+
+
+    .app-header .header-actions {
+
+        margin-left: auto;
+
+    }
+
+
+    .app-shell {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .sidebar {
+
+        position: static;
+
+        height: auto;
+
+        padding:
+            15px 20px;
+
+        border-right: 0;
+
+        border-bottom:
+            1px solid var(--pf-border);
+
+        background:
+            rgba(12,19,36,.45);
+
+    }
+
+
+    .sidebar-nav {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        overflow-x: auto;
+
+        scrollbar-width: none;
+
+        padding-bottom: 2px;
+
+    }
+
+
+    .sidebar-nav::-webkit-scrollbar {
+
+        display: none;
+
+    }
+
+
+    .sidebar-nav a {
+
+        flex:
+            0 0 auto;
+
+        min-height: 40px;
+
+        padding:
+            0 13px;
+
+        white-space: nowrap;
+
+    }
+
+
+    .side-balance {
+
+        display: none;
+
+    }
+
+
+    .app-content {
+
+        padding:
+            30px 24px 55px;
+
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .app-header {
+
+        min-height: 62px;
+
+        padding:
+            0 15px;
+
+    }
+
+
+    .app-header .brand {
+
+        font-size: 18px;
+
+    }
+
+
+    .brand-mark {
+
+        width: 35px;
+        height: 35px;
+
+        min-width: 35px;
+
+        border-radius: 9px;
+
+    }
+
+
+    .app-header .header-actions .btn {
+
+        min-height: 38px;
+
+        padding:
+            0 12px;
+
+        font-size: 12px;
+
+    }
+
+
+    .sidebar {
+
+        padding:
+            10px 14px;
+
+    }
+
+
+    .sidebar-nav {
+
+        gap: 5px;
+
+    }
+
+
+    .sidebar-nav a {
+
+        min-height: 38px;
+
+        padding:
+            0 11px;
+
+        font-size: 11px;
+
+    }
+
+
+    .sidebar-nav a:first-child {
+
+        padding-left: 12px;
+
+    }
+
+
+    .app-content {
+
+        padding:
+            28px 18px 50px;
+
+    }
+
+
+    .welcome {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 18px;
+
+        margin-bottom: 25px;
+
+    }
+
+
+    .welcome h1 {
+
+        font-size: 28px;
+
+    }
+
+
+    .welcome p {
+
+        font-size: 12px;
+
+    }
+
+
+    .welcome > .btn {
+
+        width: 100%;
+
+    }
+
+
+    .stats-row {
+
+        grid-template-columns: 1fr;
+
+        gap: 11px;
+
+        margin-bottom: 35px;
+
+    }
+
+
+    .stat-card {
+
+        min-height: 125px;
+
+        padding: 18px;
+
+    }
+
+
+    .stat-card strong {
+
+        font-size: 25px;
+
+    }
+
+
+    .earn-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 11px;
+
+    }
+
+
+    .earn-card {
+
+        min-height: 165px;
+
+    }
+
+}
+
+
+/* =========================================================
+   SMALL PHONES
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .app-header {
+
+        padding:
+            0 11px;
+
+    }
+
+
+    .app-header .brand {
+
+        gap: 8px;
+
+        font-size: 17px;
+
+    }
+
+
+    .brand-mark {
+
+        width: 33px;
+        height: 33px;
+
+        min-width: 33px;
+
+    }
+
+
+    .app-header .header-actions .btn {
+
+        padding:
+            0 10px;
+
+        font-size: 11px;
+
+    }
+
+
+    .sidebar {
+
+        padding:
+            9px 10px;
+
+    }
+
+
+    .sidebar-nav a {
+
+        min-height: 36px;
+
+        padding:
+            0 10px;
+
+    }
+
+
+    .app-content {
+
+        padding:
+            25px 14px 45px;
+
+    }
+
+
+    .kicker {
+
+        font-size: 9px;
+
+        letter-spacing: 1.2px;
+
+    }
+
+
+    .welcome h1 {
+
+        font-size: 25px;
+
+        letter-spacing: -1px;
+
+    }
+
+
+    .welcome p {
+
+        font-size: 11px;
+
+    }
+
+
+    .content-heading h2 {
+
+        font-size: 17px;
+
+    }
+
+
+    .stat-card {
+
+        min-height: 115px;
+
+        padding: 16px;
+
+    }
+
+
+    .stat-card strong {
+
+        font-size: 23px;
+
+    }
+
+
+    .earn-card {
+
+        min-height: 155px;
+
+        padding: 18px;
+
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+========================================================= */
+
+@media (max-width: 360px) {
+
+    .app-header {
+
+        padding:
+            0 9px;
+
+    }
+
+
+    .app-header .brand {
+
+        font-size: 16px;
+
+    }
+
+
+    .brand-mark {
+
+        width: 31px;
+        height: 31px;
+
+        min-width: 31px;
+
+        font-size: 13px;
+
+    }
+
+
+    .app-header .header-actions .btn {
+
+        padding:
+            0 8px;
+
+        font-size: 10px;
+
+    }
+
+
+    .sidebar-nav a {
+
+        font-size: 10px;
+
+    }
+
+
+    .app-content {
+
+        padding-left: 12px;
+        padding-right: 12px;
+
+    }
+
+
+    .welcome h1 {
+
+        font-size: 23px;
+
+    }
+
+}
