@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| PoketFlow Start Offer
+| PoketFlow Start Offer — OGAds Only
 |--------------------------------------------------------------------------
-| Starts an eligible campaign and creates a click-tracking record.
+| Validates an approved campaign, records the click, and redirects
+| the authenticated member to the OGAds offer.
 |
 | PHP 7.2 compatible.
 |--------------------------------------------------------------------------
@@ -15,23 +16,17 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/ogads.php';
 
-
-/*
-|--------------------------------------------------------------------------
-| Require Authentication
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Require authentication
+// --------------------------------------------------
 
 if (!isLoggedIn()) {
     redirect('login.php');
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Get Logged-in User
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Get logged-in user
+// --------------------------------------------------
 
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
@@ -51,12 +46,9 @@ if (!$user) {
     redirect('login.php');
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Validate User Account
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Validate user account
+// --------------------------------------------------
 
 $userStatus = strtoupper(
     trim((string) ($user['status'] ?? ''))
@@ -67,33 +59,22 @@ if ($userStatus !== 'ACTIVE') {
     exit('Your account is not currently permitted to start offers.');
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Read Network
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Accept OGAds only
+// --------------------------------------------------
 
 $network = strtolower(
     trim((string) ($_GET['network'] ?? 'ogads'))
 );
 
-if (!in_array($network, ['ogads', 'cpagrip'], true)) {
+if ($network !== 'ogads') {
     http_response_code(400);
     exit('Invalid offer network.');
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Read Offer ID
-|--------------------------------------------------------------------------
-|
-| The existing implementation uses numeric campaign offer IDs.
-| Keep this validation until the actual network ID format has
-| been confirmed.
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Validate external OGAds offer ID
+// --------------------------------------------------
 
 $offerIdValue = $_GET['offer_id'] ?? '';
 
@@ -109,12 +90,9 @@ if (
 
 $offerId = (string) $offerIdValue;
 
-
-/*
-|--------------------------------------------------------------------------
-| Helper: Validate HTTPS Destination
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Validate HTTPS offer destination
+// --------------------------------------------------
 
 function validateOfferDestination(string $url): bool
 {
@@ -147,25 +125,15 @@ function validateOfferDestination(string $url): bool
     return true;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Helper: Append Tracking Parameter
-|--------------------------------------------------------------------------
-| Preserves existing query parameters and URL fragments.
-|
-| IMPORTANT:
-| The parameter name must match the selected network's documented
-| tracking mechanism. This helper does not verify network support.
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Append network tracking parameter
+// --------------------------------------------------
 
 function appendTrackingParameter(
     string $url,
     string $parameter,
     string $trackingId
 ): string {
-
     $fragment = '';
 
     $fragmentPosition = strpos($url, '#');
@@ -175,7 +143,7 @@ function appendTrackingParameter(
         $url = substr($url, 0, $fragmentPosition);
     }
 
-    $separator = (strpos($url, '?') !== false)
+    $separator = strpos($url, '?') !== false
         ? '&'
         : '?';
 
@@ -187,236 +155,36 @@ function appendTrackingParameter(
         . $fragment;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Helper: Save Active Offer Tracking Information
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Store active offer tracking information
+// --------------------------------------------------
 
 function storeActiveOfferTracking(
-    string $network,
     string $trackingId,
     int $campaignId
 ): void {
-
     $_SESSION['active_offer_tracking_id'] = $trackingId;
-
     $_SESSION['active_offer_campaign_id'] = $campaignId;
-
-    $_SESSION['active_offer_network'] = $network;
+    $_SESSION['active_offer_network'] = 'ogads';
 }
 
+// ==================================================
+// OGADS WORKFLOW
+// ==================================================
 
-/*
-|--------------------------------------------------------------------------
-| CPAGrip Workflow
-|--------------------------------------------------------------------------
-*/
-
-if ($network === 'cpagrip') {
-
-    /*
-    | Find CPAGrip network.
-    */
-
-    $networkStmt = $pdo->prepare(
-        'SELECT id, slug, status
-         FROM networks
-         WHERE slug = ?
-         LIMIT 1'
-    );
-
-    $networkStmt->execute(['cpagrip']);
-
-    $networkRow = $networkStmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$networkRow) {
-        http_response_code(404);
-        exit('Offer network not found.');
-    }
-
-    if (
-        strtoupper(trim((string) ($networkRow['status'] ?? '')))
-        !== 'ACTIVE'
-    ) {
-        http_response_code(503);
-        exit('This offer network is temporarily unavailable.');
-    }
-
-    $networkId = (int) $networkRow['id'];
-
-
-    /*
-    | Load the database-backed campaign.
-    */
-
-    $campaignStmt = $pdo->prepare(
-        'SELECT
-            id,
-            source_type,
-            network_id,
-            external_offer_id,
-            network_offer_url,
-            image_url,
-            title,
-            description,
-            category,
-            instructions,
-            network_payout,
-            reward_rate,
-            worker_reward,
-            platform_margin,
-            countries,
-            devices,
-            os,
-            incentive_allowed,
-            status,
-            approval_status,
-            start_at,
-            end_at
-         FROM campaigns
-         WHERE network_id = ?
-           AND external_offer_id = ?
-         LIMIT 1'
-    );
-
-    $campaignStmt->execute([
-        $networkId,
-        $offerId,
-    ]);
-
-    $campaign = $campaignStmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$campaign) {
-        http_response_code(404);
-        exit('This offer is no longer available.');
-    }
-
-
-    /*
-    | Check campaign eligibility.
-    */
-
-    if (!canStartCampaign($pdo, $campaign, $user)) {
-        http_response_code(403);
-        exit('This offer is not currently available for your account.');
-    }
-
-
-    /*
-    | Validate network payout.
-    */
-
-    $networkPayout = isset($campaign['network_payout'])
-        ? (float) $campaign['network_payout']
-        : 0.0;
-
-    if (!is_finite($networkPayout) || $networkPayout <= 0) {
-        http_response_code(400);
-        exit('This offer is currently unavailable.');
-    }
-
-
-    /*
-    | Validate destination.
-    */
-
-    $networkOfferUrl = trim(
-        (string) ($campaign['network_offer_url'] ?? '')
-    );
-
-    if (!validateOfferDestination($networkOfferUrl)) {
-        error_log(
-            'PoketFlow CPAGrip: Invalid offer destination for campaign '
-            . (int) $campaign['id']
-        );
-
-        http_response_code(502);
-        exit('This offer is temporarily unavailable.');
-    }
-
-
-    /*
-    | Create unique click record.
-    */
-
-    try {
-        $trackingId = createCampaignClick(
-            $pdo,
-            (int) $campaign['id'],
-            $userId,
-            $_SERVER['REMOTE_ADDR'] ?? null,
-            $_SERVER['HTTP_USER_AGENT'] ?? null
-        );
-    } catch (Throwable $e) {
-        error_log(
-            'PoketFlow CPAGrip click error: '
-            . $e->getMessage()
-        );
-
-        http_response_code(500);
-        exit('Unable to start this offer. Please try again.');
-    }
-
-
-    /*
-    | Store tracking information.
-    */
-
-    storeActiveOfferTracking(
-        'cpagrip',
-        $trackingId,
-        (int) $campaign['id']
-    );
-
-
-    /*
-    | Add tracking ID.
-    |
-    | Confirm the parameter against CPAGrip documentation before
-    | relying on this for live conversion attribution.
-    */
-
-    $redirectUrl = appendTrackingParameter(
-        $networkOfferUrl,
-        'tracking_id',
-        $trackingId
-    );
-
-
-    /*
-    | Redirect.
-    */
-
-    header('Location: ' . $redirectUrl, true, 302);
-    exit;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| OGAds Workflow
-|--------------------------------------------------------------------------
-*/
-
-/*
-| Get offers saved in the member's session by the offers page.
-*/
+// --------------------------------------------------
+// Locate selected offer in the current session
+// --------------------------------------------------
 
 $sessionOffers = $_SESSION['ogads_offers'] ?? null;
 
 if (!is_array($sessionOffers) || empty($sessionOffers)) {
     http_response_code(404);
+
     exit(
         'Your offer list has expired. Please return to the Offers page and try again.'
     );
 }
-
-
-/*
-| Find selected offer.
-*/
 
 $selectedOffer = null;
 
@@ -437,38 +205,36 @@ foreach ($sessionOffers as $offer) {
 
 if ($selectedOffer === null) {
     http_response_code(404);
+
     exit(
         'This offer is no longer available. Please return to the Offers page and try again.'
     );
 }
 
+// --------------------------------------------------
+// Validate session offer metadata
+// --------------------------------------------------
 
-/*
-| Extract session offer fields.
-*/
-
-$networkOfferUrl = trim(
+$sessionOfferUrl = trim(
     (string) ($selectedOffer['network_offer_url'] ?? '')
 );
 
-$networkPayout = isset($selectedOffer['network_payout'])
+$sessionPayout = isset($selectedOffer['network_payout'])
     ? (float) $selectedOffer['network_payout']
     : 0.0;
 
-if (!validateOfferDestination($networkOfferUrl)) {
-    http_response_code(502);
-    exit('This offer is temporarily unavailable.');
-}
-
-if (!is_finite($networkPayout) || $networkPayout <= 0) {
+if (
+    !validateOfferDestination($sessionOfferUrl) ||
+    !is_finite($sessionPayout) ||
+    $sessionPayout <= 0
+) {
     http_response_code(400);
     exit('This offer is currently unavailable.');
 }
 
-
-/*
-| Validate raw OGAds offer using the existing safety filter.
-*/
+// --------------------------------------------------
+// Apply OGAds safety filters
+// --------------------------------------------------
 
 $ogadsOfferForSafety = [
     'offerid' => $offerId,
@@ -476,7 +242,7 @@ $ogadsOfferForSafety = [
     'name' => $selectedOffer['title'] ?? '',
     'description' => $selectedOffer['description'] ?? '',
     'adcopy' => $selectedOffer['instructions'] ?? '',
-    'link' => $networkOfferUrl,
+    'link' => $sessionOfferUrl,
 ];
 
 if (!isOgadsOfferSafe($pdo, $ogadsOfferForSafety)) {
@@ -484,31 +250,25 @@ if (!isOgadsOfferSafe($pdo, $ogadsOfferForSafety)) {
     exit('This offer is not available.');
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Get OGAds Network ID
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Get OGAds network ID
+// --------------------------------------------------
 
 try {
     $networkId = getOgadsNetworkId($pdo);
 } catch (Throwable $e) {
     error_log(
-        'PoketFlow OGAds network error: '
+        'PoketFlow OGAds network lookup failed: '
         . $e->getMessage()
     );
 
     http_response_code(500);
-    exit('Unable to connect the offer network. Please try again.');
+    exit('Unable to connect to the offer network. Please try again.');
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Find Existing OGAds Campaign
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Find the existing database campaign
+// --------------------------------------------------
 
 $campaignStmt = $pdo->prepare(
     'SELECT id
@@ -523,131 +283,74 @@ $campaignStmt->execute([
     $offerId,
 ]);
 
-$existingCampaignId = $campaignStmt->fetchColumn();
+$campaignIdValue = $campaignStmt->fetchColumn();
 
-if ($existingCampaignId !== false) {
+if ($campaignIdValue === false) {
+    http_response_code(404);
 
-    /*
-    | Existing campaign: load its authoritative database state.
-    */
-
-    $campaignId = (int) $existingCampaignId;
-
-    $campaign = getCampaign($pdo, $campaignId);
-
-    if (!$campaign) {
-        http_response_code(404);
-        exit('Offer not found.');
-    }
-
-} else {
-
-    /*
-    | Synchronize a new offer without bypassing admin approval.
-    |
-    | The synchronization function must preserve safe defaults:
-    | inactive, pending, and incentive_allowed = 0 until reviewed.
-    */
-
-    $ogadsOffer = [
-        'offerid' => $offerId,
-
-        'name_short' => $selectedOffer['title'] ?? 'OGAds Offer',
-
-        'name' => $selectedOffer['title'] ?? 'OGAds Offer',
-
-        'description' => $selectedOffer['description'] ?? '',
-
-        'adcopy' => $selectedOffer['instructions'] ?? '',
-
-        'country' => $selectedOffer['countries'] ?? '',
-
-        'device' => $selectedOffer['devices'] ?? '',
-
-        'link' => $networkOfferUrl,
-
-        'picture' => $selectedOffer['image_url'] ?? '',
-
-        'payout' => $networkPayout,
-    ];
-
-    try {
-        $campaignId = syncOgadsOffer(
-            $pdo,
-            $networkId,
-            $ogadsOffer
-        );
-    } catch (Throwable $e) {
-        error_log(
-            'PoketFlow OGAds synchronization error: '
-            . $e->getMessage()
-        );
-
-        http_response_code(500);
-        exit('Unable to prepare this offer. Please try again.');
-    }
-
-    if (!$campaignId) {
-        http_response_code(502);
-        exit('This offer could not be prepared.');
-    }
-
-    $campaignId = (int) $campaignId;
-
-    $campaign = getCampaign($pdo, $campaignId);
-
-    if (!$campaign) {
-        http_response_code(404);
-        exit('Offer not found.');
-    }
+    exit(
+        'This offer has not been approved in PoketFlow. Please choose an approved offer.'
+    );
 }
 
+$campaignId = (int) $campaignIdValue;
 
-/*
-|--------------------------------------------------------------------------
-| Check Current Database Eligibility
-|--------------------------------------------------------------------------
-|
-| Do not trust the session copy as the final source of approval,
-| reward eligibility, or campaign status.
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Load authoritative database campaign
+// --------------------------------------------------
+
+$campaign = getCampaign($pdo, $campaignId);
+
+if (!$campaign) {
+    http_response_code(404);
+    exit('This offer is no longer available.');
+}
+
+// --------------------------------------------------
+// Verify network and external offer identity
+// --------------------------------------------------
+
+if (
+    (int) ($campaign['network_id'] ?? 0) !== $networkId ||
+    trim((string) ($campaign['external_offer_id'] ?? '')) !== $offerId
+) {
+    http_response_code(403);
+    exit('This offer could not be verified.');
+}
+
+// --------------------------------------------------
+// Verify campaign eligibility
+// --------------------------------------------------
 
 if (!canStartCampaign($pdo, $campaign, $user)) {
     http_response_code(403);
-    exit('This offer is not currently available for your account.');
+
+    exit(
+        'This offer is not currently available for your account.'
+    );
 }
 
+// --------------------------------------------------
+// Validate the authoritative database destination
+// --------------------------------------------------
 
-/*
-|--------------------------------------------------------------------------
-| Verify the Current Database Destination
-|--------------------------------------------------------------------------
-*/
-
-$databaseOfferUrl = trim(
+$networkOfferUrl = trim(
     (string) ($campaign['network_offer_url'] ?? '')
 );
 
-if (!validateOfferDestination($databaseOfferUrl)) {
+if (!validateOfferDestination($networkOfferUrl)) {
+    error_log(
+        'PoketFlow OGAds invalid destination for campaign '
+        . $campaignId
+    );
+
     http_response_code(502);
     exit('This offer is temporarily unavailable.');
 }
 
-
-/*
-| Use the authoritative database destination rather than the
-| potentially stale URL retained in the session.
-*/
-
-$networkOfferUrl = $databaseOfferUrl;
-
-
-/*
-|--------------------------------------------------------------------------
-| Create OGAds Click
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Record the campaign click
+// --------------------------------------------------
 
 try {
     $trackingId = createCampaignClick(
@@ -659,7 +362,7 @@ try {
     );
 } catch (Throwable $e) {
     error_log(
-        'PoketFlow OGAds click error: '
+        'PoketFlow OGAds click creation failed: '
         . $e->getMessage()
     );
 
@@ -667,30 +370,25 @@ try {
     exit('Unable to start this offer. Please try again.');
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Store Active Tracking Information
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Store the tracking details in the session
+// --------------------------------------------------
 
 storeActiveOfferTracking(
-    'ogads',
     $trackingId,
     $campaignId
 );
 
+// --------------------------------------------------
+// Append OGAds tracking ID
+// --------------------------------------------------
 
 /*
-|--------------------------------------------------------------------------
-| Append OGAds Tracking ID
-|--------------------------------------------------------------------------
-|
-| Preserve the existing aff_sub4 parameter.
-| Confirm the configured OGAds tracking format against your
-| OGAds account before relying on live attribution.
-|--------------------------------------------------------------------------
-*/
+ * This retains the existing aff_sub4 parameter.
+ * Its compatibility with your OGAds account and postback
+ * configuration must be confirmed before live attribution
+ * can be considered verified.
+ */
 
 $redirectUrl = appendTrackingParameter(
     $networkOfferUrl,
@@ -698,12 +396,9 @@ $redirectUrl = appendTrackingParameter(
     $trackingId
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| Redirect To OGAds
-|--------------------------------------------------------------------------
-*/
+// --------------------------------------------------
+// Redirect to OGAds
+// --------------------------------------------------
 
 header('Location: ' . $redirectUrl, true, 302);
 exit;
