@@ -7,6 +7,8 @@ declare(strict_types=1);
 | PoketFlow Common Functions
 |--------------------------------------------------------------------------
 | Shared helper and business-logic functions used throughout PoketFlow.
+|
+| PHP 7.2 compatible.
 |--------------------------------------------------------------------------
 */
 
@@ -19,7 +21,11 @@ declare(strict_types=1);
 
 function e(?string $value): string
 {
-    return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars(
+        $value ?? '',
+        ENT_QUOTES,
+        'UTF-8'
+    );
 }
 
 
@@ -29,7 +35,7 @@ function e(?string $value): string
 |--------------------------------------------------------------------------
 */
 
-function redirect(string $url): never
+function redirect(string $url): void
 {
     header('Location: ' . $url);
     exit;
@@ -64,7 +70,7 @@ function generateReferralCode(PDO $pdo, string $name): string
 
         $stmt->execute([$code]);
 
-    } while ($stmt->fetch());
+    } while ($stmt->fetchColumn() !== false);
 
     return $code;
 }
@@ -73,11 +79,6 @@ function generateReferralCode(PDO $pdo, string $name): string
 /*
 |--------------------------------------------------------------------------
 | Get System Setting
-|--------------------------------------------------------------------------
-| Reads a value from the settings table.
-|
-| Example:
-| getSetting($pdo, 'minimum_withdrawal', '5.00');
 |--------------------------------------------------------------------------
 */
 
@@ -131,7 +132,7 @@ function getUser(PDO $pdo, int $userId): ?array
 
     $stmt->execute([$userId]);
 
-    $user = $stmt->fetch();
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     return $user ?: null;
 }
@@ -141,23 +142,17 @@ function getUser(PDO $pdo, int $userId): ?array
 |--------------------------------------------------------------------------
 | Get User Wallet Balance
 |--------------------------------------------------------------------------
-| The wallet balance is calculated from the wallet ledger.
-|
-| Completed positive transactions increase the balance.
-| Completed withdrawals reduce the balance.
-|
-| We use the transaction type and amount rather than storing a
-| separate balance column in users.
+| Calculates the available balance from completed ledger entries.
 |--------------------------------------------------------------------------
 */
 
 function getUserBalance(PDO $pdo, int $userId): float
 {
     $stmt = $pdo->prepare(
-        'SELECT COALESCE(SUM(amount), 0)
+        "SELECT COALESCE(SUM(amount), 0)
          FROM wallet_transactions
          WHERE user_id = ?
-           AND status = "COMPLETED"'
+           AND status = 'COMPLETED'"
     );
 
     $stmt->execute([$userId]);
@@ -170,18 +165,15 @@ function getUserBalance(PDO $pdo, int $userId): float
 |--------------------------------------------------------------------------
 | Get User Pending Balance
 |--------------------------------------------------------------------------
-| Pending wallet transactions are kept separate from the available
-| completed balance.
-|--------------------------------------------------------------------------
 */
 
 function getUserPendingBalance(PDO $pdo, int $userId): float
 {
     $stmt = $pdo->prepare(
-        'SELECT COALESCE(SUM(amount), 0)
+        "SELECT COALESCE(SUM(amount), 0)
          FROM wallet_transactions
          WHERE user_id = ?
-           AND status = "PENDING"'
+           AND status = 'PENDING'"
     );
 
     $stmt->execute([$userId]);
@@ -194,17 +186,15 @@ function getUserPendingBalance(PDO $pdo, int $userId): float
 |--------------------------------------------------------------------------
 | Get User Total Earned
 |--------------------------------------------------------------------------
-| Total rewards from approved conversions.
-|--------------------------------------------------------------------------
 */
 
 function getUserTotalEarned(PDO $pdo, int $userId): float
 {
     $stmt = $pdo->prepare(
-        'SELECT COALESCE(SUM(worker_reward), 0)
+        "SELECT COALESCE(SUM(worker_reward), 0)
          FROM conversions
          WHERE worker_id = ?
-           AND status = "APPROVED"'
+           AND status = 'APPROVED'"
     );
 
     $stmt->execute([$userId]);
@@ -215,19 +205,28 @@ function getUserTotalEarned(PDO $pdo, int $userId): float
 
 /*
 |--------------------------------------------------------------------------
+| Normalize Country Name
+|--------------------------------------------------------------------------
+*/
+
+function normalizeCountryName(?string $country): string
+{
+    $country = strtolower(trim((string) $country));
+
+    $country = preg_replace('/\s+/', ' ', $country);
+
+    return trim((string) $country);
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | Check Country Eligibility
 |--------------------------------------------------------------------------
-| campaigns.countries is stored as text.
+| Empty country restrictions mean unrestricted.
 |
-| We support common formats such as:
-|
-| US,CA,GB
-| US, CA, GB
-| USA, Canada
-| Worldwide
-| ALL
-|
-| Empty countries means no country restriction.
+| Supports comma-separated and pipe-separated values.
+| Unknown country names are compared literally.
 |--------------------------------------------------------------------------
 */
 
@@ -236,11 +235,8 @@ function isCountryEligible(
     ?string $userCountry
 ): bool {
     $campaignCountries = trim((string) $campaignCountries);
-    $userCountry = trim((string) $userCountry);
+    $userCountry = normalizeCountryName($userCountry);
 
-    /*
-    | No restriction.
-    */
     if ($campaignCountries === '') {
         return true;
     }
@@ -251,22 +247,55 @@ function isCountryEligible(
     );
 
     if (!$countries) {
-        return true;
+        return false;
     }
 
-    $userCountry = strtolower($userCountry);
+    $aliases = [
+        'us' => [
+            'usa',
+            'united states',
+            'united states of america'
+        ],
+        'usa' => [
+            'us',
+            'united states',
+            'united states of america'
+        ],
+        'united states' => [
+            'us',
+            'usa',
+            'united states of america'
+        ],
+
+        'gb' => [
+            'uk',
+            'united kingdom',
+            'great britain'
+        ],
+        'uk' => [
+            'gb',
+            'united kingdom',
+            'great britain'
+        ],
+
+        'ng' => ['nigeria'],
+        'ca' => ['canada'],
+        'au' => ['australia'],
+        'de' => ['germany'],
+        'fr' => ['france'],
+        'it' => ['italy'],
+        'es' => ['spain'],
+        'za' => ['south africa'],
+        'in' => ['india'],
+    ];
 
     foreach ($countries as $country) {
-
-        $country = strtolower(trim($country));
+        $country = normalizeCountryName($country);
 
         if ($country === '') {
             continue;
         }
 
-        /*
-        | Global campaigns.
-        */
         if (
             in_array(
                 $country,
@@ -277,39 +306,27 @@ function isCountryEligible(
             return true;
         }
 
-        /*
-        | Direct country-name/code match.
-        */
         if ($country === $userCountry) {
             return true;
         }
-
-        /*
-        | Common country-code mappings.
-        */
-        $aliases = [
-            'us' => ['usa', 'united states', 'united states of america'],
-            'usa' => ['us', 'united states', 'united states of america'],
-
-            'gb' => ['uk', 'united kingdom', 'great britain'],
-            'uk' => ['gb', 'united kingdom', 'great britain'],
-
-            'ng' => ['nigeria'],
-            'ca' => ['canada'],
-            'au' => ['australia'],
-            'de' => ['germany'],
-            'fr' => ['france'],
-            'it' => ['italy'],
-            'es' => ['spain'],
-            'za' => ['south africa'],
-            'in' => ['india'],
-        ];
 
         if (
             isset($aliases[$country]) &&
             in_array($userCountry, $aliases[$country], true)
         ) {
             return true;
+        }
+
+        if (isset($aliases[$userCountry])) {
+            if (
+                in_array(
+                    $country,
+                    $aliases[$userCountry],
+                    true
+                )
+            ) {
+                return true;
+            }
         }
     }
 
@@ -319,117 +336,15 @@ function isCountryEligible(
 
 /*
 |--------------------------------------------------------------------------
-| Check Campaign Offer Filter
-|--------------------------------------------------------------------------
-| Uses the offer_filters table instead of hard-coding prohibited
-| categories into offers.php.
+| Normalize Text For Offer Filtering
 |--------------------------------------------------------------------------
 */
 
-/**
- * Check whether a campaign is safe and eligible to be displayed.
- *
- * This is a HARD safety gate.
- *
- * An offer must:
- * 1. Be ACTIVE
- * 2. Be APPROVED
- * 3. Not match any active safety filter
- *
- * Safety filtering checks:
- * - title
- * - description
- * - category
- * - instructions
- * - network offer URL
- */
-function isCampaignAllowed(PDO $pdo, array $campaign): bool
+function normalizeOfferFilterText(string $text): string
 {
-    /*
-    |--------------------------------------------------------------------------
-    | 1. Campaign status
-    |--------------------------------------------------------------------------
-    */
+    $text = strtolower($text);
 
-    $campaignStatus = strtoupper(
-        trim((string) ($campaign['status'] ?? ''))
-    );
-
-    if ($campaignStatus !== 'ACTIVE') {
-        return false;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | 2. Approval status
-    |--------------------------------------------------------------------------
-    |
-    | CPA campaigns should not become publicly visible simply because
-    | their status is ACTIVE.
-    |
-    */
-
-    $approvalStatus = strtoupper(
-        trim((string) ($campaign['approval_status'] ?? ''))
-    );
-
-    if ($approvalStatus !== 'APPROVED') {
-        return false;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | 3. Build searchable offer text
-    |--------------------------------------------------------------------------
-    |
-    | We deliberately inspect several fields.
-    |
-    | A dangerous offer may not reveal its category in the title.
-    | The description, instructions or destination URL may reveal it.
-    |
-    */
-
-    $searchableFields = [
-        'title',
-        'description',
-        'category',
-        'instructions',
-        'network_offer_url',
-    ];
-
-    $searchableText = '';
-
-    foreach ($searchableFields as $field) {
-
-        $value = trim(
-            (string) ($campaign[$field] ?? '')
-        );
-
-        if ($value !== '') {
-            $searchableText .= ' ' . $value;
-        }
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | 4. Normalize the text
-    |--------------------------------------------------------------------------
-    |
-    | This helps us catch variations such as:
-    |
-    | Sports-Betting
-    | sports_betting
-    | sports betting
-    | SPORTS BETTING
-    |
-    */
-
-    $searchableText = strtolower($searchableText);
-
-    $searchableText = str_replace(
+    $text = str_replace(
         [
             '-',
             '_',
@@ -448,64 +363,86 @@ function isCampaignAllowed(PDO $pdo, array $campaign): bool
             '}',
         ],
         ' ',
+        $text
+    );
+
+    $text = preg_replace('/\s+/', ' ', $text);
+
+    return trim((string) $text);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Check Campaign Offer Filters
+|--------------------------------------------------------------------------
+| Requires ACTIVE status and APPROVED approval status.
+|
+| Enforces active REJECT filters on offer metadata.
+|--------------------------------------------------------------------------
+*/
+
+function isCampaignAllowed(PDO $pdo, array $campaign): bool
+{
+    $status = strtoupper(
+        trim((string) ($campaign['status'] ?? ''))
+    );
+
+    if ($status !== 'ACTIVE') {
+        return false;
+    }
+
+    $approvalStatus = strtoupper(
+        trim((string) ($campaign['approval_status'] ?? ''))
+    );
+
+    if ($approvalStatus !== 'APPROVED') {
+        return false;
+    }
+
+    $searchableFields = [
+        'title',
+        'description',
+        'category',
+        'instructions',
+        'network_offer_url',
+    ];
+
+    $searchableText = '';
+
+    foreach ($searchableFields as $field) {
+        $value = trim(
+            (string) ($campaign[$field] ?? '')
+        );
+
+        if ($value !== '') {
+            $searchableText .= ' ' . $value;
+        }
+    }
+
+    $searchableText = normalizeOfferFilterText(
         $searchableText
     );
-
-    $searchableText = preg_replace(
-        '/\s+/u',
-        ' ',
-        $searchableText
-    );
-
-    $searchableText = trim(
-        (string) $searchableText
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | 5. Load active safety filters
-    |--------------------------------------------------------------------------
-    */
 
     $stmt = $pdo->query(
-        'SELECT
-            keyword,
-            category,
-            action,
-            reason
+        "SELECT keyword, action
          FROM offer_filters
          WHERE active = 1
-         ORDER BY
-            CHAR_LENGTH(keyword) DESC,
-            id ASC'
+         ORDER BY CHAR_LENGTH(keyword) DESC, id ASC"
     );
 
     $filters = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | 6. Check every active filter
-    |--------------------------------------------------------------------------
-    */
-
     foreach ($filters as $filter) {
-
         $action = strtoupper(
             trim((string) ($filter['action'] ?? ''))
         );
-
-        /*
-        We only enforce REJECT filters here.
-        Other future actions can be handled separately.
-        */
 
         if ($action !== 'REJECT') {
             continue;
         }
 
-        $keyword = strtolower(
+        $keyword = normalizeOfferFilterText(
             trim((string) ($filter['keyword'] ?? ''))
         );
 
@@ -513,81 +450,24 @@ function isCampaignAllowed(PDO $pdo, array $campaign): bool
             continue;
         }
 
-
-        /*
-        Normalize the filter keyword in exactly the same way
-        as the campaign text.
-        */
-
-        $keyword = str_replace(
-            [
-                '-',
-                '_',
-                '/',
-                '\\',
-                '.',
-                ',',
-                ':',
-                ';',
-                '|',
-                '(',
-                ')',
-                '[',
-                ']',
-                '{',
-                '}',
-            ],
-            ' ',
-            $keyword
-        );
-
-        $keyword = preg_replace(
-            '/\s+/u',
-            ' ',
-            $keyword
-        );
-
-        $keyword = trim(
-            (string) $keyword
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | 7. Reject immediately when a dangerous keyword is found
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $keyword !== ''
-            && str_contains(
-                $searchableText,
-                $keyword
-            )
-        ) {
+        if (strpos($searchableText, $keyword) !== false) {
             return false;
         }
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | 8. Offer passed every safety check
-    |--------------------------------------------------------------------------
-    */
-
     return true;
 }
+
 
 /*
 |--------------------------------------------------------------------------
 | Get Active Campaigns
 |--------------------------------------------------------------------------
-| Returns worker-visible CPA/direct advertiser campaigns.
+| Returns campaigns that have been approved and are active.
 |
-| IMPORTANT:
-| network_payout is intentionally selected here only when needed
-| internally. Worker-facing pages must not display it.
+| This function does not independently establish that a network
+| permits incentivized traffic. Check incentive_allowed before
+| presenting a campaign as a reward-earning offer.
 |--------------------------------------------------------------------------
 */
 
@@ -596,7 +476,7 @@ function getActiveCampaigns(
     ?string $country = null
 ): array {
     $stmt = $pdo->query(
-        'SELECT
+        "SELECT
             id,
             source_type,
             title,
@@ -614,22 +494,18 @@ function getActiveCampaigns(
             start_at,
             end_at
          FROM campaigns
-         WHERE status = "ACTIVE"
-           AND approval_status = "APPROVED"
+         WHERE status = 'ACTIVE'
+           AND approval_status = 'APPROVED'
            AND (start_at IS NULL OR start_at <= NOW())
            AND (end_at IS NULL OR end_at >= NOW())
-         ORDER BY id DESC'
+         ORDER BY id DESC"
     );
 
-    $campaigns = $stmt->fetchAll();
+    $campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $results = [];
 
     foreach ($campaigns as $campaign) {
-
-        /*
-        | Country filtering.
-        */
         if (
             $country !== null &&
             !isCountryEligible(
@@ -640,9 +516,6 @@ function getActiveCampaigns(
             continue;
         }
 
-        /*
-        | Offer safety filtering.
-        */
         if (!isCampaignAllowed($pdo, $campaign)) {
             continue;
         }
@@ -677,7 +550,10 @@ function getCampaign(
             description,
             category,
             instructions,
+            network_payout,
+            reward_rate,
             worker_reward,
+            platform_margin,
             countries,
             devices,
             os,
@@ -693,7 +569,7 @@ function getCampaign(
 
     $stmt->execute([$campaignId]);
 
-    $campaign = $stmt->fetch();
+    $campaign = $stmt->fetch(PDO::FETCH_ASSOC);
 
     return $campaign ?: null;
 }
@@ -703,8 +579,8 @@ function getCampaign(
 |--------------------------------------------------------------------------
 | Validate Campaign For Worker
 |--------------------------------------------------------------------------
-| Performs the security checks that should happen before an offer
-| can be started.
+| A campaign must be approved, active, within its schedule,
+| country-eligible, safe, and explicitly permitted for incentives.
 |--------------------------------------------------------------------------
 */
 
@@ -713,40 +589,81 @@ function canStartCampaign(
     array $campaign,
     array $user
 ): bool {
+
     /*
-    | Campaign must be active.
+    | Campaign status.
     */
-    if (($campaign['status'] ?? '') !== 'ACTIVE') {
+
+    $status = strtoupper(
+        trim((string) ($campaign['status'] ?? ''))
+    );
+
+    if ($status !== 'ACTIVE') {
         return false;
     }
 
+
     /*
-    | Campaign must be approved.
+    | Admin approval.
     */
-    if (($campaign['approval_status'] ?? '') !== 'APPROVED') {
+
+    $approvalStatus = strtoupper(
+        trim((string) ($campaign['approval_status'] ?? ''))
+    );
+
+    if ($approvalStatus !== 'APPROVED') {
         return false;
     }
 
+
     /*
-    | Start/end date.
+    | Incentive permission.
+    |
+    | Missing or disabled permission must fail closed.
     */
+
     if (
-        !empty($campaign['start_at']) &&
-        strtotime((string) $campaign['start_at']) > time()
+        !isset($campaign['incentive_allowed']) ||
+        (int) $campaign['incentive_allowed'] !== 1
     ) {
         return false;
     }
 
-    if (
-        !empty($campaign['end_at']) &&
-        strtotime((string) $campaign['end_at']) < time()
-    ) {
-        return false;
-    }
 
     /*
-    | Country restriction.
+    | Campaign start date.
     */
+
+    if (!empty($campaign['start_at'])) {
+        $startTime = strtotime(
+            (string) $campaign['start_at']
+        );
+
+        if ($startTime === false || $startTime > time()) {
+            return false;
+        }
+    }
+
+
+    /*
+    | Campaign end date.
+    */
+
+    if (!empty($campaign['end_at'])) {
+        $endTime = strtotime(
+            (string) $campaign['end_at']
+        );
+
+        if ($endTime === false || $endTime < time()) {
+            return false;
+        }
+    }
+
+
+    /*
+    | Country eligibility.
+    */
+
     if (
         !isCountryEligible(
             $campaign['countries'] ?? '',
@@ -756,9 +673,11 @@ function canStartCampaign(
         return false;
     }
 
+
     /*
-    | Offer safety filter.
+    | Offer safety filters.
     */
+
     if (!isCampaignAllowed($pdo, $campaign)) {
         return false;
     }
@@ -783,7 +702,9 @@ function generateTrackingId(): string
 |--------------------------------------------------------------------------
 | Create Campaign Click
 |--------------------------------------------------------------------------
-| Records the worker starting an offer.
+| Creates a click record and returns its tracking ID.
+|
+| The database should enforce a UNIQUE constraint on tracking_id.
 |--------------------------------------------------------------------------
 */
 
@@ -794,15 +715,20 @@ function createCampaignClick(
     ?string $ipAddress = null,
     ?string $userAgent = null
 ): string {
+
+    /*
+    | Confirm that the campaign exists and the worker exists.
+    |
+    | This is a basic consistency check. The calling workflow must
+    | still perform the full eligibility checks before this function.
+    */
+
     $trackingId = generateTrackingId();
 
     $ipHash = null;
 
     if ($ipAddress !== null && $ipAddress !== '') {
-        $ipHash = hash(
-            'sha256',
-            $ipAddress
-        );
+        $ipHash = hash('sha256', $ipAddress);
     }
 
     $stmt = $pdo->prepare(
