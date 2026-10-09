@@ -59,28 +59,20 @@ function fetchOgadsOffers(
         . '?'
         . http_build_query($params);
 
-
     $ch = curl_init();
 
     curl_setopt_array($ch, [
-
         CURLOPT_URL => $url,
-
         CURLOPT_RETURNTRANSFER => true,
-
         CURLOPT_HTTPHEADER => [
             'Authorization: Bearer ' . $config['api_key'],
             'Accept: application/json',
         ],
-
         CURLOPT_CONNECTTIMEOUT => 10,
-
         CURLOPT_TIMEOUT => 30,
     ]);
 
-
     $response = curl_exec($ch);
-
 
     if ($response === false) {
 
@@ -93,23 +85,18 @@ function fetchOgadsOffers(
         );
     }
 
-
     $httpCode = curl_getinfo(
         $ch,
         CURLINFO_HTTP_CODE
     );
 
-
     curl_close($ch);
 
-
     if ($httpCode < 200 || $httpCode >= 300) {
-
         throw new RuntimeException(
             'OGAds API returned HTTP status ' . $httpCode . '.'
         );
     }
-
 
     try {
 
@@ -127,7 +114,6 @@ function fetchOgadsOffers(
         );
     }
 
-
     if (
         !isset($data['success']) ||
         $data['success'] !== true
@@ -140,7 +126,6 @@ function fetchOgadsOffers(
             'OGAds API error: ' . $error
         );
     }
-
 
     return $data['offers'] ?? [];
 }
@@ -159,18 +144,14 @@ function getOgadsNetworkId(PDO $pdo): int
     );
 
     $stmt->execute([
-        'ogads'
+        'ogads',
     ]);
-
 
     $networkId = $stmt->fetchColumn();
 
-
     if ($networkId !== false) {
-
         return (int) $networkId;
     }
-
 
     $stmt = $pdo->prepare(
         'INSERT INTO networks (
@@ -182,13 +163,11 @@ function getOgadsNetworkId(PDO $pdo): int
         VALUES (?, ?, ?, "ACTIVE")'
     );
 
-
     $stmt->execute([
         'OGAds',
         'ogads',
         'https://trckapp.org/api/v2',
     ]);
-
 
     return (int) $pdo->lastInsertId();
 }
@@ -212,15 +191,12 @@ function getOgadsOfferCategory(array $offer): string
         )
     );
 
-
     if (
         str_contains($text, 'survey') ||
         str_contains($text, 'questionnaire')
     ) {
-
         return 'Survey';
     }
-
 
     if (
         str_contains($text, 'install') ||
@@ -228,10 +204,8 @@ function getOgadsOfferCategory(array $offer): string
         str_contains($text, 'android') ||
         str_contains($text, 'iphone')
     ) {
-
         return 'App';
     }
-
 
     if (
         str_contains($text, 'signup') ||
@@ -239,10 +213,8 @@ function getOgadsOfferCategory(array $offer): string
         str_contains($text, 'registration') ||
         str_contains($text, 'register')
     ) {
-
         return 'Signup';
     }
-
 
     return 'Offer';
 }
@@ -276,11 +248,9 @@ function cleanOgadsText(?string $text): string
 /**
  * Check whether a raw OGAds offer is safe to display.
  *
- * This is the first safety gate for live OGAds inventory.
- *
  * An offer is rejected when:
- * - It has no meaningful searchable content
- * - It matches an active REJECT filter
+ * - It has no meaningful searchable content.
+ * - It matches an active REJECT filter.
  *
  * Safety fields checked:
  * - name
@@ -316,21 +286,15 @@ function isOgadsOfferSafe(
     }
 
     /*
-     * No meaningful information means we cannot
-     * safely evaluate the offer.
+     * Without meaningful information, the offer
+     * cannot be evaluated safely.
      */
     if (trim($searchableText) === '') {
         return false;
     }
 
     /*
-     * Normalize the text so variations such as:
-     *
-     * sports-betting
-     * sports_betting
-     * sports/betting
-     *
-     * can be detected consistently.
+     * Normalize offer text.
      */
     $searchableText = strtolower($searchableText);
 
@@ -392,8 +356,8 @@ function isOgadsOfferSafe(
         }
 
         /*
-         * Normalize the filter keyword using
-         * the same rules as the offer text.
+         * Normalize filter keywords using the
+         * same rules as the offer text.
          */
         $keyword = str_replace(
             [
@@ -428,8 +392,8 @@ function isOgadsOfferSafe(
         );
 
         if (
-            $keyword !== ''
-            && str_contains(
+            $keyword !== '' &&
+            str_contains(
                 $searchableText,
                 $keyword
             )
@@ -456,33 +420,32 @@ function calculateOgadsReward(
         '40'
     );
 
-
     $workerReward = round(
         $networkPayout * ($rewardRate / 100),
         2
     );
-
 
     $platformMargin = round(
         $networkPayout - $workerReward,
         2
     );
 
-
     return [
-
         'reward_rate' => $rewardRate,
-
         'worker_reward' => $workerReward,
-
         'platform_margin' => $platformMargin,
-
     ];
 }
 
 
 /**
  * Synchronize one OGAds offer into campaigns.
+ *
+ * IMPORTANT:
+ * - Never override existing administrative status.
+ * - Never override existing approval status.
+ * - Never automatically enable incentivized traffic.
+ * - New offers require administrative review.
  */
 function syncOgadsOffer(
     PDO $pdo,
@@ -494,95 +457,79 @@ function syncOgadsOffer(
         (string) ($offer['offerid'] ?? '')
     );
 
-
     if ($externalOfferId === '') {
-
         return null;
     }
 
-
     $title = cleanOgadsText(
-        $offer['name_short']
+        (string) (
+            $offer['name_short']
             ?? $offer['name']
             ?? 'OGAds Offer'
+        )
     );
-
 
     $description = cleanOgadsText(
-        $offer['description'] ?? ''
+        (string) ($offer['description'] ?? '')
     );
-
 
     $instructions = cleanOgadsText(
-        $offer['adcopy'] ?? ''
+        (string) ($offer['adcopy'] ?? '')
     );
 
-
-    $category = getOgadsOfferCategory(
-        $offer
-    );
-
+    $category = getOgadsOfferCategory($offer);
 
     $countries = trim(
         (string) ($offer['country'] ?? '')
     );
 
-
     $devices = trim(
         (string) ($offer['device'] ?? '')
     );
 
-
     /*
-     * Real OGAds participation URL.
+     * Network participation URL.
      */
     $networkOfferUrl = trim(
         (string) ($offer['link'] ?? '')
     );
 
-
     /*
-     * Real OGAds image/icon URL.
+     * Network offer image.
      */
     $imageUrl = trim(
         (string) ($offer['picture'] ?? '')
     );
-
 
     $networkPayout = round(
         (float) ($offer['payout'] ?? 0),
         2
     );
 
-
-    if ($networkPayout <= 0) {
-
+    if (
+        $networkPayout <= 0 ||
+        $networkOfferUrl === ''
+    ) {
         return null;
     }
-
 
     /*
      * Apply PoketFlow safety filters.
      */
-    /*
- * Apply PoketFlow safety filters to the
- * original OGAds offer before saving it.
- */
-if (!isOgadsOfferSafe(
-    $pdo,
-    $offer
-)) {
-    return null;
-}
+    if (!isOgadsOfferSafe($pdo, $offer)) {
+        return null;
+    }
 
+    /*
+     * Calculate the reward proposal.
+     */
     $rewards = calculateOgadsReward(
         $pdo,
         $networkPayout
     );
 
-
     /*
-     * Check whether offer already exists.
+     * Find the existing campaign.
      */
     $stmt = $pdo->prepare(
         'SELECT id
@@ -592,21 +539,20 @@ if (!isOgadsOfferSafe(
          LIMIT 1'
     );
 
-
     $stmt->execute([
-
         $networkId,
-
         $externalOfferId,
-
     ]);
-
 
     $existingId = $stmt->fetchColumn();
 
-
     /*
-     * UPDATE existing offer.
+     * Update existing offer information only.
+     *
+     * Do not modify:
+     * - status
+     * - approval_status
+     * - incentive_allowed
      */
     if ($existingId !== false) {
 
@@ -625,51 +571,38 @@ if (!isOgadsOfferSafe(
                 devices = ?,
                 network_offer_url = ?,
                 image_url = ?,
-                incentive_allowed = 1,
-                status = "ACTIVE",
-                approval_status = "APPROVED",
                 updated_at = CURRENT_TIMESTAMP
-             WHERE id = ?'
+             WHERE id = ?
+               AND network_id = ?
+               AND external_offer_id = ?'
         );
 
-
         $stmt->execute([
-
             $title,
-
             $description,
-
             $category,
-
             $instructions,
-
             $networkPayout,
-
             $rewards['reward_rate'],
-
             $rewards['worker_reward'],
-
             $rewards['platform_margin'],
-
             $countries,
-
             $devices,
-
             $networkOfferUrl,
-
             $imageUrl,
-
             (int) $existingId,
-
+            $networkId,
+            $externalOfferId,
         ]);
-
 
         return (int) $existingId;
     }
 
-
     /*
-     * INSERT new offer.
+     * Insert new offers as pending review.
+     *
+     * They must not be automatically activated,
+     * approved or enabled for incentivized traffic.
      */
     $stmt = $pdo->prepare(
         'INSERT INTO campaigns (
@@ -710,45 +643,28 @@ if (!isOgadsOfferSafe(
             ?,
             ?,
             ?,
-            1,
-            "ACTIVE",
-            "APPROVED"
+            0,
+            "INACTIVE",
+            "PENDING"
         )'
     );
 
-
     $stmt->execute([
-
         $networkId,
-
         $externalOfferId,
-
         $networkOfferUrl,
-
         $imageUrl,
-
         $title,
-
         $description,
-
         $category,
-
         $instructions,
-
         $networkPayout,
-
         $rewards['reward_rate'],
-
         $rewards['worker_reward'],
-
         $rewards['platform_margin'],
-
         $countries,
-
         $devices,
-
     ]);
-
 
     return (int) $pdo->lastInsertId();
 }
@@ -762,23 +678,14 @@ function syncOgadsOffers(
     array $offers
 ): array {
 
-    $networkId = getOgadsNetworkId(
-        $pdo
-    );
-
+    $networkId = getOgadsNetworkId($pdo);
 
     $result = [
-
         'received' => count($offers),
-
         'saved' => 0,
-
         'updated' => 0,
-
         'rejected' => 0,
-
     ];
-
 
     foreach ($offers as $offer) {
 
@@ -786,14 +693,10 @@ function syncOgadsOffers(
             (string) ($offer['offerid'] ?? '')
         );
 
-
         if ($externalOfferId === '') {
-
             $result['rejected']++;
-
             continue;
         }
-
 
         $stmt = $pdo->prepare(
             'SELECT id
@@ -803,18 +706,12 @@ function syncOgadsOffers(
              LIMIT 1'
         );
 
-
         $stmt->execute([
-
             $networkId,
-
             $externalOfferId,
-
         ]);
 
-
         $existingId = $stmt->fetchColumn();
-
 
         $campaignId = syncOgadsOffer(
             $pdo,
@@ -822,26 +719,17 @@ function syncOgadsOffers(
             $offer
         );
 
-
         if ($campaignId === null) {
-
             $result['rejected']++;
-
             continue;
         }
 
-
         if ($existingId !== false) {
-
             $result['updated']++;
-
         } else {
-
             $result['saved']++;
-
         }
     }
-
 
     return $result;
 }
