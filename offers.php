@@ -1203,30 +1203,10 @@ function getOfferCategory(array $campaign): string
                             </strong>
 
 
-                            <?php if (
-                                ($campaign['network'] ?? '') === 'CPAGrip'
-                            ): ?>
-
-                                <a
-                                    href="<?= e((string) $campaign['network_offer_url']) ?>"
-                                    class="btn btn-primary"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    Start →
-                                </a>
-
-                            <?php else: ?>
-
-                                <a
-                                    href="start-offer.php?offer_id=<?= e((string) $campaign['external_offer_id']) ?>"
-                                    class="btn btn-primary"
-                                >
-                                    Start →
-                                </a>
-
-                            <?php endif; ?>
-
+                            < href="start-offer.php?network=<?= rawurlencode(strtolower((string) ($campaign['network'] ?? 'ogads'))) ?>&offer_id=<?= rawurlencode((string) ($campaign['id'] ?? $campaign['external_offer_id'] ?? '')) ?>"
+                                class="btn btn-primary">
+                                Start ->
+                            </a>
                         </div>
 
 
