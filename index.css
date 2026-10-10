@@ -1964,3 +1964,56 @@ summary:focus-visible {
         transform: none;
     }
 }
+
+
+
+
+
+
+
+/* =========================================================
+   FIX FEATURED OFFER ACTION BUTTON COLORS
+   PoketFlow Brand
+========================================================= */
+
+.pf-featured-card a,
+.pf-featured-card a:link,
+.pf-featured-card a:visited,
+.pf-featured-card a:active,
+.pf-featured-card .btn,
+.pf-featured-card .button,
+.pf-featured-card .offer-btn {
+    color: #FFFFFF !important;
+    background: linear-gradient(
+        135deg,
+        #5A00A8 0%,
+        #9A3BFF 65%,
+        #FF5BAA 100%
+    ) !important;
+
+    border: 1px solid transparent !important;
+    border-radius: 10px;
+
+    font-weight: 750;
+    text-decoration: none !important;
+
+    box-shadow: 0 5px 14px rgba(90, 0, 168, 0.16);
+}
+
+.pf-featured-card a:hover,
+.pf-featured-card .btn:hover,
+.pf-featured-card .button:hover,
+.pf-featured-card .offer-btn:hover {
+    color: #FFFFFF !important;
+
+    background: linear-gradient(
+        135deg,
+        #4A008B 0%,
+        #8730EC 65%,
+        #F54C9F 100%
+    ) !important;
+
+    box-shadow: 0 8px 20px rgba(90, 0, 168, 0.25);
+
+    transform: translateY(-2px);
+}
