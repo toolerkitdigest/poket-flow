@@ -24,14 +24,12 @@ declare(strict_types=1);
     
     
     
-    <link rel="stylesheet" href="index.css?v=10">
+    <link rel="stylesheet" href="index.css?v=12">
     <link
     rel="stylesheet"
     href="assets/featured-offers.css?v=<?= filemtime(__DIR__ . '/assets/featured-offers.css') ?>">
     
-    <link
-    rel="stylesheet"
-    href="assets/offers.css?v=<?= filemtime(__DIR__ . '/css/offers.css') ?>">
+    
 
     
 
