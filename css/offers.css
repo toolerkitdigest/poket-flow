@@ -1725,8 +1725,8 @@ body.app-page {
     align-items: center;
     justify-content: center;
 
-    width: 45px;
-    height: 45px;
+    width: 48px;
+    height: 48px;
 
     color: var(--pf-cyan);
 
@@ -1794,8 +1794,8 @@ body.app-page {
     align-items: center;
     justify-content: center;
 
-    width: 31px;
-    height: 31px;
+    width: 35px;
+    height: 35px;
 
     flex-shrink: 0;
 
@@ -2294,9 +2294,9 @@ body.app-page {
     }
 
     .offer-image {
-        width: 62px;
-        height: 62px;
-        min-width: 62px;
+        width: 70px;
+        height: 70px;
+        min-width: 70px;
 
         padding: 8px;
 
@@ -2304,8 +2304,8 @@ body.app-page {
     }
 
     .offer-image img {
-        max-width: 44px;
-        max-height: 44px;
+        max-width: 50px;
+        max-height: 50px;
     }
 
     .offer-fallback-icon {
