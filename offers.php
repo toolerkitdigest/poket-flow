@@ -490,9 +490,12 @@ function getOfferFilterCategory(string $category): string
 
     <title>Offers — PoketFlow</title>
 
+    
+
+    
     <link
         rel="stylesheet"
-        href="index.css">
+        href="css/offers.css?v2">
 
 
 </head>
