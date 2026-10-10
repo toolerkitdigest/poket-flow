@@ -2607,3 +2607,343 @@ body.app-page {
         transform: none;
     }
 }
+
+
+/* ============================================================
+   35. POKETFLOW OFFERS — FINAL UI CORRECTIONS
+   Mobile navigation and compact offer artwork
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   A. MOBILE NAVIGATION VISIBILITY
+   ------------------------------------------------------------ */
+
+/* Desktop defaults: hide mobile-only navigation controls. */
+
+@media (min-width: 801px) {
+    .app-page .mobile-menu-button,
+    .app-page .mobile-navigation {
+        display: none !important;
+    }
+
+    .app-page .app-header-nav {
+        display: flex;
+    }
+
+    .app-page .sidebar {
+        display: block;
+    }
+}
+
+
+/* Mobile layout: show only the hamburger button. */
+
+@media (max-width: 800px) {
+
+    .app-page .app-header {
+        position: sticky;
+        top: 0;
+        z-index: 1200;
+
+        display: flex;
+        justify-content: space-between;
+
+        min-height: 66px;
+    }
+
+    .app-page .app-header-nav,
+    .app-page .sidebar {
+        display: none !important;
+    }
+
+    .app-page .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+
+    .app-page .mobile-menu-button {
+        display: flex !important;
+
+        position: relative;
+        z-index: 1202;
+    }
+
+    /* Closed means completely hidden. */
+
+    .app-page .mobile-navigation {
+        display: none !important;
+
+        position: fixed;
+        top: 76px;
+        left: 12px;
+        right: 12px;
+
+        z-index: 1201;
+
+        width: auto;
+        max-width: 460px;
+        max-height: calc(100dvh - 90px);
+
+        margin-right: auto;
+        margin-left: auto;
+
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    /* Open only when JavaScript adds .open. */
+
+    .app-page .mobile-navigation.open {
+        display: block !important;
+    }
+
+    .app-page .mobile-navigation nav {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .app-page .mobile-navigation nav a {
+        display: flex;
+        align-items: center;
+
+        width: 100%;
+        min-height: 46px;
+    }
+}
+
+
+/* ------------------------------------------------------------
+   B. COMPACT OFFER IMAGE CONTAINERS
+   ------------------------------------------------------------ */
+
+.app-page .offer-card {
+    grid-template-columns: 52px minmax(0, 1fr);
+
+    column-gap: 14px;
+}
+
+.app-page .offer-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+
+    padding: 6px;
+
+    border-radius: 14px;
+}
+
+/* Keep artwork small even when a network supplies
+   a large image. */
+
+.app-page .offer-image img {
+    display: block;
+
+    width: 36px;
+    height: 36px;
+
+    max-width: 36px;
+    max-height: 36px;
+
+    object-fit: contain;
+    object-position: center;
+
+    border-radius: 8px;
+}
+
+/* Smaller fallback icons. */
+
+.app-page .offer-fallback-icon {
+    width: 100%;
+    height: 100%;
+
+    font-size: 23px;
+}
+
+/* Keep category labels compact. */
+
+.app-page .offer-type-badge {
+    right: 3px;
+    bottom: 3px;
+
+    max-width: calc(100% - 6px);
+
+    padding: 1px 4px;
+
+    font-size: 7px;
+}
+
+
+/* ------------------------------------------------------------
+   C. KEEP OFFER TEXT PROPORTIONATE
+   ------------------------------------------------------------ */
+
+.app-page .offer-body {
+    min-width: 0;
+}
+
+.app-page .offer-body h3 {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.app-page .offer-body p {
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.app-page .offer-network {
+    font-size: 9px;
+}
+
+
+/* ------------------------------------------------------------
+   D. EMPTY OFFERS CARD
+   ------------------------------------------------------------ */
+
+.app-page .offer-card.empty-offer-card {
+    grid-template-columns: 52px minmax(0, 1fr);
+}
+
+.app-page .empty-offer-visual {
+    width: 52px;
+    height: 52px;
+}
+
+.app-page .empty-orbit-one {
+    width: 50px;
+    height: 50px;
+}
+
+.app-page .empty-orbit-two {
+    width: 38px;
+    height: 38px;
+}
+
+.app-page .empty-offer-icon {
+    width: 30px;
+    height: 30px;
+
+    font-size: 19px;
+}
+
+
+/* ------------------------------------------------------------
+   E. MOBILE OFFER CARDS
+   ------------------------------------------------------------ */
+
+@media (max-width: 600px) {
+
+    .app-page .offer-card {
+        grid-template-columns: 46px minmax(0, 1fr);
+
+        column-gap: 11px;
+
+        padding: 15px;
+    }
+
+    .app-page .offer-image {
+        width: 46px;
+        height: 46px;
+        min-width: 46px;
+
+        padding: 5px;
+
+        border-radius: 12px;
+    }
+
+    .app-page .offer-image img {
+        width: 32px;
+        height: 32px;
+
+        max-width: 32px;
+        max-height: 32px;
+    }
+
+    .app-page .offer-fallback-icon {
+        font-size: 20px;
+    }
+
+    .app-page .offer-body h3 {
+        font-size: 13px;
+    }
+
+    .app-page .offer-body p {
+        font-size: 11px;
+    }
+
+    .app-page .offer-card.empty-offer-card {
+        grid-template-columns: 46px minmax(0, 1fr);
+    }
+
+    .app-page .empty-offer-visual {
+        width: 46px;
+        height: 46px;
+    }
+
+    .app-page .empty-orbit-one {
+        width: 44px;
+        height: 44px;
+    }
+
+    .app-page .empty-orbit-two {
+        width: 34px;
+        height: 34px;
+    }
+
+    .app-page .empty-offer-icon {
+        width: 27px;
+        height: 27px;
+
+        font-size: 17px;
+    }
+}
+
+
+/* ------------------------------------------------------------
+   F. VERY SMALL SCREENS
+   ------------------------------------------------------------ */
+
+@media (max-width: 380px) {
+
+    .app-page .offer-card {
+        grid-template-columns: 42px minmax(0, 1fr);
+
+        column-gap: 9px;
+        padding: 12px;
+    }
+
+    .app-page .offer-image {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+
+        padding: 4px;
+    }
+
+    .app-page .offer-image img {
+        width: 30px;
+        height: 30px;
+
+        max-width: 30px;
+        max-height: 30px;
+    }
+
+    .app-page .offer-card.empty-offer-card {
+        grid-template-columns: 42px minmax(0, 1fr);
+    }
+
+    .app-page .empty-offer-visual {
+        width: 42px;
+        height: 42px;
+    }
+
+    .app-page .offer-body h3 {
+        font-size: 12px;
+    }
+}
