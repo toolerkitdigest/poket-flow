@@ -1,3 +1,5 @@
+Most recent offers.css code
+
 /* ============================================================
    POKETFLOW OFFERS
    Standalone stylesheet
@@ -6,31 +8,49 @@
 
 
 /* ============================================================
+   1. DESIGN SYSTEM
+   ============================================================ */
+
 :root {
-    /* PoketFlow light theme */
+    color-scheme: dark;
 
-    --pf-bg: #F5F7FA;
-    --pf-bg-soft: #F0F4F8;
+    --pf-bg: #080d1a;
+    --pf-bg-soft: #0b1222;
 
-    --pf-surface: #FFFFFF;
-    --pf-surface-2: #F8FAFC;
-    --pf-surface-hover: #F1F5F9;
+    --pf-surface: #111827;
+    --pf-surface-2: #151e31;
+    --pf-surface-3: #1b2740;
 
-    /* Brand colors */
-    --pf-primary: #0F766E;
-    --pf-primary-hover: #115E59;
+    --pf-primary: #6366f1;
+    --pf-primary-dark: #4f46e5;
+    --pf-primary-light: #a5b4fc;
 
-    /* Typography */
-    --pf-text: #172033;
-    --pf-text-secondary: #64748B;
+    --pf-cyan: #22d3ee;
+    --pf-green: #6ee7b7;
+    --pf-orange: #fb923c;
+    --pf-red: #f87171;
 
-    /* Borders */
-    --pf-border: #E2E8F0;
+    --pf-text: #f8fafc;
+    --pf-text-soft: #cbd5e1;
+    --pf-muted: #94a3b8;
+    --pf-muted-dark: #64748b;
 
-    /* Status colors */
-    --pf-success: #15803D;
-    --pf-warning: #B45309;
-    --pf-danger: #B91C1C;
+    --pf-border: rgba(148, 163, 184, 0.13);
+    --pf-border-hover: rgba(129, 140, 248, 0.4);
+
+    --pf-radius-sm: 11px;
+    --pf-radius-md: 15px;
+    --pf-radius-lg: 20px;
+    --pf-radius-xl: 25px;
+
+    --pf-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.15);
+
+    --pf-shadow-hover:
+        0 18px 38px rgba(0, 0, 0, 0.25);
+
+    --pf-transition:
+        0.25s ease;
 }
 
 
@@ -2595,11 +2615,3 @@ body.app-page {
         transform: none;
     }
 }
-
-
-
-
-
-
-
-
