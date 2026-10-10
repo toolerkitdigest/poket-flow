@@ -1,9 +1,17 @@
 /* =========================================================
-   POKETFLOW BRAND PALETTE
-   Homepage overrides
+   POKETFLOW HOMEPAGE
+   Complete Responsive Stylesheet
+   Brand: White, Deep Purple, Royal Purple, Violet and Pink
+========================================================= */
+
+
+/* =========================================================
+   1. BRAND VARIABLES
 ========================================================= */
 
 :root {
+    color-scheme: light;
+
     --home-bg: #FFF2FA;
     --home-bg-soft: #ffffff;
 
@@ -24,39 +32,152 @@
     --home-border: rgba(90, 0, 168, 0.16);
 
     --home-success: #16a34a;
+
+    --home-gradient: linear-gradient(
+        135deg,
+        #5A00A8 0%,
+        #9A3BFF 65%,
+        #FF5BAA 100%
+    );
+
+    --home-gradient-soft: linear-gradient(
+        135deg,
+        #ffffff 0%,
+        #FFF2FA 100%
+    );
+
+    --home-shadow-sm: 0 4px 14px rgba(36, 0, 61, 0.06);
+    --home-shadow-md: 0 10px 30px rgba(36, 0, 61, 0.09);
+    --home-shadow-lg: 0 18px 45px rgba(90, 0, 168, 0.12);
+
+    --home-radius-sm: 10px;
+    --home-radius-md: 16px;
+    --home-radius-lg: 22px;
+
+    --home-container: 1180px;
+
+    --home-transition: 0.22s ease;
 }
 
+
 /* =========================================================
-   HERO — REMOVE THE OLD TWO-COLUMN LAYOUT
+   2. GLOBAL HOMEPAGE BASE
+========================================================= */
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+}
+
+body {
+    background: var(--home-bg);
+    color: var(--home-text);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+img {
+    max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+a {
+    transition:
+        color var(--home-transition),
+        background-color var(--home-transition),
+        border-color var(--home-transition);
+}
+
+::selection {
+    color: #ffffff;
+    background: var(--home-primary-dark);
+}
+
+
+/* =========================================================
+   3. MAIN PAGE CONTAINER
+========================================================= */
+
+/*
+   These rules center the usual homepage content containers
+   without forcing every nested element to use the same width.
+*/
+
+main {
+    min-width: 0;
+}
+
+main > section {
+    min-width: 0;
+}
+
+main > section:not(.hero) {
+    width: min(calc(100% - 48px), var(--home-container));
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+/* =========================================================
+   4. HERO SECTION
 ========================================================= */
 
 .hero {
     display: block;
 
-    width: min(calc(100% - 40px), 1180px);
-    max-width: 1180px;
+    width: min(calc(100% - 48px), var(--home-container));
+    max-width: var(--home-container);
 
+    min-width: 0;
     min-height: auto;
 
     margin: 0 auto;
-    padding: 75px 0 45px;
+    padding: 76px 0 46px;
+
+    text-align: center;
 }
 
 .hero-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
     width: 100%;
     max-width: 100%;
+    min-width: 0;
 
     margin: 0 auto;
 }
 
 .hero h1 {
+    width: 100%;
     max-width: 850px;
 
     margin: 0 auto 22px;
 
-    text-align: center;
-
     color: var(--home-text);
+
+    font-size: clamp(38px, 5vw, 62px);
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -2px;
+
+    text-align: center;
+    overflow-wrap: break-word;
+}
+
+.hero h1 span {
+    color: var(--home-primary);
 }
 
 .hero-copy > p {
@@ -65,23 +186,150 @@
 
     margin: 0 auto;
 
-    text-align: center;
-
     color: var(--home-secondary);
+
+    font-size: 17px;
+    line-height: 1.85;
+
+    text-align: center;
 }
 
-/* Keep the hero actions centered */
+/* Optional hero eyebrow or label */
+
+.hero .eyebrow,
+.hero .hero-label,
+.hero .section-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    max-width: 100%;
+
+    margin: 0 auto 18px;
+    padding: 8px 16px;
+
+    color: var(--home-primary-dark);
+
+    background: #ffffff;
+    border: 1px solid var(--home-border);
+    border-radius: 999px;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   5. HERO ACTION BUTTONS
+========================================================= */
 
 .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+
+    align-items: center;
     justify-content: center;
+
+    gap: 14px;
+
+    width: 100%;
+    max-width: 100%;
+
+    margin: 32px auto 0;
+}
+
+.hero-actions a,
+.hero-actions button {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 48px;
+    max-width: 100%;
+
+    padding: 13px 24px;
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+
+    text-align: center;
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        transform var(--home-transition),
+        background var(--home-transition),
+        color var(--home-transition),
+        border-color var(--home-transition),
+        box-shadow var(--home-transition);
+}
+
+.hero-actions a:first-child,
+.hero-actions .btn-primary,
+.hero-actions .primary-btn {
+    color: #ffffff;
+
+    background: var(--home-gradient);
+    border-color: transparent;
+
+    box-shadow: 0 7px 18px rgba(90, 0, 168, 0.18);
+}
+
+.hero-actions a:first-child:hover,
+.hero-actions .btn-primary:hover,
+.hero-actions .primary-btn:hover {
+    transform: translateY(-2px);
+
+    box-shadow: 0 11px 25px rgba(90, 0, 168, 0.25);
+}
+
+.hero-actions a:not(:first-child),
+.hero-actions .btn-secondary,
+.hero-actions .secondary-btn {
+    color: var(--home-primary-dark);
+
+    background: #ffffff;
+    border-color: var(--home-border);
+}
+
+.hero-actions a:not(:first-child):hover,
+.hero-actions .btn-secondary:hover,
+.hero-actions .secondary-btn:hover {
+    color: #ffffff;
+
+    background: var(--home-primary-dark);
+    border-color: var(--home-primary-dark);
 }
 
 .hero-note {
+    display: flex;
+    flex-wrap: wrap;
+
+    align-items: center;
     justify-content: center;
+
+    gap: 8px;
+
+    width: 100%;
+    max-width: 100%;
+
+    margin: 20px auto 0;
+
+    color: var(--home-muted);
+
+    font-size: 13px;
+    line-height: 1.7;
+    text-align: center;
 }
 
-/* The phone mockup has been removed from index.php.
-   Hide any leftover hero visual markup if it still exists. */
+
+/* Remove obsolete phone mockup */
 
 .hero-visual,
 .hero-visual .phone,
@@ -90,22 +338,25 @@
     display: none !important;
 }
 
+
 /* =========================================================
-   FEATURED OFFERS — HORIZONTAL CAROUSEL
+   6. FEATURED OFFERS SECTION
 ========================================================= */
 
-/* Featured offers container */
-
 .pf-featured-offers {
+    display: block;
+
     width: 100%;
     max-width: 100%;
 
     min-width: 0;
 
-    margin: 38px 0 0;
-}
+    margin: 38px auto 0;
+    padding: 0;
 
-/* Keep the featured section within the homepage container */
+    color: var(--home-text);
+    text-align: left;
+}
 
 .pf-featured-offers *,
 .pf-featured-offers *::before,
@@ -113,29 +364,52 @@
     box-sizing: border-box;
 }
 
-/* Offer heading */
+/* Section headings */
 
 .pf-featured-offers h2,
 .pf-featured-offers h3 {
     color: var(--home-text);
 }
 
-/* Horizontal scrolling row */
+/* If the component includes a heading, center it */
+
+.pf-featured-offers > h2,
+.pf-featured-offers > h3,
+.pf-featured-offers > .section-heading,
+.pf-featured-offers > .section-header {
+    text-align: center;
+}
+
+/* Supporting description */
+
+.pf-featured-offers > p,
+.pf-featured-offers .section-description {
+    color: var(--home-secondary);
+}
+
+
+/* =========================================================
+   7. FEATURED OFFERS HORIZONTAL CAROUSEL
+========================================================= */
 
 .pf-featured-grid {
     display: grid !important;
 
     grid-auto-flow: column !important;
-
     grid-auto-columns: minmax(250px, 280px) !important;
 
     grid-template-columns: none !important;
+    grid-template-rows: auto;
+
+    align-items: stretch;
 
     gap: 18px;
 
     width: 100%;
     max-width: 100%;
+    min-width: 0;
 
+    margin: 24px auto 0;
     padding: 8px 4px 20px;
 
     overflow-x: auto !important;
@@ -144,17 +418,16 @@
     overscroll-behavior-x: contain;
 
     scroll-snap-type: x mandatory;
-
     scroll-behavior: smooth;
+    scroll-padding-inline: 4px;
 
     -webkit-overflow-scrolling: touch;
 
     scrollbar-width: thin;
-
-    scrollbar-color: #9A3BFF #f0e3fa;
+    scrollbar-color: var(--home-primary) #f0e3fa;
 }
 
-/* Scrollbar for Chrome, Edge and Safari */
+/* Chrome, Edge and Safari scrollbar */
 
 .pf-featured-grid::-webkit-scrollbar {
     height: 8px;
@@ -162,68 +435,76 @@
 
 .pf-featured-grid::-webkit-scrollbar-track {
     background: #f0e3fa;
-
     border-radius: 20px;
 }
 
 .pf-featured-grid::-webkit-scrollbar-thumb {
-    background: linear-gradient(
-        90deg,
-        #5A00A8,
-        #9A3BFF,
-        #FF5BAA
-    );
-
+    background: var(--home-gradient);
     border-radius: 20px;
 }
 
 .pf-featured-grid::-webkit-scrollbar-thumb:hover {
-    background: #5A00A8;
+    background: var(--home-primary-dark);
 }
 
-/* Individual offer cards */
+/* Prevent child elements from forcing the page wider */
+
+.pf-featured-grid > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Individual cards */
 
 .pf-featured-card {
-    width: 100%;
+    display: flex;
+    flex-direction: column;
 
+    width: 100%;
     min-width: 0;
     max-width: none;
 
-    scroll-snap-align: start;
-
-    border: 1px solid rgba(90, 0, 168, 0.20);
-
-    border-radius: 18px;
-
-    background: #ffffff;
-
-    box-shadow: 0 8px 26px rgba(36, 0, 61, 0.07);
+    align-self: stretch;
 
     overflow: hidden;
 
+    background: var(--home-surface);
+    border: 1px solid rgba(90, 0, 168, 0.20);
+    border-radius: var(--home-radius-lg);
+
+    box-shadow: var(--home-shadow-sm);
+
+    scroll-snap-align: start;
+
     transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        border-color 0.2s ease;
+        transform var(--home-transition),
+        box-shadow var(--home-transition),
+        border-color var(--home-transition);
 }
 
 .pf-featured-card:hover {
     transform: translateY(-4px);
 
-    border-color: #9A3BFF;
+    border-color: var(--home-primary);
 
-    box-shadow: 0 14px 32px rgba(90, 0, 168, 0.13);
+    box-shadow: var(--home-shadow-lg);
 }
 
 /* Offer image area */
 
 .pf-featured-image-wrap {
+    position: relative;
+
+    width: 100%;
+    min-width: 0;
+
     overflow: hidden;
 
-    border-color: #9A3BFF;
+    background: var(--home-gradient-soft);
+    border-color: var(--home-primary);
 }
 
-/* Offer image */
+/* Offer images */
 
 .pf-featured-image img {
     display: block;
@@ -231,58 +512,438 @@
     width: 100%;
     max-width: 100%;
 
+    height: auto;
+
     object-fit: cover;
 }
 
-/* Offer title and description */
+/* Offer text area */
 
 .pf-featured-content {
+    display: flex;
+    flex-direction: column;
+
+    flex: 1;
+
     min-width: 0;
 
+    padding: 18px;
+
     color: var(--home-text);
+    background: #ffffff;
 }
 
 .pf-featured-content h3 {
-    color: #24003D;
+    margin-top: 0;
+    margin-bottom: 10px;
+
+    color: var(--home-text);
+
+    font-size: 17px;
+    font-weight: 750;
+    line-height: 1.45;
+
+    overflow-wrap: anywhere;
 }
 
 .pf-featured-content p {
     color: var(--home-secondary);
+
+    font-size: 14px;
+    line-height: 1.7;
+
+    overflow-wrap: anywhere;
 }
 
 /* Reward highlight */
 
 .pf-featured-reward {
-    color: #5A00A8;
+    color: var(--home-primary-dark);
+
+    font-weight: 800;
 }
 
-/* Offer action buttons */
+/* Offer buttons and links */
 
 .pf-featured-card a,
 .pf-featured-offers a {
     transition:
-        background 0.2s ease,
-        color 0.2s ease,
-        border-color 0.2s ease;
+        background var(--home-transition),
+        color var(--home-transition),
+        border-color var(--home-transition);
 }
 
-/* Prevent the carousel from stretching cards to fill a row */
+.pf-featured-card a {
+    overflow-wrap: anywhere;
+}
 
-.pf-featured-grid > * {
+/* Give common offer action buttons the brand treatment */
+
+.pf-featured-card a[href] {
+    text-decoration: none;
+}
+
+.pf-featured-card .btn,
+.pf-featured-card .button,
+.pf-featured-card .offer-btn {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 42px;
+    max-width: 100%;
+
+    padding: 10px 16px;
+
+    color: #ffffff;
+
+    background: var(--home-gradient);
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    font-weight: 700;
+    text-align: center;
+}
+
+
+/* =========================================================
+   8. SHARED SECTION ALIGNMENT
+========================================================= */
+
+/*
+   Center the common homepage sections while keeping their
+   original internal layout and card arrangements.
+*/
+
+.features-section,
+.home-section,
+.how-it-works,
+.faq-section,
+.cta-section,
+.testimonials-section,
+.benefits-section,
+.stats-section {
+    width: min(calc(100% - 48px), var(--home-container));
+    max-width: var(--home-container);
+
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Consistent section spacing */
+
+.features-section,
+.home-section,
+.how-it-works,
+.faq-section,
+.testimonials-section,
+.benefits-section,
+.stats-section {
+    padding-top: 48px;
+    padding-bottom: 48px;
+}
+
+/* Section headings */
+
+.features-section h2,
+.home-section h2,
+.how-it-works h2,
+.faq-section h2,
+.cta-section h2,
+.testimonials-section h2,
+.benefits-section h2,
+.stats-section h2 {
+    color: var(--home-text);
+}
+
+/* Common section descriptions */
+
+.features-section .section-description,
+.home-section .section-description,
+.how-it-works .section-description,
+.faq-section .section-description,
+.testimonials-section .section-description,
+.benefits-section .section-description,
+.stats-section .section-description {
+    color: var(--home-secondary);
+}
+
+
+/* =========================================================
+   9. COMMON CARD BRANDING
+========================================================= */
+
+/*
+   Apply the brand colors to typical homepage cards.
+   These rules do not change the content or PHP logic.
+*/
+
+.feature-card,
+.feature-item,
+.benefit-card,
+.step-card,
+.testimonial-card,
+.stat-card,
+.faq-item {
+    border-color: var(--home-border);
+}
+
+.feature-card,
+.feature-item,
+.benefit-card,
+.step-card,
+.testimonial-card,
+.stat-card {
+    background-color: var(--home-surface);
+    box-shadow: var(--home-shadow-sm);
+}
+
+.feature-card:hover,
+.feature-item:hover,
+.benefit-card:hover,
+.step-card:hover,
+.testimonial-card:hover,
+.stat-card:hover {
+    border-color: rgba(90, 0, 168, 0.35);
+    box-shadow: var(--home-shadow-md);
+}
+
+/* Common icons */
+
+.feature-icon,
+.benefit-icon,
+.step-icon {
+    color: var(--home-primary);
+}
+
+/* Common links */
+
+.features-section a,
+.home-section a,
+.how-it-works a,
+.faq-section a,
+.benefits-section a {
+    color: var(--home-primary-dark);
+}
+
+.features-section a:hover,
+.home-section a:hover,
+.how-it-works a:hover,
+.faq-section a:hover,
+.benefits-section a:hover {
+    color: var(--home-primary);
+}
+
+
+/* =========================================================
+   10. FAQ SECTION
+========================================================= */
+
+.faq-item {
+    background: #ffffff;
+    border: 1px solid var(--home-border);
+    border-radius: var(--home-radius-md);
+}
+
+.faq-item summary {
+    color: var(--home-text);
+    cursor: pointer;
+}
+
+.faq-item p {
+    color: var(--home-secondary);
+}
+
+
+/* =========================================================
+   11. FINAL CALL-TO-ACTION SECTION
+========================================================= */
+
+.cta-section {
+    position: relative;
+
+    text-align: center;
+
+    padding-top: 54px;
+    padding-bottom: 54px;
+}
+
+.cta-section > div {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cta-section h2 {
+    color: var(--home-text);
+}
+
+.cta-section p {
+    color: var(--home-secondary);
+}
+
+.cta-section a,
+.cta-section button {
+    transition:
+        transform var(--home-transition),
+        box-shadow var(--home-transition);
+}
+
+
+/* =========================================================
+   12. FOOTER ALIGNMENT AND BRAND COLORS
+========================================================= */
+
+/*
+   Center the footer container and its content without
+   forcing all footer layouts into a single column.
+*/
+
+footer {
+    width: 100%;
     min-width: 0;
+
+    color: var(--home-secondary);
+    background: #ffffff;
+
+    border-top: 1px solid var(--home-border);
+}
+
+footer .container,
+footer .footer-container,
+footer .footer-inner {
+    width: min(calc(100% - 48px), var(--home-container));
+    max-width: var(--home-container);
+
+    margin-left: auto;
+    margin-right: auto;
+}
+
+footer h2,
+footer h3,
+footer h4 {
+    color: var(--home-text);
+}
+
+footer a {
+    color: var(--home-secondary);
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: var(--home-primary);
+}
+
+footer .footer-bottom,
+footer .copyright {
+    border-color: var(--home-border);
+}
+
+
+/* =========================================================
+   13. PREVENT HORIZONTAL PAGE OVERFLOW
+========================================================= */
+
+html,
+body {
     max-width: 100%;
 }
 
-/* =========================================================
-   HERO ACTIONS — SPACE AFTER FEATURED OFFERS
-========================================================= */
-
-.hero-actions {
-    margin-top: 32px;
+body {
+    overflow-x: clip;
 }
 
+main,
+section,
+.hero,
+.hero-copy,
+.pf-featured-offers {
+    min-width: 0;
+}
+
+.pf-featured-grid {
+    max-width: 100%;
+}
+
+
 /* =========================================================
-   RESPONSIVE CAROUSEL
+   14. DESKTOP RESPONSIVENESS
+========================================================= */
+
+@media (min-width: 1200px) {
+
+    .hero {
+        padding-top: 86px;
+        padding-bottom: 50px;
+    }
+
+    .hero h1 {
+        font-size: 62px;
+    }
+
+    .pf-featured-offers {
+        margin-top: 42px;
+    }
+
+    .pf-featured-grid {
+        gap: 20px;
+    }
+}
+
+
+/* =========================================================
+   15. TABLET RESPONSIVENESS
+========================================================= */
+
+@media (max-width: 991px) {
+
+    .hero {
+        width: calc(100% - 36px);
+
+        padding-top: 60px;
+        padding-bottom: 38px;
+    }
+
+    .hero h1 {
+        max-width: 760px;
+
+        font-size: clamp(36px, 6vw, 50px);
+        letter-spacing: -1.5px;
+    }
+
+    .hero-copy > p {
+        max-width: 700px;
+
+        font-size: 16px;
+        line-height: 1.8;
+    }
+
+    .pf-featured-offers {
+        margin-top: 32px;
+    }
+
+    .pf-featured-grid {
+        grid-auto-columns: minmax(245px, 280px) !important;
+        gap: 16px;
+    }
+
+    main > section:not(.hero),
+    .features-section,
+    .home-section,
+    .how-it-works,
+    .faq-section,
+    .cta-section,
+    .testimonials-section,
+    .benefits-section,
+    .stats-section {
+        width: calc(100% - 36px);
+    }
+}
+
+
+/* =========================================================
+   16. MOBILE RESPONSIVENESS
 ========================================================= */
 
 @media (max-width: 700px) {
@@ -290,38 +951,138 @@
     .hero {
         width: calc(100% - 28px);
 
-        padding: 48px 0 35px;
+        padding-top: 44px;
+        padding-bottom: 30px;
     }
 
     .hero h1 {
-        font-size: clamp(36px, 9vw, 50px);
+        margin-bottom: 18px;
 
-        letter-spacing: -1.8px;
+        font-size: clamp(32px, 8.5vw, 46px);
+        line-height: 1.15;
+        letter-spacing: -1.3px;
     }
 
     .hero-copy > p {
-        font-size: 15px;
+        max-width: 100%;
 
+        font-size: 15px;
         line-height: 1.75;
     }
 
+    .hero-actions {
+        gap: 10px;
+
+        margin-top: 24px;
+    }
+
+    .hero-actions a,
+    .hero-actions button {
+        min-height: 46px;
+        padding: 12px 18px;
+
+        font-size: 14px;
+    }
+
+    .hero-note {
+        gap: 6px;
+
+        margin-top: 16px;
+
+        font-size: 12px;
+    }
+
     .pf-featured-offers {
-        margin-top: 30px;
+        margin-top: 28px;
     }
 
     .pf-featured-grid {
-        grid-auto-columns: minmax(235px, 78%) !important;
+        grid-auto-columns: minmax(235px, 82%) !important;
 
         gap: 14px;
 
-        padding-bottom: 17px;
+        margin-top: 18px;
+        padding: 6px 3px 17px;
+    }
+
+    .pf-featured-card {
+        border-radius: 16px;
+    }
+
+    .pf-featured-content {
+        padding: 15px;
+    }
+
+    .pf-featured-content h3 {
+        font-size: 16px;
+    }
+
+    .pf-featured-content p {
+        font-size: 13px;
+    }
+
+    main > section:not(.hero),
+    .features-section,
+    .home-section,
+    .how-it-works,
+    .faq-section,
+    .cta-section,
+    .testimonials-section,
+    .benefits-section,
+    .stats-section {
+        width: calc(100% - 28px);
+
+        padding-top: 34px;
+        padding-bottom: 34px;
+    }
+
+    .cta-section {
+        padding-top: 38px;
+        padding-bottom: 38px;
+    }
+
+    footer .container,
+    footer .footer-container,
+    footer .footer-inner {
+        width: calc(100% - 28px);
     }
 }
+
+
+/* =========================================================
+   17. SMALL MOBILE DEVICES
+========================================================= */
 
 @media (max-width: 380px) {
 
     .hero {
         width: calc(100% - 24px);
+
+        padding-top: 36px;
+        padding-bottom: 26px;
+    }
+
+    .hero h1 {
+        font-size: clamp(29px, 8.5vw, 36px);
+        letter-spacing: -1px;
+    }
+
+    .hero-copy > p {
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+
+        width: 100%;
+    }
+
+    .hero-actions a,
+    .hero-actions button {
+        width: 100%;
+        max-width: 100%;
     }
 
     .pf-featured-grid {
@@ -329,19 +1090,63 @@
 
         gap: 12px;
     }
+
+    .pf-featured-content {
+        padding: 13px;
+    }
+
+    main > section:not(.hero),
+    .features-section,
+    .home-section,
+    .how-it-works,
+    .faq-section,
+    .cta-section,
+    .testimonials-section,
+    .benefits-section,
+    .stats-section {
+        width: calc(100% - 24px);
+    }
+
+    footer .container,
+    footer .footer-container,
+    footer .footer-inner {
+        width: calc(100% - 24px);
+    }
 }
 
+
 /* =========================================================
-   REDUCED MOTION ACCESSIBILITY
+   18. ACCESSIBILITY
+========================================================= */
+
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible {
+    outline: 3px solid var(--home-accent);
+    outline-offset: 3px;
+}
+
+
+/* =========================================================
+   19. REDUCED MOTION
 ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
 
-    .pf-featured-grid {
+    html {
         scroll-behavior: auto;
     }
 
-    .pf-featured-card {
-        transition: none;
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .pf-featured-card:hover {
+        transform: none;
     }
 }
