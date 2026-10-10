@@ -492,6 +492,11 @@ function getOfferFilterCategory(string $category): string
 
     <link
         rel="stylesheet"
+        href="css/dashboard.css"
+    >
+
+    <link
+        rel="stylesheet"
         href="css/offers.css"
     >
 
