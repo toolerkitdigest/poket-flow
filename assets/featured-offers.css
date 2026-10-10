@@ -668,3 +668,75 @@ VERY SMALL SCREENS
 }
 
 }
+
+
+/* Three medium vertical cards on desktop */
+.pf-featured-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    align-items: stretch;
+}
+
+.pf-featured-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid rgba(167, 139, 250, 0.32);
+    border-radius: 16px;
+    background: #111827;
+}
+
+.pf-featured-image-wrap {
+    height: 150px;
+    min-height: 150px;
+    overflow: hidden;
+}
+
+.pf-featured-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pf-featured-content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 16px;
+}
+
+.pf-featured-reward {
+    margin-top: auto;
+}
+
+/* Two vertical cards per row on mobile */
+@media (max-width: 600px) {
+    .pf-featured-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .pf-featured-image-wrap {
+        height: 112px;
+        min-height: 112px;
+    }
+
+    .pf-featured-content {
+        padding: 11px;
+    }
+}
+
+/* One card per row on very narrow phones */
+@media (max-width: 350px) {
+    .pf-featured-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pf-featured-image-wrap {
+        height: 145px;
+        min-height: 145px;
+    }
+}
+
