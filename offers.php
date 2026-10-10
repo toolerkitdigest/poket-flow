@@ -492,10 +492,9 @@ function getOfferFilterCategory(string $category): string
 
     
 
-    
     <link
-        rel="stylesheet"
-        href="css/offers.css?v2">
+    rel="stylesheet"
+    href="css/offers.css?v=<?= filemtime(__DIR__ . '/css/offers.css') ?>">
 
 
 </head>
