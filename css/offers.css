@@ -1140,7 +1140,7 @@ body.app-page {
 
     background: #FFFFFF;
 
-    border: 1px solid rgba(154, 59, 255, 0.35);
+    border: 2px solid rgba(154, 59, 255, 0.35);
     border-radius: 23px;
 
     box-shadow:
@@ -1186,6 +1186,7 @@ body.app-page {
             transparent,
             rgba(154, 59, 255, 0.45),
             transparent
+            border: 1px solid rgba(154, 59, 255, 0.35);
         );
 
     opacity: 0.55;
