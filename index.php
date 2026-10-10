@@ -23,7 +23,7 @@ declare(strict_types=1);
 
    <link
     rel="stylesheet"
-    href="css/index.css">
+    href="css/index.css?v2">
     <link
     rel="stylesheet"
     href="assets/featured-offers.css?v=<?= filemtime(__DIR__ . '/assets/featured-offers.css') ?>">
