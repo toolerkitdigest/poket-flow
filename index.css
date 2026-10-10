@@ -1,43 +1,41 @@
 /* =========================================================
-   POKETFLOW HOME PAGE
-   Standalone Homepage CSS
-   Light Purple Theme
-   Fully Responsive / Header + Mobile Navigation Preserved
-========================================================= */
-
-/* =========================================================
-   ROOT
+   ROOT — POKETFLOW LIGHT PURPLE THEME
 ========================================================= */
 
 :root {
     --home-bg: #e9e6ef;
-    --home-bg-soft: #f1eef7;
+    --home-bg-soft: #f3f0f8;
 
     --home-surface: #ffffff;
     --home-surface-2: #f8f6fc;
     --home-surface-hover: #f0eafa;
 
-    --home-primary: #9333ea;
-    --home-primary-hover: #a855f7;
+    --home-primary: #9b3bff;
+    --home-primary-hover: #ad63ff;
     --home-primary-dark: #7e22ce;
 
-    --home-accent: #7c3aed;
+    --home-accent: #a855f7;
 
     --home-text: #211832;
     --home-secondary: #625873;
     --home-muted: #837991;
 
-    --home-border: rgba(126, 34, 206, .16);
+    --home-border: rgba(126, 34, 206, 0.14);
 
     --home-success: #16a34a;
 
     --home-radius: 18px;
 
     --home-shadow:
-        0 20px 60px rgba(61, 35, 92, .09);
+        0 12px 35px rgba(67, 36, 105, 0.08);
 
     --home-container: 1180px;
 }
+
+
+
+
+
 
 /* =========================================================
    RESET
