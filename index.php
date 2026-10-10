@@ -26,7 +26,7 @@ declare(strict_types=1);
   >
 
 <link rel="stylesheet" href="/index.css?v2">
-<link rel="stylesheet" href="/assets/featured-offers.">
+<link rel="stylesheet" href="/assets/featured-offers.css?v2">
 
 
   
