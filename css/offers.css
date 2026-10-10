@@ -1,7 +1,6 @@
 /* =========================================================
    POKETFLOW — OFFERS PAGE
-   Premium Rewards Marketplace UI
-   Complete replacement stylesheet
+   Compatible with the existing offers.php
    ========================================================= */
 
 :root {
@@ -30,35 +29,21 @@
     --pf-success: #34d399;
     --pf-success-soft: rgba(52, 211, 153, 0.10);
 
-    --pf-warning: #f59e0b;
-    --pf-danger: #f87171;
-
-    --pf-radius-xs: 8px;
     --pf-radius-sm: 10px;
     --pf-radius-md: 13px;
     --pf-radius-lg: 17px;
-    --pf-radius-xl: 21px;
 
-    --pf-shadow-sm:
-        0 8px 24px rgba(0, 0, 0, 0.14);
-
-    --pf-shadow:
-        0 18px 50px rgba(0, 0, 0, 0.24);
-
-    --pf-shadow-primary:
-        0 12px 32px rgba(99, 102, 241, 0.18);
+    --pf-shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.14);
 }
 
-
 /* =========================================================
-   GLOBAL PAGE
+   PAGE
    ========================================================= */
 
 .app-page {
     min-height: 100vh;
-
+    margin: 0;
     color: var(--pf-text);
-
     background:
         radial-gradient(
             circle at 8% 0%,
@@ -77,7 +62,6 @@
         );
 }
 
-
 /* =========================================================
    HEADER
    ========================================================= */
@@ -94,7 +78,7 @@
 
     padding: 0 28px;
 
-    background: rgba(7, 11, 22, 0.90);
+    background: rgba(7, 11, 22, 0.92);
 
     border-bottom: 1px solid var(--pf-border);
 
@@ -102,15 +86,9 @@
     -webkit-backdrop-filter: blur(20px);
 }
 
-
-/* =========================================================
-   BRAND
-   ========================================================= */
-
 .brand {
     display: inline-flex;
     align-items: center;
-
     gap: 10px;
 
     color: var(--pf-text);
@@ -120,12 +98,7 @@
     font-weight: 800;
 
     letter-spacing: -0.55px;
-
     white-space: nowrap;
-}
-
-.brand > span:last-child span {
-    color: var(--pf-primary-hover);
 }
 
 .brand-mark {
@@ -156,6 +129,9 @@
         0 8px 25px rgba(99, 102, 241, 0.28);
 }
 
+.brand > span:last-child span {
+    color: var(--pf-primary-hover);
+}
 
 /* =========================================================
    DESKTOP HEADER NAV
@@ -196,40 +172,13 @@
 
 .app-header-nav a:hover {
     color: var(--pf-text);
-
-    background:
-        rgba(255, 255, 255, 0.045);
+    background: rgba(255, 255, 255, 0.045);
 }
 
 .app-header-nav a.active {
     color: #ffffff;
-
-    background:
-        rgba(99, 102, 241, 0.13);
+    background: rgba(99, 102, 241, 0.13);
 }
-
-.app-header-nav a.active::after {
-    content: "";
-
-    position: absolute;
-
-    left: 12px;
-    right: 12px;
-
-    bottom: -18px;
-
-    height: 2px;
-
-    border-radius: 999px;
-
-    background:
-        linear-gradient(
-            90deg,
-            var(--pf-primary),
-            var(--pf-accent)
-        );
-}
-
 
 /* =========================================================
    HEADER ACTIONS
@@ -238,7 +187,6 @@
 .header-actions {
     display: flex;
     align-items: center;
-
     gap: 9px;
 
     margin-left: auto;
@@ -262,34 +210,19 @@
 
     text-decoration: none;
 
-    background:
-        rgba(99, 102, 241, 0.11);
+    background: rgba(99, 102, 241, 0.11);
 
     border: 1px solid rgba(129, 140, 248, 0.17);
-
-    transition:
-        background 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.2s ease;
 }
 
 .balance-button:hover {
     color: #ffffff;
-
-    background:
-        rgba(99, 102, 241, 0.18);
-
-    border-color:
-        rgba(129, 140, 248, 0.30);
-
-    transform: translateY(-1px);
+    background: rgba(99, 102, 241, 0.18);
+    border-color: rgba(129, 140, 248, 0.30);
 }
 
-
 /* =========================================================
-   MOBILE MENU BUTTON
-   IMPORTANT:
-   This is the ONLY hamburger control.
+   SINGLE MOBILE HAMBURGER
    ========================================================= */
 
 .mobile-menu-button {
@@ -302,7 +235,6 @@
 
     align-items: center;
     justify-content: center;
-
     flex-direction: column;
 
     gap: 4px;
@@ -314,30 +246,13 @@
     -webkit-appearance: none;
 
     border: 1px solid var(--pf-border);
-
     border-radius: 10px;
 
-    background:
-        rgba(17, 24, 39, 0.90);
+    background: rgba(17, 24, 39, 0.90);
 
     color: var(--pf-text);
 
     cursor: pointer;
-
-    box-shadow:
-        0 6px 18px rgba(0, 0, 0, 0.12);
-
-    transition:
-        background 0.2s ease,
-        border-color 0.2s ease;
-}
-
-.mobile-menu-button:hover {
-    background:
-        rgba(99, 102, 241, 0.12);
-
-    border-color:
-        rgba(129, 140, 248, 0.25);
 }
 
 .mobile-menu-button span {
@@ -346,14 +261,13 @@
     width: 17px;
     height: 2px;
 
-    flex: 0 0 2px;
-
     margin: 0;
+
+    flex: 0 0 2px;
 
     border-radius: 999px;
 
-    background:
-        var(--pf-text-soft);
+    background: var(--pf-text-soft);
 
     transition:
         transform 0.2s ease,
@@ -361,9 +275,7 @@
 }
 
 .mobile-menu-button.open span:nth-child(1) {
-    transform:
-        translateY(6px)
-        rotate(45deg);
+    transform: translateY(6px) rotate(45deg);
 }
 
 .mobile-menu-button.open span:nth-child(2) {
@@ -371,11 +283,8 @@
 }
 
 .mobile-menu-button.open span:nth-child(3) {
-    transform:
-        translateY(-6px)
-        rotate(-45deg);
+    transform: translateY(-6px) rotate(-45deg);
 }
-
 
 /* =========================================================
    MOBILE NAVIGATION
@@ -394,11 +303,9 @@
 
     padding: 8px;
 
-    background:
-        rgba(14, 21, 36, 0.98);
+    background: rgba(14, 21, 36, 0.98);
 
     border: 1px solid var(--pf-border);
-
     border-radius: 15px;
 
     box-shadow:
@@ -414,7 +321,6 @@
 
 .mobile-navigation nav {
     display: grid;
-
     gap: 3px;
 }
 
@@ -436,18 +342,12 @@
 
     font-size: 13px;
     font-weight: 650;
-
-    transition:
-        color 0.2s ease,
-        background 0.2s ease;
 }
 
 .mobile-navigation a:hover,
 .mobile-navigation a.active {
     color: #ffffff;
-
-    background:
-        rgba(99, 102, 241, 0.13);
+    background: rgba(99, 102, 241, 0.13);
 }
 
 .mobile-nav-icon {
@@ -464,57 +364,44 @@
 
     color: var(--pf-primary-hover);
 
-    background:
-        rgba(99, 102, 241, 0.10);
+    background: rgba(99, 102, 241, 0.10);
 
     font-size: 13px;
 }
 
-
 /* =========================================================
-   APP SHELL
+   MAIN LAYOUT
    ========================================================= */
 
 .app-shell {
     display: grid;
 
-    grid-template-columns:
-        245px
-        minmax(0, 1fr);
+    grid-template-columns: 245px minmax(0, 1fr);
 
-    min-height:
-        calc(100vh - 72px);
+    min-height: calc(100vh - 72px);
 }
-
-
-/* =========================================================
-   SIDEBAR
-   ========================================================= */
 
 .sidebar {
     position: sticky;
+
     top: 72px;
 
-    height:
-        calc(100vh - 72px);
+    height: calc(100vh - 72px);
 
     display: flex;
     flex-direction: column;
 
     padding: 23px 14px;
 
-    background:
-        rgba(10, 17, 31, 0.72);
+    background: rgba(10, 17, 31, 0.72);
 
-    border-right:
-        1px solid var(--pf-border);
+    border-right: 1px solid var(--pf-border);
 
     overflow-y: auto;
 }
 
 .sidebar-nav {
     display: grid;
-
     gap: 4px;
 }
 
@@ -533,23 +420,15 @@
     text-decoration: none;
 
     border: 1px solid transparent;
-
     border-radius: 10px;
 
     font-size: 13px;
     font-weight: 650;
-
-    transition:
-        color 0.2s ease,
-        background 0.2s ease,
-        border-color 0.2s ease;
 }
 
 .sidebar-nav a:hover {
     color: var(--pf-text);
-
-    background:
-        rgba(255, 255, 255, 0.035);
+    background: rgba(255, 255, 255, 0.035);
 }
 
 .sidebar-nav a.active {
@@ -562,14 +441,8 @@
             rgba(99, 102, 241, 0.045)
         );
 
-    border-color:
-        rgba(99, 102, 241, 0.17);
+    border-color: rgba(99, 102, 241, 0.17);
 }
-
-.sidebar-nav a:first-letter {
-    color: var(--pf-primary-hover);
-}
-
 
 /* =========================================================
    SIDEBAR BALANCE
@@ -580,11 +453,8 @@
 
     padding: 17px;
 
-    border:
-        1px solid var(--pf-border);
-
-    border-radius:
-        var(--pf-radius-lg);
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius-lg);
 
     background:
         radial-gradient(
@@ -610,7 +480,6 @@
     font-weight: 750;
 
     letter-spacing: 0.09em;
-
     text-transform: uppercase;
 }
 
@@ -623,8 +492,6 @@
 
     font-size: 25px;
     font-weight: 800;
-
-    letter-spacing: -0.7px;
 }
 
 .side-balance > span {
@@ -646,28 +513,15 @@
     text-decoration: none;
 }
 
-.side-balance a:hover {
-    color: var(--pf-accent);
-}
-
-
 /* =========================================================
-   MAIN CONTENT
+   CONTENT
    ========================================================= */
 
 .app-content {
     min-width: 0;
 
-    padding:
-        38px
-        40px
-        60px;
+    padding: 38px 40px 60px;
 }
-
-
-/* =========================================================
-   PAGE TITLE
-   ========================================================= */
 
 .page-title {
     display: flex;
@@ -681,7 +535,6 @@
 
 .kicker {
     display: inline-flex;
-    align-items: center;
 
     margin-bottom: 8px;
 
@@ -691,7 +544,6 @@
     font-weight: 800;
 
     letter-spacing: 0.15em;
-
     text-transform: uppercase;
 }
 
@@ -700,9 +552,7 @@
 
     color: #ffffff;
 
-    font-size:
-        clamp(29px, 3.4vw, 39px);
-
+    font-size: clamp(29px, 3.4vw, 39px);
     line-height: 1.05;
 
     letter-spacing: -1.25px;
@@ -719,19 +569,15 @@
     line-height: 1.7;
 }
 
-
 /* =========================================================
-   INFORMATION CARD
+   INFO CARD
    ========================================================= */
 
 .info-card {
     padding: 20px;
 
-    border:
-        1px solid var(--pf-border);
-
-    border-radius:
-        var(--pf-radius-lg);
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius-lg);
 
     background:
         linear-gradient(
@@ -740,8 +586,7 @@
             rgba(15, 23, 39, 0.96)
         );
 
-    box-shadow:
-        var(--pf-shadow-sm);
+    box-shadow: var(--pf-shadow-sm);
 }
 
 .app-content > .info-card {
@@ -779,10 +624,6 @@
     text-decoration: none;
 }
 
-.info-card > a:hover {
-    color: var(--pf-accent);
-}
-
 .info-card hr {
     height: 1px;
 
@@ -790,515 +631,14 @@
 
     border: 0;
 
-    background:
-        var(--pf-border);
+    background: var(--pf-border);
 }
 
 .info-card small {
     color: var(--pf-text-muted);
 
     font-size: 10px;
-
     line-height: 1.6;
-}
-
-
-/* =========================================================
-   OFFER TABS
-   ========================================================= */
-
-.offer-tabs {
-    display: flex;
-    align-items: center;
-
-    gap: 5px;
-
-    width: fit-content;
-    max-width: 100%;
-
-    margin-bottom: 21px;
-    padding: 4px;
-
-    overflow-x: auto;
-
-    border:
-        1px solid var(--pf-border);
-
-    border-radius: 11px;
-
-    background:
-        rgba(15, 23, 39, 0.82);
-
-    scrollbar-width: none;
-}
-
-.offer-tabs::-webkit-scrollbar {
-    display: none;
-}
-
-.offer-tabs button {
-    flex: 0 0 auto;
-
-    min-height: 35px;
-
-    padding: 0 13px;
-
-    border: 0;
-
-    border-radius: 8px;
-
-    background: transparent;
-
-    color: var(--pf-text-muted);
-
-    font: inherit;
-
-    font-size: 11px;
-    font-weight: 750;
-
-    cursor: pointer;
-
-    transition:
-        color 0.2s ease,
-        background 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.offer-tabs button:hover {
-    color: var(--pf-text);
-
-    background:
-        rgba(255, 255, 255, 0.04);
-}
-
-.offer-tabs button.selected {
-    color: #ffffff;
-
-    background:
-        linear-gradient(
-            135deg,
-            var(--pf-primary-dark),
-            var(--pf-primary)
-        );
-
-    box-shadow:
-        0 5px 17px rgba(99, 102, 241, 0.20);
-}
-
-
-/* =========================================================
-   DASHBOARD LAYOUT
-   ========================================================= */
-
-.dashboard-grid {
-    display: grid;
-
-    grid-template-columns:
-        minmax(0, 1fr)
-        270px;
-
-    align-items: start;
-
-    gap: 22px;
-}
-
-.dashboard-offers {
-    min-width: 0;
-}
-
-
-/* =========================================================
-   OFFER GRID
-   ========================================================= */
-
-.offer-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-    gap: 16px;
-}
-
-
-/* =========================================================
-   OFFER CARD
-   ========================================================= */
-
-.offer-card {
-    position: relative;
-
-    min-width: 0;
-
-    display: flex;
-    flex-direction: column;
-
-    overflow: hidden;
-
-    border:
-        1px solid var(--pf-border);
-
-    border-radius:
-        var(--pf-radius-lg);
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(20, 29, 47, 0.98),
-            rgba(14, 21, 35, 0.98)
-        );
-
-    box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.14);
-
-    transition:
-        transform 0.22s ease,
-        border-color 0.22s ease,
-        box-shadow 0.22s ease;
-}
-
-.offer-card:hover {
-    transform:
-        translateY(-2px);
-
-    border-color:
-        var(--pf-border-strong);
-
-    box-shadow:
-        0 18px 42px rgba(0, 0, 0, 0.23),
-        0 8px 28px rgba(99, 102, 241, 0.07);
-}
-
-
-/* =========================================================
-   OFFER IMAGE / LOGO AREA
-   IMPORTANT:
-   Offer images are intentionally compact.
-   ========================================================= */
-
-.offer-image {
-    position: relative;
-
-    height: 90px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    overflow: hidden;
-
-    border-bottom:
-        1px solid var(--pf-border-light);
-
-    background:
-        radial-gradient(
-            circle at 50% 20%,
-            rgba(99, 102, 241, 0.105),
-            transparent 68%
-        ),
-        #0c1425;
-}
-
-
-/*
-   Actual offer image.
-
-   The image is no longer allowed to fill
-   the entire banner area.
-*/
-
-.offer-image img {
-    display: block;
-
-    width: 90px;
-    height: 90px;
-
-    max-width: 90px;
-    max-height: 90px;
-
-    padding: 0;
-
-    object-fit: contain;
-
-    border-radius: 13px;
-
-    filter:
-        drop-shadow(
-            0 7px 14px rgba(0, 0, 0, 0.24)
-        );
-
-    transition:
-        transform 0.22s ease,
-        filter 0.22s ease;
-}
-
-.offer-card:hover .offer-image img {
-    transform:
-        scale(1.055);
-
-    filter:
-        drop-shadow(
-            0 9px 18px rgba(0, 0, 0, 0.30)
-        );
-}
-
-
-/* Orange offer background */
-
-.offer-image.orange {
-    background:
-        radial-gradient(
-            circle at 50% 20%,
-            rgba(245, 158, 11, 0.12),
-            transparent 68%
-        ),
-        #0c1425;
-}
-
-
-/* Cyan offer background */
-
-.offer-image.cyan {
-    background:
-        radial-gradient(
-            circle at 50% 20%,
-            rgba(34, 211, 238, 0.11),
-            transparent 68%
-        ),
-        #0c1425;
-}
-
-
-/* =========================================================
-   FALLBACK OFFER ICON
-   ========================================================= */
-
-.offer-fallback-icon {
-    width: 52px;
-    height: 52px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border:
-        1px solid rgba(129, 140, 248, 0.20);
-
-    border-radius: 14px;
-
-    color: #ffffff;
-
-    font-size: 21px;
-    font-weight: 800;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(99, 102, 241, 0.22),
-            rgba(34, 211, 238, 0.10)
-        );
-
-    box-shadow:
-        0 9px 22px rgba(0, 0, 0, 0.20);
-}
-
-
-/* =========================================================
-   OFFER BODY
-   ========================================================= */
-
-.offer-body {
-    flex: 1;
-
-    min-width: 0;
-
-    padding:
-        14px
-        16px
-        11px;
-}
-
-.offer-body h3 {
-    display: -webkit-box;
-
-    margin: 0 0 6px;
-
-    overflow: hidden;
-
-    color: #ffffff;
-
-    font-size: 14px;
-    font-weight: 750;
-
-    line-height: 1.4;
-
-    letter-spacing: -0.1px;
-
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-.offer-body p {
-    display: -webkit-box;
-
-    margin: 0;
-
-    overflow: hidden;
-
-    color: var(--pf-text-muted);
-
-    font-size: 11px;
-
-    line-height: 1.6;
-
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-
-/* =========================================================
-   OFFER BOTTOM
-   ========================================================= */
-
-.offer-bottom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 10px;
-
-    padding:
-        11px
-        16px
-        14px;
-
-    border-top:
-        1px solid var(--pf-border-light);
-}
-
-
-/* Reward */
-
-.offer-bottom strong {
-    display: inline-flex;
-    align-items: center;
-
-    min-height: 28px;
-
-    padding: 0 9px;
-
-    color: var(--pf-success);
-
-    border:
-        1px solid rgba(52, 211, 153, 0.12);
-
-    border-radius: 8px;
-
-    background:
-        var(--pf-success-soft);
-
-    font-size: 12px;
-    font-weight: 800;
-
-    white-space: nowrap;
-}
-
-
-/* CTA */
-
-.offer-bottom .btn {
-    min-height: 35px;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    padding:
-        0 13px;
-
-    border-radius: 9px;
-
-    font-size: 11px;
-    font-weight: 800;
-
-    text-decoration: none;
-
-    white-space: nowrap;
-}
-
-
-/* =========================================================
-   EMPTY OFFER CARD
-   ========================================================= */
-
-.empty-offer-card {
-    grid-column: 1 / -1;
-
-    min-height: 270px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    text-align: center;
-
-    padding: 32px;
-}
-
-.empty-offer-card .offer-icon {
-    width: 58px;
-    height: 58px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    margin: 0 auto 16px;
-
-    border-radius: 16px;
-
-    color: var(--pf-primary-hover);
-
-    background:
-        rgba(99, 102, 241, 0.10);
-
-    font-size: 24px;
-}
-
-.empty-offer-card .offer-body {
-    flex: initial;
-
-    padding: 0;
-}
-
-.empty-offer-card .offer-body h3 {
-    display: block;
-
-    margin-bottom: 7px;
-
-    font-size: 16px;
-}
-
-.empty-offer-card .offer-body p {
-    display: block;
-
-    max-width: 420px;
-
-    margin: 0 auto;
-
-    -webkit-line-clamp: initial;
-}
-
-
-/* =========================================================
-   RIGHT INFORMATION PANEL
-   ========================================================= */
-
-.dashboard-grid > .info-card {
-    position: sticky;
-
-    top: 94px;
 }
 
 .info-icon {
@@ -1325,6 +665,369 @@
     font-size: 17px;
 }
 
+/* =========================================================
+   OFFER TABS
+   ========================================================= */
+
+.offer-tabs {
+    display: flex;
+    align-items: center;
+
+    gap: 5px;
+
+    width: fit-content;
+    max-width: 100%;
+
+    margin-bottom: 21px;
+
+    padding: 4px;
+
+    overflow-x: auto;
+
+    border: 1px solid var(--pf-border);
+    border-radius: 11px;
+
+    background: rgba(15, 23, 39, 0.82);
+
+    scrollbar-width: none;
+}
+
+.offer-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.offer-tabs button {
+    flex: 0 0 auto;
+
+    min-height: 35px;
+
+    padding: 0 13px;
+
+    border: 0;
+    border-radius: 8px;
+
+    background: transparent;
+
+    color: var(--pf-text-muted);
+
+    font: inherit;
+    font-size: 11px;
+    font-weight: 750;
+
+    cursor: pointer;
+}
+
+.offer-tabs button:hover {
+    color: var(--pf-text);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.offer-tabs button.selected {
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--pf-primary-dark),
+            var(--pf-primary)
+        );
+
+    box-shadow:
+        0 5px 17px rgba(99, 102, 241, 0.20);
+}
+
+/* =========================================================
+   OFFER GRID
+   ========================================================= */
+
+.dashboard-grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        270px;
+
+    align-items: start;
+
+    gap: 22px;
+}
+
+.dashboard-offers {
+    min-width: 0;
+}
+
+.offer-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+}
+
+/* =========================================================
+   OFFER CARD
+   ========================================================= */
+
+.offer-card {
+    position: relative;
+
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius-lg);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(20, 29, 47, 0.98),
+            rgba(14, 21, 35, 0.98)
+        );
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.14);
+
+    transition:
+        transform 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+.offer-card:hover {
+    transform: translateY(-2px);
+
+    border-color: var(--pf-border-strong);
+
+    box-shadow:
+        0 18px 42px rgba(0, 0, 0, 0.23),
+        0 8px 28px rgba(99, 102, 241, 0.07);
+}
+
+/* =========================================================
+   SMALL PROFESSIONAL OFFER IMAGE AREA
+   ========================================================= */
+
+.offer-image {
+    position: relative;
+
+    height: 82px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-bottom: 1px solid var(--pf-border-light);
+
+    background:
+        radial-gradient(
+            circle at 50% 20%,
+            rgba(99, 102, 241, 0.105),
+            transparent 68%
+        ),
+        #0c1425;
+}
+
+/*
+ * This is the important image sizing rule.
+ *
+ * Network images can be very large, but they are
+ * visually constrained to a professional 58px size.
+ */
+
+.offer-image img {
+    display: block;
+
+    width: 58px;
+    height: 58px;
+
+    max-width: 58px;
+    max-height: 58px;
+
+    object-fit: contain;
+
+    border-radius: 13px;
+
+    filter:
+        drop-shadow(
+            0 7px 14px rgba(0, 0, 0, 0.24)
+        );
+
+    transition:
+        transform 0.22s ease,
+        filter 0.22s ease;
+}
+
+.offer-card:hover .offer-image img {
+    transform: scale(1.05);
+
+    filter:
+        drop-shadow(
+            0 9px 18px rgba(0, 0, 0, 0.30)
+        );
+}
+
+.offer-image.orange {
+    background:
+        radial-gradient(
+            circle at 50% 20%,
+            rgba(245, 158, 11, 0.12),
+            transparent 68%
+        ),
+        #0c1425;
+}
+
+.offer-image.cyan {
+    background:
+        radial-gradient(
+            circle at 50% 20%,
+            rgba(34, 211, 238, 0.11),
+            transparent 68%
+        ),
+        #0c1425;
+}
+
+/* =========================================================
+   FALLBACK OFFER ICON
+   ========================================================= */
+
+.offer-fallback-icon {
+    width: 52px;
+    height: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(129, 140, 248, 0.20);
+
+    border-radius: 14px;
+
+    color: #ffffff;
+
+    font-size: 21px;
+    font-weight: 800;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(99, 102, 241, 0.22),
+            rgba(34, 211, 238, 0.10)
+        );
+
+    box-shadow:
+        0 9px 22px rgba(0, 0, 0, 0.20);
+}
+
+/* =========================================================
+   OFFER BODY
+   ========================================================= */
+
+.offer-body {
+    flex: 1;
+
+    min-width: 0;
+
+    padding: 14px 16px 11px;
+}
+
+.offer-body h3 {
+    display: -webkit-box;
+
+    margin: 0 0 6px;
+
+    overflow: hidden;
+
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 750;
+
+    line-height: 1.4;
+
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.offer-body p {
+    display: -webkit-box;
+
+    margin: 0;
+
+    overflow: hidden;
+
+    color: var(--pf-text-muted);
+
+    font-size: 11px;
+
+    line-height: 1.6;
+
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* =========================================================
+   OFFER BOTTOM
+   ========================================================= */
+
+.offer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding: 11px 16px 14px;
+
+    border-top: 1px solid var(--pf-border-light);
+}
+
+.offer-bottom strong {
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 28px;
+
+    padding: 0 9px;
+
+    color: var(--pf-success);
+
+    border: 1px solid rgba(52, 211, 153, 0.12);
+
+    border-radius: 8px;
+
+    background: var(--pf-success-soft);
+
+    font-size: 12px;
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+.offer-bottom .btn {
+    min-height: 35px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 13px;
+
+    border-radius: 9px;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+}
 
 /* =========================================================
    PRIMARY BUTTON
@@ -1340,31 +1043,94 @@
             var(--pf-primary)
         );
 
-    border:
-        1px solid rgba(129, 140, 248, 0.24);
+    border: 1px solid rgba(129, 140, 248, 0.24);
 
     box-shadow:
         0 7px 20px rgba(99, 102, 241, 0.15);
-
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        filter 0.2s ease;
 }
 
 .btn-primary:hover {
     color: #ffffff;
 
-    transform:
-        translateY(-1px);
-
-    filter:
-        brightness(1.07);
+    filter: brightness(1.07);
 
     box-shadow:
         0 10px 25px rgba(99, 102, 241, 0.24);
 }
 
+/* =========================================================
+   EMPTY OFFER CARD
+   ========================================================= */
+
+.empty-offer-card {
+    grid-column: 1 / -1;
+
+    min-height: 270px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    padding: 32px;
+}
+
+.empty-offer-card .offer-icon {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 16px;
+
+    border-radius: 16px;
+
+    color: var(--pf-primary-hover);
+
+    background: rgba(99, 102, 241, 0.10);
+
+    font-size: 24px;
+}
+
+.empty-offer-card .offer-body {
+    padding: 0;
+}
+
+.empty-offer-card .offer-body h3 {
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-size: 16px;
+}
+
+.empty-offer-card .offer-body p {
+    display: block;
+
+    max-width: 420px;
+
+    margin: 0 auto;
+
+    -webkit-line-clamp: initial;
+}
+
+.empty-offer-card .offer-bottom {
+    justify-content: center;
+
+    border-top: 0;
+}
+
+/* =========================================================
+   RIGHT INFO CARD
+   ========================================================= */
+
+.dashboard-grid > .info-card {
+    position: sticky;
+    top: 94px;
+}
 
 /* =========================================================
    TABLET
@@ -1373,8 +1139,7 @@
 @media (max-width: 1150px) {
 
     .app-header {
-        padding:
-            0 20px;
+        padding: 0 20px;
     }
 
     .app-header-nav {
@@ -1402,7 +1167,6 @@
     }
 }
 
-
 /* =========================================================
    MOBILE
    ========================================================= */
@@ -1411,15 +1175,13 @@
 
     .app-header {
         min-height: 64px;
-
-        padding:
-            0 14px;
+        padding: 0 14px;
     }
 
     /*
-       Desktop navigation disappears.
-       The dedicated hamburger is shown.
-    */
+     * Hide desktop navigation.
+     * Only the ONE mobile menu button remains.
+     */
 
     .app-header-nav {
         display: none;
@@ -1432,8 +1194,7 @@
     .balance-button {
         min-height: 37px;
 
-        padding:
-            0 10px;
+        padding: 0 10px;
 
         font-size: 11px;
     }
@@ -1442,13 +1203,9 @@
         display: flex;
     }
 
-
     /*
-       IMPORTANT:
-       Hide the sidebar completely on mobile.
-       This prevents the sidebar from becoming
-       a second navigation menu.
-    */
+     * Hide desktop sidebar on mobile.
+     */
 
     .app-page .sidebar {
         display: none;
@@ -1457,19 +1214,12 @@
     .app-shell {
         display: block;
 
-        min-height:
-            calc(100vh - 64px);
+        min-height: calc(100vh - 64px);
     }
 
     .app-content {
-        padding:
-            28px
-            17px
-            45px;
+        padding: 28px 17px 45px;
     }
-
-
-    /* Page title */
 
     .page-title {
         align-items: flex-start;
@@ -1485,17 +1235,11 @@
         font-size: 12px;
     }
 
-
-    /* Tabs */
-
     .offer-tabs {
         width: 100%;
 
         margin-bottom: 18px;
     }
-
-
-    /* Main dashboard */
 
     .dashboard-grid {
         grid-template-columns: 1fr;
@@ -1509,9 +1253,6 @@
         order: 2;
     }
 
-
-    /* Offer grid */
-
     .offer-grid {
         grid-template-columns:
             repeat(2, minmax(0, 1fr));
@@ -1519,8 +1260,9 @@
         gap: 12px;
     }
 
-
-    /* Offer image */
+    /*
+     * Slightly smaller offer images on mobile.
+     */
 
     .offer-image {
         height: 76px;
@@ -1543,14 +1285,8 @@
         font-size: 19px;
     }
 
-
-    /* Offer body */
-
     .offer-body {
-        padding:
-            12px
-            13px
-            9px;
+        padding: 12px 13px 9px;
     }
 
     .offer-body h3 {
@@ -1561,18 +1297,12 @@
         font-size: 10.5px;
     }
 
-
-    /* Offer footer */
-
     .offer-bottom {
         align-items: flex-start;
 
         flex-direction: column;
 
-        padding:
-            10px
-            13px
-            13px;
+        padding: 10px 13px 13px;
 
         gap: 8px;
     }
@@ -1580,8 +1310,7 @@
     .offer-bottom strong {
         min-height: 26px;
 
-        padding:
-            0 8px;
+        padding: 0 8px;
 
         font-size: 11px;
     }
@@ -1593,9 +1322,8 @@
     }
 }
 
-
 /* =========================================================
-   SMALL MOBILE
+   SMALL PHONES
    ========================================================= */
 
 @media (max-width: 520px) {
@@ -1618,10 +1346,7 @@
     }
 
     .app-content {
-        padding:
-            24px
-            13px
-            40px;
+        padding: 24px 13px 40px;
     }
 
     .page-title h1 {
@@ -1632,18 +1357,12 @@
         font-size: 12px;
     }
 
-
-    /* Tabs */
-
     .offer-tabs button {
         padding-left: 10px;
         padding-right: 10px;
 
         font-size: 10.5px;
     }
-
-
-    /* One-column offer list */
 
     .offer-grid {
         grid-template-columns: 1fr;
@@ -1654,12 +1373,6 @@
     .offer-card {
         border-radius: 15px;
     }
-
-
-    /*
-       On very small screens we use a slightly
-       larger logo area because the card is full width.
-    */
 
     .offer-image {
         height: 80px;
@@ -1678,12 +1391,8 @@
         height: 50px;
     }
 
-
     .offer-body {
-        padding:
-            13px
-            14px
-            10px;
+        padding: 13px 14px 10px;
     }
 
     .offer-body h3 {
@@ -1696,20 +1405,12 @@
         -webkit-line-clamp: 2;
     }
 
-
-    /*
-       Full-width cards use a horizontal footer.
-    */
-
     .offer-bottom {
         flex-direction: row;
 
         align-items: center;
 
-        padding:
-            11px
-            14px
-            14px;
+        padding: 11px 14px 14px;
     }
 
     .offer-bottom .btn {
@@ -1718,19 +1419,15 @@
         min-width: 92px;
     }
 
-
     .empty-offer-card {
         min-height: 250px;
 
-        padding:
-            25px
-            18px;
+        padding: 25px 18px;
     }
 }
 
-
 /* =========================================================
-   VERY SMALL DEVICES
+   VERY SMALL PHONES
    ========================================================= */
 
 @media (max-width: 360px) {
@@ -1780,7 +1477,6 @@
     }
 }
 
-
 /* =========================================================
    ACCESSIBILITY
    ========================================================= */
@@ -1792,12 +1488,9 @@
 .offer-card a:focus-visible,
 .mobile-navigation a:focus-visible,
 .balance-button:focus-visible {
-    outline:
-        2px solid var(--pf-accent);
-
+    outline: 2px solid var(--pf-accent);
     outline-offset: 3px;
 }
-
 
 /* =========================================================
    REDUCED MOTION
@@ -1810,13 +1503,10 @@
     *::after {
         scroll-behavior: auto !important;
 
-        transition-duration:
-            0.01ms !important;
+        transition-duration: 0.01ms !important;
 
-        animation-duration:
-            0.01ms !important;
+        animation-duration: 0.01ms !important;
 
-        animation-iteration-count:
-            1 !important;
+        animation-iteration-count: 1 !important;
     }
 }
