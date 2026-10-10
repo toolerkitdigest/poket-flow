@@ -31,7 +31,7 @@ declare(strict_types=1);
     
     <link
     rel="stylesheet"
-    href="css/offers.css?v=<?= filemtime(__DIR__ . '/css/offers.css') ?>">
+    href="assets/dashboard.css?v=<?= filemtime(__DIR__ . '/css/offers.css') ?>">
 
     
 
