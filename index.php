@@ -22,11 +22,15 @@ declare(strict_types=1);
 
   <meta
     name="description"
-    content="Discover offers and activities, complete requirements, earn rewards, and cash out when you reach the minimum balance."
-  >
+    content="Discover offers and activities, complete requirements, earn rewards, and cash out when you reach the minimum balance.">
 
-<link rel="stylesheet" href="/index.css?v2">
-<link rel="stylesheet" href="/assets/featured-offers.css?v2">
+  <link
+    rel="stylesheet"
+    href="assets/index.css?v=<?= filemtime(__DIR__ . '/dashboard.css') ?>">
+
+    
+
+  <link rel="stylesheet" href="/assets/featured-offers.css?v2">
 
 
   
