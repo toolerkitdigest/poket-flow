@@ -9,20 +9,15 @@
     --pf-featured-bg: #e9e6ef;
     --pf-featured-surface: #111827;
     --pf-featured-surface-soft: #182238;
-
     --pf-featured-primary: #9333ea;
     --pf-featured-primary-hover: #a855f7;
     --pf-featured-primary-dark: #7e22ce;
-
     --pf-featured-text: #f3eaff;
     --pf-featured-secondary: #c4b5d9;
     --pf-featured-muted: #a397b8;
-
     --pf-featured-border: rgba(167, 139, 250, 0.35);
     --pf-featured-success: #4ade80;
-
-    --pf-featured-shadow:
-        0 12px 30px rgba(10, 5, 25, 0.16);
+    --pf-featured-shadow: 0 12px 30px rgba(10, 5, 25, 0.16);
 }
 
 /* SECTION */
@@ -94,7 +89,7 @@
     color: #d8b4fe;
 }
 
-/* GRID: THREE CARDS ON DESKTOP */
+/* GRID */
 .pf-featured-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -113,10 +108,7 @@
     border-radius: 15px;
     background: var(--pf-featured-surface);
     box-shadow: var(--pf-featured-shadow);
-    transition:
-        transform 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .pf-featured-card:hover {
@@ -125,15 +117,15 @@
     box-shadow: 0 18px 35px rgba(10, 5, 25, 0.24);
 }
 
-/* IMAGE WRAPPER
-   Supports either a separate image wrapper or the
-   existing card-top layout in the PHP component.
-*/
+/* FULL-WIDTH IMAGE WRAPPER */
 .pf-featured-image-wrap {
     width: 100%;
     height: 115px;
     min-height: 115px;
     overflow: hidden;
+    box-sizing: border-box;
+    border: 2px solid #a855f7;
+    border-radius: 12px;
     background: var(--pf-featured-surface-soft);
 }
 
@@ -142,9 +134,10 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 9px;
 }
 
-/* EXISTING CARD TOP */
+/* CARD TOP */
 .pf-featured-card-top {
     display: flex;
     align-items: flex-start;
@@ -152,7 +145,7 @@
     padding: 13px 13px 0;
 }
 
-/* OFFER IMAGE — VISIBLE EDGES ALL ROUND */
+/* OFFER IMAGE — PURPLE BORDER ON ALL FOUR SIDES */
 .pf-featured-image {
     display: grid;
     flex: 0 0 46px;
@@ -161,10 +154,8 @@
     overflow: hidden;
     place-items: center;
     box-sizing: border-box;
-
     border: 2px solid #a855f7;
     border-radius: 11px;
-
     background: #182238;
     color: #c084fc;
     font-size: 18px;
@@ -178,12 +169,6 @@
     box-sizing: border-box;
     object-fit: cover;
     border-radius: 8px;
-}
-.pf-featured-image img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
 }
 
 .pf-featured-fallback {
@@ -222,9 +207,7 @@
     -webkit-box-orient: vertical;
 }
 
-/* CONTENT
-   Supports the existing PHP component's content wrapper.
-*/
+/* CONTENT */
 .pf-featured-content {
     display: flex;
     flex: 1;
@@ -308,21 +291,13 @@
     text-align: center;
     text-decoration: none;
     white-space: nowrap;
-    transition:
-        background 0.2s ease,
-        color 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .pf-featured-button:hover {
     transform: translateY(-1px);
     border-color: transparent;
-    background: linear-gradient(
-        135deg,
-        var(--pf-featured-primary),
-        var(--pf-featured-primary-dark)
-    );
+    background: linear-gradient(135deg, var(--pf-featured-primary), var(--pf-featured-primary-dark));
     color: #fff;
 }
 
@@ -390,11 +365,7 @@
     min-height: 38px;
     padding: 0 15px;
     border-radius: 9px;
-    background: linear-gradient(
-        135deg,
-        var(--pf-featured-primary),
-        var(--pf-featured-primary-dark)
-    );
+    background: linear-gradient(135deg, var(--pf-featured-primary), var(--pf-featured-primary-dark));
     color: #fff;
     font-size: 11px;
     font-weight: 750;
@@ -414,7 +385,7 @@
     }
 }
 
-/* MOBILE: TWO CARDS PER ROW */
+/* MOBILE */
 @media (max-width: 600px) {
     .pf-featured-offers {
         padding: 42px 0;
@@ -449,6 +420,7 @@
     .pf-featured-image-wrap {
         height: 90px;
         min-height: 90px;
+        border-radius: 10px;
     }
 
     .pf-featured-card-top {
@@ -462,6 +434,10 @@
         height: 36px;
         border-radius: 9px;
         font-size: 15px;
+    }
+
+    .pf-featured-image img {
+        border-radius: 6px;
     }
 
     .pf-featured-content {
