@@ -118,6 +118,16 @@ declare(strict_types=1);
             when you reach the minimum balance.
         </p>
 
+        <!-- ==================================================
+             FEATURED OFFERS
+
+             Display immediately after the hero description.
+             The existing component handles offer retrieval
+             and reward calculations.
+        ================================================== -->
+
+        <?php require_once __DIR__ . '/includes/featured-offers.php'; ?>
+
         <div class="hero-actions">
 
             <a
@@ -143,125 +153,7 @@ declare(strict_types=1);
 
     </div>
 
-
-    <!-- HERO VISUAL -->
-
-    <div class="hero-visual">
-
-        <div class="glow glow-one"></div>
-
-        <div class="glow glow-two"></div>
-
-        <div class="phone">
-
-            <div class="phone-top">
-
-                <span class="mini-logo">P</span>
-
-                <strong>PoketFlow</strong>
-
-                <span>⌁</span>
-
-            </div>
-
-            <div class="balance-card">
-
-                <small>Your Balance</small>
-
-                <strong>$8.75</strong>
-
-                <div class="balance-row">
-
-                    <span>
-                        Available
-                        <b>$5.20</b>
-                    </span>
-
-                    <span>
-                        Pending
-                        <b>$3.55</b>
-                    </span>
-
-                </div>
-
-                <button>Cash Out</button>
-
-            </div>
-
-            <h4>Ways to Earn</h4>
-
-            <div class="phone-item">
-
-                ▣
-
-                <span>
-                    Surveys
-                    <small>Share your opinions</small>
-                </span>
-
-                ›
-
-            </div>
-
-            <div class="phone-item">
-
-                ▯
-
-                <span>
-                    App Installs
-                    <small>Try new apps & games</small>
-                </span>
-
-                ›
-
-            </div>
-
-            <div class="phone-item">
-
-                ◈
-
-                <span>
-                    Special Offers
-                    <small>Complete and earn</small>
-                </span>
-
-                ›
-
-            </div>
-
-        </div>
-
-
-        <!-- FLOATING FEATURE CARD -->
-
-        <div class="float-card float-one">
-
-            ✓
-
-            <span>
-
-                <b>Complete Offers</b>
-
-                <small>Earn rewards</small>
-
-            </span>
-
-        </div>
-
-    </div>
-
 </section>
-
-
-<!-- ==================================================
-     LIVE FEATURED OFFERS
-
-     IMPORTANT:
-     This component is immediately after the hero
-     and before the trust strip.
-================================================== -->
-
-<?php require_once __DIR__ . '/includes/featured-offers.php'; ?>
 
 
 <!-- ==================================================
