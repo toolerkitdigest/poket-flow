@@ -21,7 +21,10 @@ declare(strict_types=1);
         name="description"
         content="Discover offers and activities, complete requirements, earn rewards, and cash out when you reach the minimum balance.">
 
-    <link rel="stylesheet" href="css/index.css?v=2">
+    
+    <link rel="stylesheet" href="assets/dashboard.css?v2">
+    <link
+    <link rel="stylesheet" href="css/index.css?v2">
     <link
     rel="stylesheet"
     href="assets/featured-offers.css?v=<?= filemtime(__DIR__ . '/assets/featured-offers.css') ?>">
