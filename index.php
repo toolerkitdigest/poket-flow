@@ -19,18 +19,19 @@ declare(strict_types=1);
 
     <meta
         name="description"
-        content="Discover offers and activities, complete requirements, earn rewards, and cash out when you reach the minimum balance."
-    >
+        content="Discover offers and activities, complete requirements, earn rewards, and cash out when you reach the minimum balance.">
+
+   <link rel="stylesheet" href="assets/index.css?v=<?= file_exists(__DIR__ . '/assets/index.css') ? filemtime(__DIR__ . '/css/index.css') : time() ?>">
+    
+    <link
+        rel="stylesheet"
+        href="assets/index.css?v2">
+    
 
     <link
         rel="stylesheet"
-        href="assets/index.css?v=<?= file_exists(__DIR__ . '/assets/index.css') ? filemtime(__DIR__ . '/assets/index.css') : time() ?>"
-    >
-
-    <link
-        rel="stylesheet"
-        href="assets/featured-offers.css?v=<?= file_exists(__DIR__ . '/assets/featured-offers.css') ? filemtime(__DIR__ . '/assets/featured-offers.css') : time() ?>"
-    >
+        href="assets/featured-offers.css?v3">
+    
 
 </head>
 
