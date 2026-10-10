@@ -13,14 +13,14 @@
     color-scheme: light;
 
     --home-bg: #FFF2FA;
-    --home-bg-soft: #ffffff;
+    --home-bg-soft: #FFFFFF;
 
-    --home-surface: #ffffff;
+    --home-surface: #FFFFFF;
     --home-surface-2: #FFF2FA;
-    --home-surface-hover: #f8e8ff;
+    --home-surface-hover: #F8E8FF;
 
     --home-primary: #9A3BFF;
-    --home-primary-hover: #ad63ff;
+    --home-primary-hover: #AD63FF;
     --home-primary-dark: #5A00A8;
 
     --home-accent: #FF5BAA;
@@ -31,7 +31,7 @@
 
     --home-border: rgba(90, 0, 168, 0.16);
 
-    --home-success: #16a34a;
+    --home-success: #16A34A;
 
     --home-gradient: linear-gradient(
         135deg,
@@ -42,7 +42,7 @@
 
     --home-gradient-soft: linear-gradient(
         135deg,
-        #ffffff 0%,
+        #FFFFFF 0%,
         #FFF2FA 100%
     );
 
@@ -61,18 +61,8 @@
 
 
 /* =========================================================
-   2. GLOBAL HOMEPAGE BASE
+   2. GLOBAL RESET
 ========================================================= */
-
-html {
-    scroll-behavior: smooth;
-    scroll-padding-top: 80px;
-}
-
-body {
-    background: var(--home-bg);
-    color: var(--home-text);
-}
 
 *,
 *::before,
@@ -80,7 +70,42 @@ body {
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 100px;
+    max-width: 100%;
+}
+
+body {
+    min-width: 320px;
+    max-width: 100%;
+    min-height: 100vh;
+
+    margin: 0;
+
+    color: var(--home-text);
+    background: var(--home-bg);
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+    font-size: 16px;
+    line-height: 1.6;
+
+    overflow-x: hidden;
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
 img {
+    display: block;
     max-width: 100%;
 }
 
@@ -91,45 +116,320 @@ textarea {
     font: inherit;
 }
 
+button,
 a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+a {
+    color: var(--home-primary-dark);
+    text-decoration: none;
+
     transition:
         color var(--home-transition),
         background-color var(--home-transition),
-        border-color var(--home-transition);
+        border-color var(--home-transition),
+        box-shadow var(--home-transition);
+}
+
+a:hover {
+    color: var(--home-primary);
+}
+
+p {
+    margin-top: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    color: var(--home-text);
+    line-height: 1.2;
 }
 
 ::selection {
-    color: #ffffff;
+    color: #FFFFFF;
     background: var(--home-primary-dark);
 }
 
+main {
+    display: block;
+    width: 100%;
+    min-width: 0;
+}
+
+section {
+    min-width: 0;
+}
+
 
 /* =========================================================
-   3. MAIN PAGE CONTAINER
+   3. HEADER
 ========================================================= */
 
-/*
-   These rules center the usual homepage content containers
-   without forcing every nested element to use the same width.
-*/
+.site-header {
+    position: relative;
+    z-index: 100;
 
-main {
-    min-width: 0;
-}
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-main > section {
-    min-width: 0;
-}
+    gap: 28px;
 
-main > section:not(.hero) {
-    width: min(calc(100% - 48px), var(--home-container));
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
+    max-width: 100%;
+
+    min-height: 82px;
+
+    margin: 0 auto;
+    padding: 16px max(24px, calc((100% - 1180px) / 2));
+
+    background: rgba(255, 255, 255, 0.94);
+
+    border-bottom: 1px solid var(--home-border);
+
+    box-shadow: 0 3px 16px rgba(36, 0, 61, 0.035);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
 }
 
 
 /* =========================================================
-   4. HERO SECTION
+   4. BRAND LOGO
+========================================================= */
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+
+    flex-shrink: 0;
+
+    gap: 10px;
+
+    color: var(--home-text);
+
+    font-size: 24px;
+    font-weight: 850;
+    line-height: 1;
+
+    letter-spacing: -1px;
+
+    text-decoration: none;
+}
+
+.brand:hover {
+    color: var(--home-text);
+}
+
+.brand > span:last-child > span {
+    color: var(--home-primary);
+}
+
+.brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 42px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    color: #FFFFFF;
+
+    background: var(--home-gradient);
+
+    border-radius: 13px;
+
+    font-size: 22px;
+    font-weight: 850;
+
+    box-shadow: 0 6px 16px rgba(90, 0, 168, 0.20);
+}
+
+
+/* =========================================================
+   5. DESKTOP NAVIGATION
+========================================================= */
+
+.desktop-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    min-width: 0;
+}
+
+.desktop-nav a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 42px;
+
+    padding: 10px 13px;
+
+    color: var(--home-secondary);
+
+    background: transparent;
+
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-weight: 650;
+
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.desktop-nav a:hover {
+    color: var(--home-primary-dark);
+
+    background: #F8E8FF;
+}
+
+.desktop-nav a.active {
+    color: var(--home-primary-dark);
+
+    background: #F4E5FF;
+
+    border-color: rgba(90, 0, 168, 0.08);
+
+    font-weight: 750;
+}
+
+
+/* =========================================================
+   6. HEADER ACTIONS
+========================================================= */
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    flex-shrink: 0;
+
+    gap: 10px;
+}
+
+
+/* =========================================================
+   7. BUTTON SYSTEM
+========================================================= */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    min-height: 44px;
+    max-width: 100%;
+
+    padding: 11px 18px;
+
+    border: 1px solid transparent;
+    border-radius: 11px;
+
+    font-size: 14px;
+    font-weight: 750;
+    line-height: 1.3;
+
+    text-align: center;
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        color var(--home-transition),
+        background var(--home-transition),
+        border-color var(--home-transition),
+        box-shadow var(--home-transition),
+        transform var(--home-transition);
+}
+
+.btn:hover {
+    text-decoration: none;
+}
+
+.btn-primary {
+    color: #FFFFFF;
+
+    background: var(--home-gradient);
+
+    border-color: transparent;
+
+    box-shadow: 0 6px 16px rgba(90, 0, 168, 0.17);
+}
+
+.btn-primary:hover {
+    color: #FFFFFF;
+
+    background: linear-gradient(
+        135deg,
+        #4A008B,
+        #8730EC,
+        #F54C9F
+    );
+
+    box-shadow: 0 9px 22px rgba(90, 0, 168, 0.23);
+
+    transform: translateY(-1px);
+}
+
+.btn-ghost {
+    color: var(--home-primary-dark);
+
+    background: #FFFFFF;
+
+    border-color: var(--home-border);
+}
+
+.btn-ghost:hover {
+    color: var(--home-primary-dark);
+
+    background: #F8E8FF;
+
+    border-color: rgba(90, 0, 168, 0.30);
+}
+
+.btn-outline {
+    color: var(--home-primary-dark);
+
+    background: #FFFFFF;
+
+    border-color: rgba(90, 0, 168, 0.25);
+}
+
+.btn-outline:hover {
+    color: #FFFFFF;
+
+    background: var(--home-primary-dark);
+
+    border-color: var(--home-primary-dark);
+}
+
+.btn-large {
+    min-height: 52px;
+
+    padding: 14px 25px;
+
+    border-radius: 13px;
+
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   8. HERO SECTION
 ========================================================= */
 
 .hero {
@@ -139,10 +439,9 @@ main > section:not(.hero) {
     max-width: var(--home-container);
 
     min-width: 0;
-    min-height: auto;
 
     margin: 0 auto;
-    padding: 76px 0 46px;
+    padding: 68px 0 44px;
 
     text-align: center;
 }
@@ -154,6 +453,7 @@ main > section:not(.hero) {
 
     width: 100%;
     max-width: 100%;
+
     min-width: 0;
 
     margin: 0 auto;
@@ -163,16 +463,18 @@ main > section:not(.hero) {
     width: 100%;
     max-width: 850px;
 
-    margin: 0 auto 22px;
+    margin: 0 auto 20px;
 
     color: var(--home-text);
 
     font-size: clamp(38px, 5vw, 62px);
-    font-weight: 800;
+    font-weight: 850;
+
     line-height: 1.12;
     letter-spacing: -2px;
 
     text-align: center;
+
     overflow-wrap: break-word;
 }
 
@@ -194,8 +496,6 @@ main > section:not(.hero) {
     text-align: center;
 }
 
-/* Optional hero eyebrow or label */
-
 .hero .eyebrow,
 .hero .hero-label,
 .hero .section-label {
@@ -210,126 +510,17 @@ main > section:not(.hero) {
 
     color: var(--home-primary-dark);
 
-    background: #ffffff;
+    background: #FFFFFF;
+
     border: 1px solid var(--home-border);
     border-radius: 999px;
 
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 750;
 }
 
 
-/* =========================================================
-   5. HERO ACTION BUTTONS
-========================================================= */
-
-.hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-
-    align-items: center;
-    justify-content: center;
-
-    gap: 14px;
-
-    width: 100%;
-    max-width: 100%;
-
-    margin: 32px auto 0;
-}
-
-.hero-actions a,
-.hero-actions button {
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    min-height: 48px;
-    max-width: 100%;
-
-    padding: 13px 24px;
-
-    border: 1px solid transparent;
-    border-radius: 12px;
-
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.4;
-
-    text-align: center;
-    text-decoration: none;
-
-    cursor: pointer;
-
-    transition:
-        transform var(--home-transition),
-        background var(--home-transition),
-        color var(--home-transition),
-        border-color var(--home-transition),
-        box-shadow var(--home-transition);
-}
-
-.hero-actions a:first-child,
-.hero-actions .btn-primary,
-.hero-actions .primary-btn {
-    color: #ffffff;
-
-    background: var(--home-gradient);
-    border-color: transparent;
-
-    box-shadow: 0 7px 18px rgba(90, 0, 168, 0.18);
-}
-
-.hero-actions a:first-child:hover,
-.hero-actions .btn-primary:hover,
-.hero-actions .primary-btn:hover {
-    transform: translateY(-2px);
-
-    box-shadow: 0 11px 25px rgba(90, 0, 168, 0.25);
-}
-
-.hero-actions a:not(:first-child),
-.hero-actions .btn-secondary,
-.hero-actions .secondary-btn {
-    color: var(--home-primary-dark);
-
-    background: #ffffff;
-    border-color: var(--home-border);
-}
-
-.hero-actions a:not(:first-child):hover,
-.hero-actions .btn-secondary:hover,
-.hero-actions .secondary-btn:hover {
-    color: #ffffff;
-
-    background: var(--home-primary-dark);
-    border-color: var(--home-primary-dark);
-}
-
-.hero-note {
-    display: flex;
-    flex-wrap: wrap;
-
-    align-items: center;
-    justify-content: center;
-
-    gap: 8px;
-
-    width: 100%;
-    max-width: 100%;
-
-    margin: 20px auto 0;
-
-    color: var(--home-muted);
-
-    font-size: 13px;
-    line-height: 1.7;
-    text-align: center;
-}
-
-
-/* Remove obsolete phone mockup */
+/* Hide the obsolete phone mockup */
 
 .hero-visual,
 .hero-visual .phone,
@@ -340,8 +531,13 @@ main > section:not(.hero) {
 
 
 /* =========================================================
-   6. FEATURED OFFERS SECTION
+   9. FEATURED OFFERS
 ========================================================= */
+
+/*
+   Keep the existing featured-offers component and its PHP
+   logic intact. These rules style its outer container only.
+*/
 
 .pf-featured-offers {
     display: block;
@@ -355,6 +551,7 @@ main > section:not(.hero) {
     padding: 0;
 
     color: var(--home-text);
+
     text-align: left;
 }
 
@@ -364,14 +561,10 @@ main > section:not(.hero) {
     box-sizing: border-box;
 }
 
-/* Section headings */
-
 .pf-featured-offers h2,
 .pf-featured-offers h3 {
     color: var(--home-text);
 }
-
-/* If the component includes a heading, center it */
 
 .pf-featured-offers > h2,
 .pf-featured-offers > h3,
@@ -380,17 +573,13 @@ main > section:not(.hero) {
     text-align: center;
 }
 
-/* Supporting description */
-
 .pf-featured-offers > p,
 .pf-featured-offers .section-description {
     color: var(--home-secondary);
 }
 
 
-/* =========================================================
-   7. FEATURED OFFERS HORIZONTAL CAROUSEL
-========================================================= */
+/* Featured offers carousel */
 
 .pf-featured-grid {
     display: grid !important;
@@ -424,17 +613,15 @@ main > section:not(.hero) {
     -webkit-overflow-scrolling: touch;
 
     scrollbar-width: thin;
-    scrollbar-color: var(--home-primary) #f0e3fa;
+    scrollbar-color: var(--home-primary) #F0E3FA;
 }
-
-/* Chrome, Edge and Safari scrollbar */
 
 .pf-featured-grid::-webkit-scrollbar {
     height: 8px;
 }
 
 .pf-featured-grid::-webkit-scrollbar-track {
-    background: #f0e3fa;
+    background: #F0E3FA;
     border-radius: 20px;
 }
 
@@ -447,14 +634,10 @@ main > section:not(.hero) {
     background: var(--home-primary-dark);
 }
 
-/* Prevent child elements from forcing the page wider */
-
 .pf-featured-grid > * {
     min-width: 0;
     max-width: 100%;
 }
-
-/* Individual cards */
 
 .pf-featured-card {
     display: flex;
@@ -468,8 +651,10 @@ main > section:not(.hero) {
 
     overflow: hidden;
 
-    background: var(--home-surface);
-    border: 1px solid rgba(90, 0, 168, 0.20);
+    color: var(--home-text);
+    background: #FFFFFF !important;
+
+    border: 1px solid rgba(90, 0, 168, 0.22);
     border-radius: var(--home-radius-lg);
 
     box-shadow: var(--home-shadow-sm);
@@ -490,8 +675,6 @@ main > section:not(.hero) {
     box-shadow: var(--home-shadow-lg);
 }
 
-/* Offer image area */
-
 .pf-featured-image-wrap {
     position: relative;
 
@@ -501,10 +684,9 @@ main > section:not(.hero) {
     overflow: hidden;
 
     background: var(--home-gradient-soft);
+
     border-color: var(--home-primary);
 }
-
-/* Offer images */
 
 .pf-featured-image img {
     display: block;
@@ -517,8 +699,6 @@ main > section:not(.hero) {
     object-fit: cover;
 }
 
-/* Offer text area */
-
 .pf-featured-content {
     display: flex;
     flex-direction: column;
@@ -530,7 +710,7 @@ main > section:not(.hero) {
     padding: 18px;
 
     color: var(--home-text);
-    background: #ffffff;
+    background: #FFFFFF !important;
 }
 
 .pf-featured-content h3 {
@@ -555,15 +735,10 @@ main > section:not(.hero) {
     overflow-wrap: anywhere;
 }
 
-/* Reward highlight */
-
 .pf-featured-reward {
-    color: var(--home-primary-dark);
-
+    color: var(--home-primary-dark) !important;
     font-weight: 800;
 }
-
-/* Offer buttons and links */
 
 .pf-featured-card a,
 .pf-featured-offers a {
@@ -575,11 +750,6 @@ main > section:not(.hero) {
 
 .pf-featured-card a {
     overflow-wrap: anywhere;
-}
-
-/* Give common offer action buttons the brand treatment */
-
-.pf-featured-card a[href] {
     text-decoration: none;
 }
 
@@ -596,9 +766,10 @@ main > section:not(.hero) {
 
     padding: 10px 16px;
 
-    color: #ffffff;
+    color: #FFFFFF;
 
     background: var(--home-gradient);
+
     border: 1px solid transparent;
     border-radius: 10px;
 
@@ -608,392 +779,749 @@ main > section:not(.hero) {
 
 
 /* =========================================================
-   8. SHARED SECTION ALIGNMENT
+   10. HERO ACTIONS
 ========================================================= */
 
-/*
-   Center the common homepage sections while keeping their
-   original internal layout and card arrangements.
-*/
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
 
-.features-section,
-.home-section,
-.how-it-works,
-.faq-section,
-.cta-section,
-.testimonials-section,
-.benefits-section,
-.stats-section {
+    align-items: center;
+    justify-content: center;
+
+    gap: 14px;
+
+    width: 100%;
+    max-width: 100%;
+
+    margin: 32px auto 0;
+}
+
+.hero-actions .btn {
+    min-height: 52px;
+}
+
+.hero-note {
+    display: flex;
+    flex-wrap: wrap;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    width: 100%;
+    max-width: 100%;
+
+    margin: 20px auto 0;
+
+    color: var(--home-muted);
+
+    font-size: 13px;
+    line-height: 1.7;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   11. TRUST STRIP
+========================================================= */
+
+.trust-strip {
+    display: grid;
+
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    align-items: stretch;
+
+    gap: 16px;
+
     width: min(calc(100% - 48px), var(--home-container));
     max-width: var(--home-container);
 
-    margin-left: auto;
-    margin-right: auto;
-}
+    margin: 0 auto;
+    padding: 24px;
 
-/* Consistent section spacing */
+    background: #FFFFFF;
 
-.features-section,
-.home-section,
-.how-it-works,
-.faq-section,
-.testimonials-section,
-.benefits-section,
-.stats-section {
-    padding-top: 48px;
-    padding-bottom: 48px;
-}
+    border: 1px solid var(--home-border);
+    border-radius: var(--home-radius-lg);
 
-/* Section headings */
-
-.features-section h2,
-.home-section h2,
-.how-it-works h2,
-.faq-section h2,
-.cta-section h2,
-.testimonials-section h2,
-.benefits-section h2,
-.stats-section h2 {
-    color: var(--home-text);
-}
-
-/* Common section descriptions */
-
-.features-section .section-description,
-.home-section .section-description,
-.how-it-works .section-description,
-.faq-section .section-description,
-.testimonials-section .section-description,
-.benefits-section .section-description,
-.stats-section .section-description {
-    color: var(--home-secondary);
-}
-
-
-/* =========================================================
-   9. COMMON CARD BRANDING
-========================================================= */
-
-/*
-   Apply the brand colors to typical homepage cards.
-   These rules do not change the content or PHP logic.
-*/
-
-.feature-card,
-.feature-item,
-.benefit-card,
-.step-card,
-.testimonial-card,
-.stat-card,
-.faq-item {
-    border-color: var(--home-border);
-}
-
-.feature-card,
-.feature-item,
-.benefit-card,
-.step-card,
-.testimonial-card,
-.stat-card {
-    background-color: var(--home-surface);
     box-shadow: var(--home-shadow-sm);
 }
 
-.feature-card:hover,
-.feature-item:hover,
-.benefit-card:hover,
-.step-card:hover,
-.testimonial-card:hover,
-.stat-card:hover {
-    border-color: rgba(90, 0, 168, 0.35);
-    box-shadow: var(--home-shadow-md);
+.trust-strip > div {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    min-width: 0;
+
+    padding: 8px;
 }
 
-/* Common icons */
+.trust-strip .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
-.feature-icon,
-.benefit-icon,
-.step-icon {
-    color: var(--home-primary);
-}
+    width: 46px;
+    height: 46px;
 
-/* Common links */
+    flex: 0 0 46px;
 
-.features-section a,
-.home-section a,
-.how-it-works a,
-.faq-section a,
-.benefits-section a {
     color: var(--home-primary-dark);
+
+    background: #F5E8FF;
+
+    border: 1px solid rgba(90, 0, 168, 0.09);
+    border-radius: 14px;
+
+    font-size: 22px;
+    font-weight: 750;
 }
 
-.features-section a:hover,
-.home-section a:hover,
-.how-it-works a:hover,
-.faq-section a:hover,
-.benefits-section a:hover {
+.trust-strip p {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+
+    min-width: 0;
+
+    margin: 0;
+}
+
+.trust-strip b {
+    color: var(--home-text);
+
+    font-size: 14px;
+    font-weight: 750;
+    line-height: 1.4;
+}
+
+.trust-strip small {
+    color: var(--home-muted);
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   12. GENERAL CONTENT SECTIONS
+========================================================= */
+
+.section {
+    width: min(calc(100% - 48px), var(--home-container));
+    max-width: var(--home-container);
+
+    min-width: 0;
+
+    margin: 0 auto;
+    padding: 78px 0;
+}
+
+
+/* =========================================================
+   13. SECTION HEADINGS
+========================================================= */
+
+.section-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 24px;
+
+    width: 100%;
+
+    margin: 0 0 30px;
+}
+
+.section-heading > div {
+    min-width: 0;
+}
+
+.kicker {
+    display: inline-block;
+
+    margin-bottom: 12px;
+
+    color: var(--home-primary-dark);
+
+    font-size: 12px;
+    font-weight: 850;
+
+    letter-spacing: 1.8px;
+    line-height: 1.5;
+}
+
+.section-heading h2 {
+    margin: 0;
+
+    color: var(--home-text);
+
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 800;
+
+    line-height: 1.2;
+    letter-spacing: -1px;
+}
+
+.section-heading > a {
+    display: inline-flex;
+    align-items: center;
+
+    flex-shrink: 0;
+
+    gap: 6px;
+
+    padding: 9px 0;
+
+    color: var(--home-primary-dark);
+
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.section-heading > a:hover {
     color: var(--home-primary);
 }
 
 
 /* =========================================================
-   10. FAQ SECTION
+   14. HOW IT WORKS — STEPS GRID
 ========================================================= */
 
-.faq-item {
-    background: #ffffff;
-    border: 1px solid var(--home-border);
-    border-radius: var(--home-radius-md);
+#how-it-works {
+    scroll-margin-top: 90px;
 }
 
-.faq-item summary {
-    color: var(--home-text);
-    cursor: pointer;
+.steps {
+    display: grid;
+
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+
+    align-items: stretch;
+
+    gap: 16px;
+
+    width: 100%;
 }
 
-.faq-item p {
-    color: var(--home-secondary);
-}
-
-
-/* =========================================================
-   11. FINAL CALL-TO-ACTION SECTION
-========================================================= */
-
-.cta-section {
+.step {
     position: relative;
 
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 
-    padding-top: 54px;
-    padding-bottom: 54px;
-}
+    min-width: 0;
 
-.cta-section > div {
-    max-width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-}
+    padding: 24px 20px;
 
-.cta-section h2 {
-    color: var(--home-text);
-}
+    background: #FFFFFF;
 
-.cta-section p {
-    color: var(--home-secondary);
-}
+    border: 1px solid var(--home-border);
+    border-radius: var(--home-radius-lg);
 
-.cta-section a,
-.cta-section button {
+    box-shadow: var(--home-shadow-sm);
+
     transition:
         transform var(--home-transition),
+        border-color var(--home-transition),
         box-shadow var(--home-transition);
 }
 
+.step:hover {
+    transform: translateY(-4px);
 
-/* =========================================================
-   12. FOOTER ALIGNMENT AND BRAND COLORS
-========================================================= */
+    border-color: rgba(90, 0, 168, 0.35);
 
-/*
-   Center the footer container and its content without
-   forcing all footer layouts into a single column.
-*/
+    box-shadow: var(--home-shadow-md);
+}
 
-footer {
-    width: 100%;
-    min-width: 0;
+.step > b {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 42px;
+    height: 30px;
+
+    margin-bottom: 20px;
+    padding: 4px 10px;
+
+    color: var(--home-primary-dark);
+
+    background: #F5E8FF;
+
+    border-radius: 8px;
+
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: 1px;
+}
+
+.step > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 48px;
+    height: 48px;
+
+    margin-bottom: 20px;
+
+    color: #FFFFFF;
+
+    background: var(--home-gradient);
+
+    border-radius: 15px;
+
+    font-size: 23px;
+    font-weight: 700;
+
+    box-shadow: 0 6px 15px rgba(90, 0, 168, 0.14);
+}
+
+.step h3 {
+    margin: 0 0 10px;
+
+    color: var(--home-text);
+
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.4;
+}
+
+.step p {
+    margin: 0;
 
     color: var(--home-secondary);
-    background: #ffffff;
+
+    font-size: 13px;
+    line-height: 1.75;
+}
+
+
+/* =========================================================
+   15. CALL-TO-ACTION SECTION
+========================================================= */
+
+.cta-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 36px;
+
+    width: min(calc(100% - 48px), var(--home-container));
+    max-width: var(--home-container);
+
+    min-width: 0;
+
+    margin: 0 auto 30px;
+    padding: 44px 48px;
+
+    background:
+        radial-gradient(
+            circle at 100% 0%,
+            rgba(255, 91, 170, 0.12),
+            transparent 42%
+        ),
+        #FFFFFF;
+
+    border: 1px solid var(--home-border);
+    border-radius: 24px;
+
+    box-shadow: var(--home-shadow-md);
+}
+
+.cta-section > div {
+    max-width: 720px;
+    min-width: 0;
+}
+
+.cta-section .kicker {
+    margin-bottom: 12px;
+}
+
+.cta-section h2 {
+    margin: 0 0 14px;
+
+    color: var(--home-text);
+
+    font-size: clamp(27px, 3vw, 36px);
+    font-weight: 800;
+
+    line-height: 1.25;
+    letter-spacing: -1px;
+}
+
+.cta-section p {
+    max-width: 650px;
+
+    margin: 0;
+
+    color: var(--home-secondary);
+
+    font-size: 15px;
+    line-height: 1.8;
+}
+
+.cta-section > a {
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   16. FAQ SECTION
+========================================================= */
+
+.faq {
+    padding-top: 56px;
+    padding-bottom: 82px;
+}
+
+.faq .section-heading {
+    margin-bottom: 28px;
+}
+
+.faq details {
+    width: 100%;
+
+    margin-bottom: 12px;
+    padding: 0;
+
+    background: #FFFFFF;
+
+    border: 1px solid var(--home-border);
+    border-radius: var(--home-radius-md);
+
+    box-shadow: 0 3px 10px rgba(36, 0, 61, 0.025);
+
+    transition:
+        border-color var(--home-transition),
+        box-shadow var(--home-transition);
+}
+
+.faq details:hover {
+    border-color: rgba(90, 0, 168, 0.30);
+}
+
+.faq details[open] {
+    border-color: rgba(90, 0, 168, 0.30);
+
+    box-shadow: var(--home-shadow-sm);
+}
+
+.faq summary {
+    position: relative;
+
+    display: block;
+
+    padding: 21px 54px 21px 22px;
+
+    color: var(--home-text);
+
+    font-size: 15px;
+    font-weight: 750;
+    line-height: 1.6;
+
+    list-style: none;
+    cursor: pointer;
+}
+
+.faq summary::-webkit-details-marker {
+    display: none;
+}
+
+.faq summary::after {
+    content: "+";
+
+    position: absolute;
+    top: 50%;
+    right: 22px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 28px;
+    height: 28px;
+
+    color: var(--home-primary-dark);
+
+    background: #F5E8FF;
+
+    border-radius: 9px;
+
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1;
+
+    transform: translateY(-50%);
+}
+
+.faq details[open] summary::after {
+    content: "−";
+
+    color: #FFFFFF;
+
+    background: var(--home-primary-dark);
+}
+
+.faq details > p {
+    margin: 0;
+
+    padding: 0 22px 22px;
+
+    color: var(--home-secondary);
+
+    font-size: 14px;
+    line-height: 1.85;
+}
+
+
+/* =========================================================
+   17. FOOTER
+========================================================= */
+
+.footer {
+    display: grid;
+
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    align-items: center;
+
+    gap: 28px 40px;
+
+    width: 100%;
+    max-width: 100%;
+
+    margin: 0;
+    padding: 36px max(24px, calc((100% - 1180px) / 2)) 24px;
+
+    color: var(--home-secondary);
+
+    background: #FFFFFF;
 
     border-top: 1px solid var(--home-border);
 }
 
-footer .container,
-footer .footer-container,
-footer .footer-inner {
-    width: min(calc(100% - 48px), var(--home-container));
-    max-width: var(--home-container);
-
-    margin-left: auto;
-    margin-right: auto;
-}
-
-footer h2,
-footer h3,
-footer h4 {
-    color: var(--home-text);
-}
-
-footer a {
-    color: var(--home-secondary);
-    text-decoration: none;
-}
-
-footer a:hover {
-    color: var(--home-primary);
-}
-
-footer .footer-bottom,
-footer .copyright {
-    border-color: var(--home-border);
-}
-
-
-/* =========================================================
-   13. PREVENT HORIZONTAL PAGE OVERFLOW
-========================================================= */
-
-html,
-body {
-    max-width: 100%;
-}
-
-body {
-    overflow-x: clip;
-}
-
-main,
-section,
-.hero,
-.hero-copy,
-.pf-featured-offers {
+.footer-brand {
     min-width: 0;
 }
 
-.pf-featured-grid {
-    max-width: 100%;
+.footer-brand .brand {
+    margin-bottom: 14px;
+}
+
+.footer-brand p {
+    margin: 0;
+
+    color: var(--home-muted);
+
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.footer-links {
+    display: flex;
+    flex-wrap: wrap;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 12px 24px;
+}
+
+.footer-links a {
+    color: var(--home-secondary);
+
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.footer-links a:hover {
+    color: var(--home-primary);
+}
+
+.footer > small {
+    grid-column: 1 / -1;
+
+    display: block;
+
+    padding-top: 20px;
+
+    color: var(--home-muted);
+
+    border-top: 1px solid var(--home-border);
+
+    font-size: 12px;
+    line-height: 1.7;
 }
 
 
 /* =========================================================
-   14. DESKTOP RESPONSIVENESS
+   18. TABLET LAYOUT
 ========================================================= */
 
-@media (min-width: 1200px) {
+@media (max-width: 1100px) {
 
-    .hero {
-        padding-top: 86px;
-        padding-bottom: 50px;
-    }
-
-    .hero h1 {
-        font-size: 62px;
-    }
-
-    .pf-featured-offers {
-        margin-top: 42px;
-    }
-
-    .pf-featured-grid {
-        gap: 20px;
-    }
-}
-
-
-/* =========================================================
-   15. TABLET RESPONSIVENESS
-========================================================= */
-
-@media (max-width: 991px) {
-
-    .hero {
-        width: calc(100% - 36px);
-
-        padding-top: 60px;
-        padding-bottom: 38px;
-    }
-
-    .hero h1 {
-        max-width: 760px;
-
-        font-size: clamp(36px, 6vw, 50px);
-        letter-spacing: -1.5px;
-    }
-
-    .hero-copy > p {
-        max-width: 700px;
-
-        font-size: 16px;
-        line-height: 1.8;
-    }
-
-    .pf-featured-offers {
-        margin-top: 32px;
-    }
-
-    .pf-featured-grid {
-        grid-auto-columns: minmax(245px, 280px) !important;
+    .site-header {
         gap: 16px;
+
+        padding-right: 24px;
+        padding-left: 24px;
     }
 
-    main > section:not(.hero),
-    .features-section,
-    .home-section,
-    .how-it-works,
-    .faq-section,
-    .cta-section,
-    .testimonials-section,
-    .benefits-section,
-    .stats-section {
-        width: calc(100% - 36px);
+    .brand {
+        font-size: 22px;
+    }
+
+    .brand-mark {
+        width: 39px;
+        height: 39px;
+
+        border-radius: 12px;
+
+        font-size: 20px;
+    }
+
+    .desktop-nav {
+        gap: 2px;
+    }
+
+    .desktop-nav a {
+        padding-right: 9px;
+        padding-left: 9px;
+
+        font-size: 13px;
+    }
+
+    .header-actions {
+        gap: 7px;
+    }
+
+    .header-actions .btn {
+        padding-right: 12px;
+        padding-left: 12px;
+
+        font-size: 13px;
+    }
+
+    .steps {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .trust-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 
 /* =========================================================
-   16. MOBILE RESPONSIVENESS
+   19. MOBILE NAVIGATION
 ========================================================= */
 
-@media (max-width: 700px) {
+/*
+   The supplied HTML has no mobile toggle button.
+   On small screens, show the navigation links and account
+   actions in a responsive stacked layout instead.
+*/
 
-    .hero {
-        width: calc(100% - 28px);
+@media (max-width: 760px) {
 
-        padding-top: 44px;
-        padding-bottom: 30px;
+    .site-header {
+        display: grid;
+
+        grid-template-columns: minmax(0, 1fr) auto;
+
+        align-items: center;
+
+        gap: 16px 12px;
+
+        min-height: auto;
+
+        padding: 16px 20px;
     }
 
-    .hero h1 {
-        margin-bottom: 18px;
-
-        font-size: clamp(32px, 8.5vw, 46px);
-        line-height: 1.15;
-        letter-spacing: -1.3px;
+    .site-header > .brand {
+        grid-column: 1;
+        grid-row: 1;
     }
 
-    .hero-copy > p {
-        max-width: 100%;
+    .header-actions {
+        grid-column: 2;
+        grid-row: 1;
 
-        font-size: 15px;
-        line-height: 1.75;
+        justify-content: flex-end;
+
+        gap: 7px;
     }
 
-    .hero-actions {
-        gap: 10px;
+    .header-actions .btn {
+        min-height: 39px;
 
-        margin-top: 24px;
-    }
-
-    .hero-actions a,
-    .hero-actions button {
-        min-height: 46px;
-        padding: 12px 18px;
-
-        font-size: 14px;
-    }
-
-    .hero-note {
-        gap: 6px;
-
-        margin-top: 16px;
+        padding: 9px 12px;
 
         font-size: 12px;
     }
 
+    .desktop-nav {
+        grid-column: 1 / -1;
+        grid-row: 2;
+
+        display: flex;
+        flex-wrap: wrap;
+
+        align-items: center;
+        justify-content: flex-start;
+
+        gap: 5px;
+
+        width: 100%;
+        min-width: 0;
+
+        padding-top: 12px;
+
+        border-top: 1px solid var(--home-border);
+    }
+
+    .desktop-nav a {
+        min-height: 37px;
+
+        padding: 8px 11px;
+
+        font-size: 12px;
+    }
+
+    .hero {
+        width: calc(100% - 36px);
+
+        padding-top: 46px;
+        padding-bottom: 34px;
+    }
+
+    .hero h1 {
+        font-size: clamp(34px, 7.5vw, 48px);
+
+        line-height: 1.15;
+        letter-spacing: -1.5px;
+    }
+
+    .hero-copy > p {
+        font-size: 15px;
+        line-height: 1.8;
+    }
+
     .pf-featured-offers {
-        margin-top: 28px;
+        margin-top: 30px;
     }
 
     .pf-featured-grid {
@@ -1021,55 +1549,258 @@ section,
         font-size: 13px;
     }
 
-    main > section:not(.hero),
-    .features-section,
-    .home-section,
-    .how-it-works,
-    .faq-section,
-    .cta-section,
-    .testimonials-section,
-    .benefits-section,
-    .stats-section {
-        width: calc(100% - 28px);
+    .hero-actions {
+        gap: 10px;
 
-        padding-top: 34px;
-        padding-bottom: 34px;
+        margin-top: 26px;
+    }
+
+    .hero-actions .btn {
+        min-height: 47px;
+
+        padding: 12px 17px;
+
+        font-size: 14px;
+    }
+
+    .hero-note {
+        margin-top: 16px;
+
+        font-size: 12px;
+    }
+
+    .trust-strip {
+        width: calc(100% - 36px);
+
+        gap: 10px;
+
+        padding: 16px;
+
+        border-radius: 18px;
+    }
+
+    .trust-strip > div {
+        gap: 9px;
+
+        padding: 6px 2px;
+    }
+
+    .trust-strip .icon {
+        width: 39px;
+        height: 39px;
+
+        flex-basis: 39px;
+
+        border-radius: 12px;
+
+        font-size: 19px;
+    }
+
+    .trust-strip b {
+        font-size: 12px;
+    }
+
+    .trust-strip small {
+        font-size: 11px;
+    }
+
+    .section {
+        width: calc(100% - 36px);
+
+        padding-top: 54px;
+        padding-bottom: 54px;
+    }
+
+    .section-heading {
+        align-items: flex-start;
+
+        gap: 16px;
+
+        margin-bottom: 24px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(26px, 5vw, 34px);
+    }
+
+    .section-heading > a {
+        font-size: 12px;
+    }
+
+    .steps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        gap: 12px;
+    }
+
+    .step {
+        padding: 19px 16px;
+
+        border-radius: 17px;
+    }
+
+    .step > b {
+        margin-bottom: 15px;
+    }
+
+    .step > span {
+        width: 43px;
+        height: 43px;
+
+        margin-bottom: 15px;
+
+        border-radius: 13px;
+
+        font-size: 21px;
+    }
+
+    .step h3 {
+        font-size: 15px;
+    }
+
+    .step p {
+        font-size: 12px;
     }
 
     .cta-section {
-        padding-top: 38px;
-        padding-bottom: 38px;
+        flex-direction: column;
+        align-items: flex-start;
+
+        gap: 24px;
+
+        width: calc(100% - 36px);
+
+        margin-bottom: 16px;
+        padding: 30px 25px;
+
+        border-radius: 20px;
     }
 
-    footer .container,
-    footer .footer-container,
-    footer .footer-inner {
-        width: calc(100% - 28px);
+    .cta-section h2 {
+        font-size: clamp(25px, 5vw, 32px);
+    }
+
+    .cta-section p {
+        font-size: 14px;
+    }
+
+    .faq {
+        padding-top: 42px;
+        padding-bottom: 54px;
+    }
+
+    .faq summary {
+        padding: 18px 48px 18px 17px;
+
+        font-size: 14px;
+    }
+
+    .faq summary::after {
+        right: 15px;
+    }
+
+    .faq details > p {
+        padding-right: 17px;
+        padding-left: 17px;
+
+        font-size: 13px;
+    }
+
+    .footer {
+        grid-template-columns: minmax(0, 1fr);
+
+        gap: 22px;
+
+        padding: 30px 20px 20px;
+    }
+
+    .footer-links {
+        justify-content: flex-start;
+
+        gap: 12px 20px;
+    }
+
+    .footer > small {
+        grid-column: 1;
+
+        padding-top: 18px;
     }
 }
 
 
 /* =========================================================
-   17. SMALL MOBILE DEVICES
+   20. SMALL MOBILE DEVICES
 ========================================================= */
 
-@media (max-width: 380px) {
+@media (max-width: 420px) {
+
+    .site-header {
+        padding: 14px 14px;
+    }
+
+    .brand {
+        gap: 7px;
+
+        font-size: 20px;
+    }
+
+    .brand-mark {
+        width: 35px;
+        height: 35px;
+
+        border-radius: 10px;
+
+        font-size: 18px;
+    }
+
+    .header-actions {
+        gap: 5px;
+    }
+
+    .header-actions .btn {
+        min-height: 36px;
+
+        padding: 8px 9px;
+
+        font-size: 11px;
+    }
+
+    .desktop-nav {
+        gap: 4px;
+    }
+
+    .desktop-nav a {
+        min-height: 34px;
+
+        padding: 7px 9px;
+
+        font-size: 11px;
+    }
 
     .hero {
-        width: calc(100% - 24px);
+        width: calc(100% - 28px);
 
-        padding-top: 36px;
-        padding-bottom: 26px;
+        padding-top: 38px;
+        padding-bottom: 28px;
     }
 
     .hero h1 {
-        font-size: clamp(29px, 8.5vw, 36px);
+        margin-bottom: 16px;
+
+        font-size: clamp(30px, 8vw, 36px);
+
         letter-spacing: -1px;
     }
 
     .hero-copy > p {
         font-size: 14px;
-        line-height: 1.7;
+        line-height: 1.75;
+    }
+
+    .pf-featured-grid {
+        grid-auto-columns: 86% !important;
+
+        gap: 12px;
     }
 
     .hero-actions {
@@ -1079,44 +1810,126 @@ section,
         width: 100%;
     }
 
-    .hero-actions a,
-    .hero-actions button {
+    .hero-actions .btn {
         width: 100%;
         max-width: 100%;
     }
 
-    .pf-featured-grid {
-        grid-auto-columns: 86% !important;
+    .trust-strip {
+        width: calc(100% - 28px);
+
+        grid-template-columns: minmax(0, 1fr);
+
+        gap: 8px;
+
+        padding: 15px;
+    }
+
+    .trust-strip > div {
+        padding: 5px 2px;
+    }
+
+    .trust-strip small {
+        font-size: 12px;
+    }
+
+    .section {
+        width: calc(100% - 28px);
+
+        padding-top: 44px;
+        padding-bottom: 44px;
+    }
+
+    .section-heading {
+        flex-direction: column;
+        align-items: flex-start;
+
+        gap: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: 27px;
+    }
+
+    .steps {
+        grid-template-columns: minmax(0, 1fr);
 
         gap: 12px;
     }
 
-    .pf-featured-content {
-        padding: 13px;
+    .step {
+        display: grid;
+
+        grid-template-columns: 43px minmax(0, 1fr);
+
+        column-gap: 13px;
+
+        align-items: start;
+
+        padding: 17px;
     }
 
-    main > section:not(.hero),
-    .features-section,
-    .home-section,
-    .how-it-works,
-    .faq-section,
-    .cta-section,
-    .testimonials-section,
-    .benefits-section,
-    .stats-section {
-        width: calc(100% - 24px);
+    .step > b {
+        grid-column: 1;
+        grid-row: 1;
+
+        width: 43px;
+        min-width: 0;
+
+        margin: 0;
+
+        align-self: center;
     }
 
-    footer .container,
-    footer .footer-container,
-    footer .footer-inner {
-        width: calc(100% - 24px);
+    .step > span {
+        grid-column: 1;
+        grid-row: 2;
+
+        width: 43px;
+        height: 43px;
+
+        margin: 10px 0 0;
+    }
+
+    .step h3 {
+        grid-column: 2;
+        grid-row: 1;
+
+        align-self: center;
+
+        margin: 0;
+    }
+
+    .step p {
+        grid-column: 2;
+        grid-row: 2;
+
+        margin-top: 10px;
+    }
+
+    .cta-section {
+        width: calc(100% - 28px);
+
+        padding: 25px 19px;
+    }
+
+    .cta-section h2 {
+        font-size: 26px;
+    }
+
+    .cta-section > a {
+        width: 100%;
+    }
+
+    .footer {
+        padding-right: 16px;
+        padding-left: 16px;
     }
 }
 
 
 /* =========================================================
-   18. ACCESSIBILITY
+   21. ACCESSIBILITY
 ========================================================= */
 
 a:focus-visible,
@@ -1128,7 +1941,7 @@ summary:focus-visible {
 
 
 /* =========================================================
-   19. REDUCED MOTION
+   22. REDUCED MOTION
 ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
@@ -1146,7 +1959,8 @@ summary:focus-visible {
         transition-duration: 0.01ms !important;
     }
 
-    .pf-featured-card:hover {
+    .pf-featured-card:hover,
+    .step:hover {
         transform: none;
     }
 }
