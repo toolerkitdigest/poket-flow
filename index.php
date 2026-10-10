@@ -4,42 +4,37 @@ declare(strict_types=1);
 
 ?>
 <!doctype html>
-
 <html lang="en">
 
 <head>
 
-  <meta charset="utf-8">
+    <meta charset="utf-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
-  >
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
 
-  <title>
-    PoketFlow — Turn Your Free Time Into Rewards
-  </title>
+    <title>PoketFlow — Turn Your Free Time Into Rewards</title>
 
-  <meta
-    name="description"
-    content="Discover offers and activities, complete requirements, earn rewards, and cash out when you reach the minimum balance.">
+    <meta
+        name="description"
+        content="Discover offers and activities, complete requirements, earn rewards, and cash out when you reach the minimum balance."
+    >
 
-  <link
-    rel="stylesheet"
-    href="assets/index.css?v=<?= filemtime(__DIR__ . '/dashboard.css') ?>">
+    <link
+        rel="stylesheet"
+        href="assets/index.css?v=<?= file_exists(__DIR__ . '/assets/index.css') ? filemtime(__DIR__ . '/assets/index.css') : time() ?>"
+    >
 
-    
-
-  <link rel="stylesheet" href="/assets/featured-offers.css?v2">
-
-
-  
+    <link
+        rel="stylesheet"
+        href="assets/featured-offers.css?v=<?= file_exists(__DIR__ . '/assets/featured-offers.css') ? filemtime(__DIR__ . '/assets/featured-offers.css') : time() ?>"
+    >
 
 </head>
 
-
 <body>
-
 
 <!-- ==================================================
      HEADER
@@ -47,70 +42,52 @@ declare(strict_types=1);
 
 <header class="site-header">
 
+    <a class="brand" href="index.php">
 
-  <a
-    class="brand"
-    href="index.php"
-  >
+        <span class="brand-mark">P</span>
 
-    <span class="brand-mark">
-      P
-    </span>
+        <span>
+            Poket<span>Flow</span>
+        </span>
 
-    <span>
-      Poket<span>Flow</span>
-    </span>
-
-  </a>
-
-
-  <nav class="desktop-nav">
-
-    <a
-      class="active"
-      href="index.php"
-    >
-      Home
     </a>
 
-    <a href="offers.php">
-      Earn
-    </a>
+    <nav class="desktop-nav">
 
-    <a href="#how-it-works">
-      How It Works
-    </a>
+        <a class="active" href="index.php">
+            Home
+        </a>
 
-    <a href="#featured-offers">
-      Rewards
-    </a>
+        <a href="offers.php">
+            Earn
+        </a>
 
-    <a href="#faq">
-      FAQ
-    </a>
+        <a href="#how-it-works">
+            How It Works
+        </a>
 
-  </nav>
+        <a href="#featured-offers">
+            Rewards
+        </a>
 
+        <a href="#faq">
+            FAQ
+        </a>
 
-  <div class="header-actions">
+    </nav>
 
-    <a
-      class="btn btn-ghost"
-      href="login.php"
-    >
-      Sign In
-    </a>
+    <div class="header-actions">
 
+        <a class="btn btn-ghost" href="login.php">
+            Sign In
+        </a>
 
-    <a
-      class="btn btn-primary"
-      href="register.php"
-    >
-      Get Started
-      <span>→</span>
-    </a>
+        <a class="btn btn-primary" href="register.php">
+            Get Started
+            <span>→</span>
+        </a>
 
-  </div>
+    </div>
 
 </header>
 
@@ -128,205 +105,163 @@ declare(strict_types=1);
 
 <section class="hero">
 
+    <div class="hero-copy">
 
-  <div class="hero-copy">
+        <h1>
+            Turn Your Free Time Into
+            <span>Rewards</span>
+        </h1>
 
+        <p>
+            Discover available offers, surveys and online activities.
+            Complete the requirements, earn rewards, and cash out
+            when you reach the minimum balance.
+        </p>
 
-    <h1>
-      Turn Your Free Time Into
-      <span>Rewards</span>
-    </h1>
+        <div class="hero-actions">
 
+            <a
+                class="btn btn-primary btn-large"
+                href="register.php"
+            >
+                Start Earning
+                <span>→</span>
+            </a>
 
-    <p>
-      Discover available offers, surveys and online activities.
-      Complete the requirements, earn rewards, and cash out
-      when you reach the minimum balance.
-    </p>
+            <a
+                class="btn btn-outline btn-large"
+                href="#how-it-works"
+            >
+                How It Works
+            </a>
 
+        </div>
 
-    <div class="hero-actions">
-
-      <a
-        class="btn btn-primary btn-large"
-        href="register.php"
-      >
-        Start Earning
-        <span>→</span>
-      </a>
-
-
-      <a
-        class="btn btn-outline btn-large"
-        href="#how-it-works"
-      >
-        How It Works
-      </a>
+        <div class="hero-note">
+            Free to join · No subscription required
+        </div>
 
     </div>
 
 
-    <div class="hero-note">
-      Free to join · No subscription required
-    </div>
+    <!-- HERO VISUAL -->
 
+    <div class="hero-visual">
 
-  </div>
+        <div class="glow glow-one"></div>
 
+        <div class="glow glow-two"></div>
 
-  <!-- ==================================================
-       HERO VISUAL
-  ================================================== -->
+        <div class="phone">
 
-  <div class="hero-visual">
+            <div class="phone-top">
 
+                <span class="mini-logo">P</span>
 
-    <div class="glow glow-one"></div>
+                <strong>PoketFlow</strong>
 
-    <div class="glow glow-two"></div>
+                <span>⌁</span>
 
+            </div>
 
-    <div class="phone">
+            <div class="balance-card">
 
+                <small>Your Balance</small>
 
-      <div class="phone-top">
+                <strong>$8.75</strong>
 
-        <span class="mini-logo">
-          P
-        </span>
+                <div class="balance-row">
 
-        <strong>
-          PoketFlow
-        </strong>
+                    <span>
+                        Available
+                        <b>$5.20</b>
+                    </span>
 
-        <span>
-          ⌁
-        </span>
+                    <span>
+                        Pending
+                        <b>$3.55</b>
+                    </span>
 
-      </div>
+                </div>
 
+                <button>Cash Out</button>
 
-      <div class="balance-card">
+            </div>
 
-        <small>
-          Your Balance
-        </small>
+            <h4>Ways to Earn</h4>
 
+            <div class="phone-item">
 
-        <strong>
-          $8.75
-        </strong>
+                ▣
 
+                <span>
+                    Surveys
+                    <small>Share your opinions</small>
+                </span>
 
-        <div class="balance-row">
+                ›
 
-          <span>
-            Available
-            <b>
-              $5.20
-            </b>
-          </span>
+            </div>
 
+            <div class="phone-item">
 
-          <span>
-            Pending
-            <b>
-              $3.55
-            </b>
-          </span>
+                ▯
+
+                <span>
+                    App Installs
+                    <small>Try new apps & games</small>
+                </span>
+
+                ›
+
+            </div>
+
+            <div class="phone-item">
+
+                ◈
+
+                <span>
+                    Special Offers
+                    <small>Complete and earn</small>
+                </span>
+
+                ›
+
+            </div>
 
         </div>
 
 
-        <button>
-          Cash Out
-        </button>
+        <!-- FLOATING FEATURE CARD -->
 
-      </div>
+        <div class="float-card float-one">
 
+            ✓
 
-      <h4>
-        Ways to Earn
-      </h4>
+            <span>
 
+                <b>Complete Offers</b>
 
-      <div class="phone-item">
+                <small>Earn rewards</small>
 
-        ▣
+            </span>
 
-        <span>
-          Surveys
-          <small>
-            Share your opinions
-          </small>
-        </span>
-
-        ›
-
-      </div>
-
-
-      <div class="phone-item">
-
-        ▯
-
-        <span>
-          App Installs
-          <small>
-            Try new apps & games
-          </small>
-        </span>
-
-        ›
-
-      </div>
-
-
-      <div class="phone-item">
-
-        ◈
-
-        <span>
-          Special Offers
-          <small>
-            Complete and earn
-          </small>
-        </span>
-
-        ›
-
-      </div>
-
+        </div>
 
     </div>
-
-
-    <!-- ==================================================
-         FLOATING FEATURE CARD
-    ================================================== -->
-
-    <div class="float-card float-one">
-
-      ✓
-
-      <span>
-
-        <b>
-          Complete Offers
-        </b>
-
-        <small>
-          Earn rewards
-        </small>
-
-      </span>
-
-    </div>
-
-
-  </div>
 
 </section>
+
+
+<!-- ==================================================
+     LIVE FEATURED OFFERS
+
+     IMPORTANT:
+     This component is immediately after the hero
+     and before the trust strip.
+================================================== -->
+
+<?php require_once __DIR__ . '/includes/featured-offers.php'; ?>
 
 
 <!-- ==================================================
@@ -335,90 +270,61 @@ declare(strict_types=1);
 
 <section class="trust-strip">
 
+    <div>
 
-  <div>
+        <span class="icon">♙</span>
 
-    <span class="icon">
-      ♙
-    </span>
+        <p>
 
-    <p>
+            <b>Free to join</b>
 
-      <b>
-        Free to join
-      </b>
+            <small>Create your account in seconds</small>
 
-      <small>
-        Create your account in seconds
-      </small>
+        </p>
 
-    </p>
+    </div>
 
-  </div>
+    <div>
 
+        <span class="icon">♢</span>
 
-  <div>
+        <p>
 
-    <span class="icon">
-      ♢
-    </span>
+            <b>Multiple ways to earn</b>
 
-    <p>
+            <small>Offers, surveys & more</small>
 
-      <b>
-        Multiple ways to earn
-      </b>
+        </p>
 
-      <small>
-        Offers, surveys & more
-      </small>
+    </div>
 
-    </p>
+    <div>
 
-  </div>
+        <span class="icon">✓</span>
 
+        <p>
 
-  <div>
+            <b>Secure & reliable</b>
 
-    <span class="icon">
-      ✓
-    </span>
+            <small>Your account stays protected</small>
 
-    <p>
+        </p>
 
-      <b>
-        Secure & reliable
-      </b>
+    </div>
 
-      <small>
-        Your account stays protected
-      </small>
+    <div>
 
-    </p>
+        <span class="icon">ϟ</span>
 
-  </div>
+        <p>
 
+            <b>Fast rewards</b>
 
-  <div>
+            <small>Cash out when eligible</small>
 
-    <span class="icon">
-      ϟ
-    </span>
+        </p>
 
-    <p>
-
-      <b>
-        Fast rewards
-      </b>
-
-      <small>
-        Cash out when eligible
-      </small>
-
-    </p>
-
-  </div>
-
+    </div>
 
 </section>
 
@@ -427,147 +333,93 @@ declare(strict_types=1);
      HOW IT WORKS
 ================================================== -->
 
-<section
-  class="section"
-  id="how-it-works"
->
+<section class="section" id="how-it-works">
 
+    <div class="section-heading">
 
-  <div class="section-heading">
+        <div>
 
+            <span class="kicker">
+                HOW IT WORKS
+            </span>
 
-    <div>
+            <h2>
+                It’s Simple to Get Started
+            </h2>
 
-      <span class="kicker">
-        HOW IT WORKS
-      </span>
+        </div>
 
-      <h2>
-        It’s Simple to Get Started
-      </h2>
-
-    </div>
-
-
-    <a href="offers.php">
-      Explore offers →
-    </a>
-
-
-  </div>
-
-
-  <div class="steps">
-
-
-    <div class="step">
-
-      <b>01</b>
-
-      <span>
-        ♙
-      </span>
-
-      <h3>
-        Create Account
-      </h3>
-
-      <p>
-        Sign up for free in seconds.
-      </p>
+        <a href="offers.php">
+            Explore offers →
+        </a>
 
     </div>
 
+    <div class="steps">
 
-    <div class="step">
+        <div class="step">
 
-      <b>02</b>
+            <b>01</b>
 
-      <span>
-        ◎
-      </span>
+            <span>♙</span>
 
-      <h3>
-        Find Offers
-      </h3>
+            <h3>Create Account</h3>
 
-      <p>
-        Browse available activities.
-      </p>
+            <p>Sign up for free in seconds.</p>
 
-    </div>
+        </div>
 
+        <div class="step">
 
-    <div class="step">
+            <b>02</b>
 
-      <b>03</b>
+            <span>◎</span>
 
-      <span>
-        ✓
-      </span>
+            <h3>Find Offers</h3>
 
-      <h3>
-        Complete
-      </h3>
+            <p>Browse available activities.</p>
 
-      <p>
-        Follow the offer requirements.
-      </p>
+        </div>
 
-    </div>
+        <div class="step">
 
+            <b>03</b>
 
-    <div class="step">
+            <span>✓</span>
 
-      <b>04</b>
+            <h3>Complete</h3>
 
-      <span>
-        ◈
-      </span>
+            <p>Follow the offer requirements.</p>
 
-      <h3>
-        Earn Rewards
-      </h3>
+        </div>
 
-      <p>
-        Your balance updates after approval.
-      </p>
+        <div class="step">
 
-    </div>
+            <b>04</b>
 
+            <span>◈</span>
 
-    <div class="step">
+            <h3>Earn Rewards</h3>
 
-      <b>05</b>
+            <p>Your balance updates after approval.</p>
 
-      <span>
-        ▣
-      </span>
+        </div>
 
-      <h3>
-        Cash Out
-      </h3>
+        <div class="step">
 
-      <p>
-        Request rewards when eligible.
-      </p>
+            <b>05</b>
+
+            <span>▣</span>
+
+            <h3>Cash Out</h3>
+
+            <p>Request rewards when eligible.</p>
+
+        </div>
 
     </div>
-
-
-  </div>
 
 </section>
-
-
-<!-- ==================================================
-     LIVE FEATURED OFFERS
-     
-     Real OGAds offers are loaded dynamically
-     through the reusable PHP component.
-================================================== -->
-
-<?php require_once __DIR__ . '/includes/featured-offers.php'; ?>
 
 
 <!-- ==================================================
@@ -576,34 +428,29 @@ declare(strict_types=1);
 
 <section class="cta-section">
 
+    <div>
 
-  <div>
+        <span class="kicker">
+            READY WHEN YOU ARE
+        </span>
 
-    <span class="kicker">
-      READY WHEN YOU ARE
-    </span>
+        <h2>
+            Start discovering available rewards.
+        </h2>
 
+        <p>
+            Create your PoketFlow account and explore
+            the earning opportunities available to you.
+        </p>
 
-    <h2>
-      Start discovering available rewards.
-    </h2>
+    </div>
 
-
-    <p>
-      Create your PoketFlow account and explore
-      the earning opportunities available to you.
-    </p>
-
-  </div>
-
-
-  <a
-    class="btn btn-primary btn-large"
-    href="register.php"
-  >
-    Get Started →
-  </a>
-
+    <a
+        class="btn btn-primary btn-large"
+        href="register.php"
+    >
+        Get Started →
+    </a>
 
 </section>
 
@@ -612,77 +459,62 @@ declare(strict_types=1);
      FAQ
 ================================================== -->
 
-<section
-  class="section faq"
-  id="faq"
->
+<section class="section faq" id="faq">
 
+    <div class="section-heading">
 
-  <div class="section-heading">
+        <div>
 
+            <span class="kicker">FAQ</span>
 
-    <div>
+            <h2>Common Questions</h2>
 
-      <span class="kicker">
-        FAQ
-      </span>
-
-      <h2>
-        Common Questions
-      </h2>
+        </div>
 
     </div>
 
+    <details>
 
-  </div>
+        <summary>
+            Is PoketFlow free to join?
+        </summary>
 
+        <p>
+            Yes. Creating an account does not require
+            a subscription.
+        </p>
 
-  <details>
+    </details>
 
-    <summary>
-      Is PoketFlow free to join?
-    </summary>
+    <details>
 
-    <p>
-      Yes. Creating an account does not require
-      a subscription.
-    </p>
+        <summary>
+            How do rewards work?
+        </summary>
 
-  </details>
+        <p>
+            Available offers show their requirements and
+            reward information. Follow the listed requirements
+            and wait for completion approval where applicable.
+        </p>
 
+    </details>
 
-  <details>
+    <details>
 
-    <summary>
-      How do rewards work?
-    </summary>
+        <summary>
+            When can I cash out?
+        </summary>
 
-    <p>
-      Available offers show their requirements and
-      reward information. Follow the listed requirements
-      and wait for completion approval where applicable.
-    </p>
+        <p>
+            Cash-out eligibility depends on your available
+            balance, the site's minimum cashout, and any
+            applicable payment or verification requirements.
+        </p>
 
-  </details>
-
-
-  <details>
-
-    <summary>
-      When can I cash out?
-    </summary>
-
-    <p>
-      Cash-out eligibility depends on your available
-      balance, the site's minimum cashout, and any
-      applicable payment or verification requirements.
-    </p>
-
-  </details>
-
+    </details>
 
 </section>
-
 
 </main>
 
@@ -693,63 +525,41 @@ declare(strict_types=1);
 
 <footer class="footer">
 
+    <div class="footer-brand">
 
-  <div class="footer-brand">
+        <a class="brand" href="index.php">
 
+            <span class="brand-mark">P</span>
 
-    <a
-      class="brand"
-      href="index.php"
-    >
+            <span>
+                Poket<span>Flow</span>
+            </span>
 
-      <span class="brand-mark">
-        P
-      </span>
+        </a>
 
-      <span>
-        Poket<span>Flow</span>
-      </span>
+        <p>
+            A modern rewards discovery platform.
+        </p>
 
-    </a>
+    </div>
 
+    <div class="footer-links">
 
-    <p>
-      A modern rewards discovery platform.
-    </p>
+        <a href="#faq">FAQ</a>
 
+        <a href="#">Terms</a>
 
-  </div>
+        <a href="#">Privacy</a>
 
+        <a href="#">Contact</a>
 
-  <div class="footer-links">
+    </div>
 
-    <a href="#faq">
-      FAQ
-    </a>
-
-    <a href="#">
-      Terms
-    </a>
-
-    <a href="#">
-      Privacy
-    </a>
-
-    <a href="#">
-      Contact
-    </a>
-
-  </div>
-
-
-  <small>
-    © 2026 PoketFlow. All rights reserved.
-  </small>
-
+    <small>
+        © 2026 PoketFlow. All rights reserved.
+    </small>
 
 </footer>
 
-
 </body>
-
 </html>
