@@ -108,9 +108,11 @@ $navigationItems = [
     <title>Dashboard — PoketFlow</title>
 
     <link
-        rel="stylesheet"
-        href="css/dashboard.css?v=4"
-    >
+    rel="stylesheet"
+    href="css/dashboard.css?v=<?= filemtime(__DIR__ . '/dashboard.css') ?>">
+
+    
+    
 
 </head>
 
