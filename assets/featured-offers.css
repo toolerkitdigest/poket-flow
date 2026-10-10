@@ -152,7 +152,7 @@
     padding: 13px 13px 0;
 }
 
-/* OFFER IMAGE OR ICON */
+/* OFFER IMAGE — VISIBLE EDGES ALL ROUND */
 .pf-featured-image {
     display: grid;
     flex: 0 0 46px;
@@ -160,18 +160,25 @@
     height: 46px;
     overflow: hidden;
     place-items: center;
-    border: 1px solid var(--pf-featured-border);
+    box-sizing: border-box;
+
+    border: 2px solid #a855f7;
     border-radius: 11px;
-    background: linear-gradient(
-        135deg,
-        rgba(147, 51, 234, 0.2),
-        rgba(192, 132, 252, 0.1)
-    );
-    color: var(--pf-featured-primary-hover);
+
+    background: #182238;
+    color: #c084fc;
     font-size: 18px;
     font-weight: 800;
 }
 
+.pf-featured-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    object-fit: cover;
+    border-radius: 8px;
+}
 .pf-featured-image img {
     display: block;
     width: 100%;
