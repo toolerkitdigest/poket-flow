@@ -28,6 +28,10 @@ declare(strict_types=1);
     <link
     rel="stylesheet"
     href="assets/featured-offers.css?v=<?= filemtime(__DIR__ . '/assets/featured-offers.css') ?>">
+    
+    <link
+    rel="stylesheet"
+    href="css/offers.css?v=<?= filemtime(__DIR__ . '/css/offers.css') ?>">
 
     
 
