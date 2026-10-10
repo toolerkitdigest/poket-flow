@@ -412,7 +412,7 @@ try {
     $featuredOffers = array_slice(
         $featuredEligibleOffers,
         0,
-        3
+        4
     );
 
 } catch (Throwable $featuredException) {
