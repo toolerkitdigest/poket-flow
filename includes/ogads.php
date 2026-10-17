@@ -8,7 +8,7 @@ declare(strict_types=1);
  */
 function getOgadsConfig(): array
 {
-    $configPath = '/home/u541027683/private/poketflow-config.php';
+    $configPath = '/home/poketflo/private/poketflow-config.php';
 
     if (!file_exists($configPath)) {
         throw new RuntimeException(
