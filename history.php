@@ -87,7 +87,7 @@ $history = $historyStmt->fetchAll();
 
     <title>History — PoketFlow</title>
 
-    <link rel="stylesheet" href="assets/poketflow.css">
+    <link rel="stylesheet" href="assets/poketflow.css?v2">
 </head>
 
 <body class="app-page">
