@@ -722,7 +722,7 @@ $canWithdraw =
 
     <link
         rel="stylesheet"
-        href="assets/poketflow.css"
+        href="href="index.css?v=13">"
     >
 
     <style>
