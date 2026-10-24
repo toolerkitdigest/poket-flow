@@ -109,7 +109,7 @@ $navigationItems = [
 
     <link
     rel="stylesheet"
-    href="css/dashboard.css?v=<?= filemtime(__DIR__ . '/dashboard.css') ?>">
+    href="css/dashboard.css?1v">
 
     
     
