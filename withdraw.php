@@ -721,9 +721,9 @@ $canWithdraw =
     <title>Withdraw — PoketFlow</title>
 
     <link
-        rel="stylesheet"
-        href="href="/css/withdraw.css">
-    
+    rel="stylesheet"
+    href="css/withdraw.css?1v">
+
 
     <style>
 
