@@ -722,7 +722,7 @@ $canWithdraw =
 
     <link
         rel="stylesheet"
-        href="href="withdraw.css?v3">
+        href="href="withdraw.css">
     
 
     <style>
