@@ -948,19 +948,20 @@ $canWithdraw = $availableBalance >= $minimumWithdrawal;
                             <strong>Minimum balance not reached</strong>
 
                             <p>
-                                You need another
-                                $<?= number_format(
-                                    max(
-                                        0,
-                                        $minimumWithdrawal - $availableBalance
-                                    ),
-                                    2
-                                ) ?>
-                                to reach the minimum withdrawal amount.
-                            </p>
-                        </div>
+    You need another
+    <strong class="pf-money">
+        $<?= number_format(
+            max(
+                0,
+                $minimumWithdrawal - $availableBalance
+            ),
+            2
+        ) ?>
+    </strong>
+    to reach the minimum withdrawal amount.
+</p>
+ </div>
 
-                    </div>
 
                 <?php endif; ?>
 
