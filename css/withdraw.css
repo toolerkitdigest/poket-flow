@@ -1900,3 +1900,361 @@
         transition-duration: 0.01ms !important;
     }
 }
+
+/* =========================================================
+   POKETFLOW WITHDRAWAL PAGE — FINAL ENHANCEMENTS
+   Money colors and responsive hamburger navigation
+   ========================================================= */
+
+
+/* =========================================================
+   GREEN MONETARY VALUES
+   ========================================================= */
+
+:root {
+    --pf-money: #15803D;
+    --pf-money-light: #86EFAC;
+    --pf-money-bg: #F0FDF4;
+    --pf-money-border: #BBF7D0;
+}
+
+/*
+ * Available balance:
+ * Light green provides better contrast against the purple card.
+ */
+
+.pf-balance-amount {
+    color: var(--pf-money-light);
+}
+
+/*
+ * Minimum withdrawal displayed on the purple balance card.
+ */
+
+.pf-balance-footnote strong {
+    color: var(--pf-money-light);
+    font-weight: 850;
+}
+
+/*
+ * Withdrawal amount input.
+ */
+
+.pf-amount-input input {
+    color: var(--pf-money);
+    font-weight: 850;
+}
+
+/*
+ * Currency prefix.
+ */
+
+.pf-currency-prefix {
+    color: var(--pf-money);
+}
+
+/*
+ * Monetary amounts on light backgrounds.
+ * Apply this class to an amount when the HTML contains one.
+ */
+
+.pf-money {
+    color: var(--pf-money);
+    font-weight: 800;
+}
+
+/*
+ * Keep warning messages readable.
+ * Only monetary figures should be green, not the entire warning.
+ */
+
+.pf-alert-warning .pf-money {
+    color: var(--pf-money);
+}
+
+
+/* =========================================================
+   HAMBURGER BUTTON — DESKTOP DEFAULT
+   ========================================================= */
+
+.pf-menu-toggle {
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+
+    width: 42px;
+    height: 42px;
+
+    flex: 0 0 42px;
+
+    padding: 0;
+
+    border: 1px solid var(--pf-border);
+    border-radius: 11px;
+
+    background: var(--pf-surface);
+
+    color: var(--pf-primary-dark);
+
+    cursor: pointer;
+
+    transition:
+        background var(--pf-transition),
+        border-color var(--pf-transition),
+        box-shadow var(--pf-transition);
+}
+
+.pf-menu-toggle:hover {
+    border-color: var(--pf-border-hover);
+    background: var(--pf-surface-2);
+}
+
+.pf-menu-toggle:focus-visible {
+    outline: 3px solid rgba(154, 59, 255, 0.28);
+    outline-offset: 3px;
+}
+
+.pf-menu-toggle span {
+    display: block;
+
+    width: 19px;
+    height: 2px;
+
+    border-radius: 5px;
+
+    background: var(--pf-primary);
+
+    transition:
+        transform var(--pf-transition),
+        opacity var(--pf-transition);
+}
+
+/*
+ * Transform the hamburger into an X when the menu is open.
+ */
+
+.pf-menu-toggle[aria-expanded="true"] span:first-child {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.pf-menu-toggle[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+}
+
+.pf-menu-toggle[aria-expanded="true"] span:last-child {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+
+/* =========================================================
+   MOBILE NAVIGATION DROPDOWN
+   ========================================================= */
+
+@media (max-width: 760px) {
+
+    .pf-header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+
+        display: grid;
+
+        grid-template-columns: minmax(0, 1fr) 42px auto;
+
+        align-items: center;
+
+        column-gap: 10px;
+        row-gap: 0;
+
+        min-height: 67px;
+
+        padding: 12px 16px;
+    }
+
+    .pf-brand {
+        grid-column: 1;
+        grid-row: 1;
+
+        min-width: 0;
+    }
+
+    .pf-menu-toggle {
+        display: flex;
+
+        grid-column: 2;
+        grid-row: 1;
+
+        justify-self: center;
+    }
+
+    .pf-logout {
+        grid-column: 3;
+        grid-row: 1;
+
+        justify-self: end;
+    }
+
+    /*
+     * Closed by default.
+     */
+
+    .pf-top-nav {
+        order: initial;
+
+        grid-column: 1 / -1;
+        grid-row: 2;
+
+        display: none;
+
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+
+        gap: 5px;
+
+        width: 100%;
+
+        max-height: min(65vh, 420px);
+
+        margin-top: 12px;
+        padding: 12px;
+
+        overflow-x: hidden;
+        overflow-y: auto;
+
+        border: 1px solid var(--pf-border);
+        border-radius: 14px;
+
+        background: var(--pf-surface);
+
+        box-shadow:
+            0 14px 32px rgba(36, 0, 61, 0.12);
+
+        scrollbar-width: thin;
+    }
+
+    /*
+     * Open when JavaScript adds is-open.
+     */
+
+    .pf-top-nav.is-open {
+        display: flex;
+    }
+
+    .pf-top-nav a {
+        display: flex;
+
+        align-items: center;
+        justify-content: flex-start;
+
+        width: 100%;
+        min-height: 43px;
+
+        padding: 11px 13px;
+
+        border-radius: 10px;
+
+        font-size: 13px;
+        font-weight: 750;
+
+        white-space: normal;
+    }
+
+    .pf-top-nav a:hover {
+        background: var(--pf-surface-2);
+    }
+
+    .pf-top-nav a.active {
+        background: var(--pf-surface-3);
+        color: var(--pf-primary);
+    }
+
+    /*
+     * Give the page a little breathing room on mobile.
+     */
+
+    .pf-layout {
+        padding-top: 23px;
+    }
+
+}
+
+
+/* =========================================================
+   EXTRA-SMALL MOBILE PHONES
+   ========================================================= */
+
+@media (max-width: 390px) {
+
+    .pf-header {
+        grid-template-columns: minmax(0, 1fr) 38px auto;
+
+        column-gap: 7px;
+
+        padding: 11px 10px;
+    }
+
+    .pf-brand {
+        gap: 7px;
+
+        font-size: 17px;
+        letter-spacing: -0.5px;
+    }
+
+    .pf-brand-mark {
+        width: 33px;
+        height: 33px;
+
+        flex: 0 0 33px;
+
+        font-size: 18px;
+    }
+
+    .pf-menu-toggle {
+        width: 38px;
+        height: 38px;
+
+        flex-basis: 38px;
+    }
+
+    .pf-logout {
+        min-height: 34px;
+
+        padding: 6px 8px;
+
+        font-size: 10px;
+    }
+
+    .pf-top-nav {
+        padding: 9px;
+    }
+
+    .pf-top-nav a {
+        min-height: 41px;
+
+        padding: 10px;
+
+        font-size: 12px;
+    }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .pf-menu-toggle,
+    .pf-menu-toggle span,
+    .pf-top-nav,
+    .pf-top-nav a {
+        transition: none !important;
+    }
+
+}
+
