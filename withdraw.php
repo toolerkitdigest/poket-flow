@@ -1397,12 +1397,105 @@ $canWithdraw = $availableBalance >= $minimumWithdrawal;
     </section>
 
 </main>
-
+    
 <script>
 (function () {
     'use strict';
 
+    /*
+    |--------------------------------------------------------------------------
+    | MOBILE NAVIGATION
+    |--------------------------------------------------------------------------
+    */
+
+    const menuToggle = document.getElementById('pf-menu-toggle');
+    const topNav = document.getElementById('pf-top-nav');
+
+    function closeMenu() {
+        if (!menuToggle || !topNav) {
+            return;
+        }
+
+        topNav.classList.remove('is-open');
+
+        menuToggle.setAttribute('aria-expanded', 'false');
+        menuToggle.setAttribute('aria-label', 'Open navigation menu');
+    }
+
+    function openMenu() {
+        if (!menuToggle || !topNav) {
+            return;
+        }
+
+        topNav.classList.add('is-open');
+
+        menuToggle.setAttribute('aria-expanded', 'true');
+        menuToggle.setAttribute('aria-label', 'Close navigation menu');
+    }
+
+    if (menuToggle && topNav) {
+        menuToggle.addEventListener('click', function () {
+            const isOpen =
+                menuToggle.getAttribute('aria-expanded') === 'true';
+
+            if (isOpen) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        /*
+         * Close the menu after selecting a navigation link.
+         */
+        topNav.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', closeMenu);
+        });
+
+        /*
+         * Close the menu when tapping outside the header.
+         */
+        document.addEventListener('click', function (event) {
+            if (
+                !event.target.closest('.pf-header') &&
+                menuToggle.getAttribute('aria-expanded') === 'true'
+            ) {
+                closeMenu();
+            }
+        });
+
+        /*
+         * Close the menu with the Escape key.
+         */
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeMenu();
+                menuToggle.focus();
+            }
+        });
+
+        /*
+         * Reset the mobile menu when switching to desktop width.
+         */
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 760) {
+                closeMenu();
+            }
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | WITHDRAWAL FORM
+    |--------------------------------------------------------------------------
+    */
+
     const form = document.getElementById('withdraw-form');
+
+    if (!form) {
+        return;
+    }
+
     const methodInputs = document.querySelectorAll(
         'input[name="withdrawal_method"]'
     );
@@ -1436,10 +1529,7 @@ $canWithdraw = $availableBalance >= $minimumWithdrawal;
     ];
 
     /*
-     * Toggle a payment detail group.
-     *
-     * Hidden controls are disabled so they cannot block
-     * submission through browser validation.
+     * Show or hide payment fields and disable inactive controls.
      */
     function toggleGroup(group, enabled) {
         group.hidden = !enabled;
@@ -1451,10 +1541,14 @@ $canWithdraw = $availableBalance >= $minimumWithdrawal;
         });
     }
 
+    /*
+     * Populate the cryptocurrency network dropdown.
+     */
     function populateCryptoNetworks(method) {
         cryptoNetwork.replaceChildren();
 
         const placeholder = document.createElement('option');
+
         placeholder.value = '';
         placeholder.textContent = 'Select a network';
 
@@ -1472,6 +1566,9 @@ $canWithdraw = $availableBalance >= $minimumWithdrawal;
         });
     }
 
+    /*
+     * Update fields according to the selected payment method.
+     */
     function updatePaymentDetails() {
         let selectedMethod = null;
 
@@ -1484,6 +1581,15 @@ $canWithdraw = $availableBalance >= $minimumWithdrawal;
         detailGroups.forEach(function (group) {
             toggleGroup(group, false);
         });
+
+        /*
+         * Reset required fields before enabling the selected group.
+         */
+        accountName.required = false;
+        accountNumber.required = false;
+        paypalEmail.required = false;
+        cryptoNetwork.required = false;
+        walletAddress.required = false;
 
         amountInput.disabled = true;
         submitButton.disabled = true;
@@ -1504,27 +1610,15 @@ $canWithdraw = $availableBalance >= $minimumWithdrawal;
             accountName.required = true;
             accountNumber.required = true;
 
-            paypalEmail.required = false;
-            cryptoNetwork.required = false;
-            walletAddress.required = false;
         } else if (type === 'paypal') {
             toggleGroup(paypalFields, true);
 
-            accountName.required = false;
-            accountNumber.required = false;
-
             paypalEmail.required = true;
 
-            cryptoNetwork.required = false;
-            walletAddress.required = false;
         } else if (type === 'crypto') {
             populateCryptoNetworks(method);
 
             toggleGroup(cryptoFields, true);
-
-            accountName.required = false;
-            accountNumber.required = false;
-            paypalEmail.required = false;
 
             cryptoNetwork.required = true;
             walletAddress.required = true;
@@ -1534,6 +1628,9 @@ $canWithdraw = $availableBalance >= $minimumWithdrawal;
         submitButton.disabled = false;
     }
 
+    /*
+     * Listen for payment-method changes.
+     */
     methodInputs.forEach(function (input) {
         input.addEventListener(
             'change',
@@ -1542,7 +1639,7 @@ $canWithdraw = $availableBalance >= $minimumWithdrawal;
     });
 
     /*
-     * Avoid accidental double-click submissions.
+     * Prevent accidental double submissions.
      */
     form.addEventListener('submit', function (event) {
         if (!form.checkValidity()) {
@@ -1557,16 +1654,26 @@ $canWithdraw = $availableBalance >= $minimumWithdrawal;
         }
 
         submitButton.disabled = true;
+
         submitButton.classList.add('is-submitting');
 
-        submitButton.querySelector(
+        const buttonText = submitButton.querySelector(
             'span:first-child'
-        ).textContent = 'Submitting request...';
+        );
+
+        if (buttonText) {
+            buttonText.textContent = 'Submitting request...';
+        }
     });
 
+    /*
+     * Initialise the form.
+     */
     updatePaymentDetails();
+
 })();
 </script>
+
 
 </body>
 </html>
