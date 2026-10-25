@@ -744,6 +744,19 @@ $canWithdraw = $availableBalance >= $minimumWithdrawal;
         </span>
     </a>
 
+ <button
+    class="pf-menu-toggle"
+    id="pf-menu-toggle"
+    type="button"
+    aria-label="Open navigation menu"
+    aria-expanded="false"
+    aria-controls="pf-top-nav">
+    <span></span>
+    <span></span>
+    <span></span>
+</button>
+    
+
     <nav class="pf-top-nav" aria-label="Main navigation">
         <a href="dashboard.php">Home</a>
         <a href="offers.php">Earn</a>
