@@ -743,29 +743,40 @@ $canWithdraw = $availableBalance >= $minimumWithdrawal;
             Poket<span>Flow</span>
         </span>
     </a>
-
- <button
+<button
     class="pf-menu-toggle"
     id="pf-menu-toggle"
     type="button"
     aria-label="Open navigation menu"
     aria-expanded="false"
-    aria-controls="pf-top-nav">
+    aria-controls="pf-top-nav"
+>
     <span></span>
     <span></span>
     <span></span>
 </button>
+
+<nav
+    class="pf-top-nav"
+    id="pf-top-nav"
+    aria-label="Main navigation"
+>
+    <a href="dashboard.php">Home</a>
+    <a href="offers.php">Earn</a>
+    <a href="history.php">History</a>
+    <a href="referrals.php">Refer &amp; Earn</a>
+
+    <a
+        class="active"
+        href="withdraw.php"
+        aria-current="page"
+    >
+        Withdraw
+    </a>
+</nav>
     
 
-    <nav class="pf-top-nav" aria-label="Main navigation">
-        <a href="dashboard.php">Home</a>
-        <a href="offers.php">Earn</a>
-        <a href="history.php">History</a>
-        <a href="referrals.php">Refer &amp; Earn</a>
-        <a class="active" href="withdraw.php" aria-current="page">
-            Withdraw
-        </a>
-    </nav>
+    
 
     <a href="logout.php" class="pf-logout">
         Log out
