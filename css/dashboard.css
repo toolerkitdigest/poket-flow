@@ -421,6 +421,8 @@ p {
 
 .balance-amount {
     white-space: nowrap;
+    color: #15803D !important;
+    font-weight: 800;
 }
 
 
@@ -1585,3 +1587,6 @@ p {
         animation-iteration-count: 1 !important;
     }
 }
+
+
+
