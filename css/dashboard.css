@@ -47,6 +47,7 @@
     --pf-radius-md: 15px;
     --pf-radius-lg: 20px;
 
+
     --pf-shadow:
         0 8px 25px rgba(36, 0, 61, 0.06);
 
@@ -54,6 +55,9 @@
         0 15px 35px rgba(90, 0, 168, 0.12);
 
     --pf-transition: 0.25s ease;
+
+   /* Money and account balance color */
+    --pf-money: #15803D;
 }
 
 
@@ -1588,13 +1592,20 @@ p {
 }
 
 
-/* PoketFlow: Highlight money amounts in green */
+/* =========================================================
+   POKETFLOW — GLOBAL MONEY COLOR
+   ========================================================= */
+
 .balance-amount,
-.wallet-balance,
 .stat-value,
 .balance-value,
+.wallet-balance,
 .earnings-amount,
-.money-amount {
-    color: #15803D !important;
-    font-weight: 800;
+.money-amount,
+.account-balance,
+.total-earnings,
+.available-balance {
+    color: var(--pf-money) !important;
+    font-weight: 800 !important;
 }
+
