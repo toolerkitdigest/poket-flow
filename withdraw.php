@@ -722,7 +722,7 @@ $canWithdraw =
 
     <link
         rel="stylesheet"
-        href="href="css/withdraw.css">
+        href="href="/css/withdraw.css">
     
 
     <style>
@@ -886,7 +886,7 @@ $canWithdraw =
 
 <header class="app-header">
 
-    <a class="brand" href="index.html">
+    <a class="brand" href="index.php">
 
         <span class="brand-mark">P</span>
 
