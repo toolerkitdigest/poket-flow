@@ -1,16 +1,50 @@
-<?php
-
-declare(strict_types=1);
-
 require_once __DIR__ . '/../includes/auth.php';
-
-
-// --------------------------------------------------
-// Basic response type
-// --------------------------------------------------
 
 header('Content-Type: text/plain; charset=UTF-8');
 
+/*
+|--------------------------------------------------------------------------
+| TEMPORARY POSTBACK DIAGNOSTICS
+|--------------------------------------------------------------------------
+| Writes diagnostic information outside public_html.
+| Does not record the visitor's IP, full request URL, or tracking ID.
+|--------------------------------------------------------------------------
+*/
+
+$debugLog = dirname(__DIR__, 2)
+    . '/private/poketflow-postback-debug.log';
+
+function pfPostbackDebug(string $message, array $context = []): void
+{
+    global $debugLog;
+
+    $entry = [
+        'time' => date('Y-m-d H:i:s'),
+        'event' => $message,
+        'context' => $context,
+    ];
+
+    $json = json_encode(
+        $entry,
+        JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR
+    );
+
+    if ($json !== false) {
+        error_log($json . PHP_EOL, 3, $debugLog);
+    }
+}
+
+pfPostbackDebug('POSTBACK_REACHED', [
+    'method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown',
+    'pdo_available' => isset($pdo) && $pdo instanceof PDO,
+    'parameters_present' => [
+        'offer_id' => isset($_GET['offer_id']),
+        'payout' => isset($_GET['payout']),
+        'session_ip' => isset($_GET['session_ip']),
+        'aff_sub4' => isset($_GET['aff_sub4']),
+        'datetime' => isset($_GET['datetime']),
+    ],
+]);
 
 // --------------------------------------------------
 // Get OGAds postback values
