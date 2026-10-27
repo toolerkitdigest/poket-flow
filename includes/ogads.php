@@ -115,17 +115,29 @@ function fetchOgadsOffers(
     }
 
     if (
-        !isset($data['success']) ||
-        $data['success'] !== true
-    ) {
+    !isset($data['success']) ||
+    $data['success'] !== true
+) {
+    $error = $data['error']
+        ?? 'Unknown OGAds API error.';
 
-        $error = $data['error']
-            ?? 'Unknown OGAds API error.';
-
-        throw new RuntimeException(
-            'OGAds API error: ' . $error
+    if (is_array($error)) {
+        $error = json_encode(
+            $error,
+            JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR
         );
+
+        if ($error === false) {
+            $error = 'Unable to decode the OGAds API error.';
+        }
+    } elseif (!is_string($error)) {
+        $error = (string) $error;
     }
+
+    throw new RuntimeException(
+        'OGAds API error: ' . $error
+    );
+}
 
     return $data['offers'] ?? [];
 }
