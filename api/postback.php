@@ -11,8 +11,7 @@ header('Content-Type: text/plain; charset=UTF-8');
 |--------------------------------------------------------------------------
 */
 
-$debugLog = dirname(__DIR__, 2)
-    . '/private/poketflow-postback-debug.log';
+$debugLog = '/home/u541027683/private/poketflow-postback-debug.log';
 
 function pfPostbackDebug(string $message, array $context = []): void
 {
