@@ -1,3 +1,4 @@
+<?php
 require_once __DIR__ . '/../includes/auth.php';
 
 header('Content-Type: text/plain; charset=UTF-8');
