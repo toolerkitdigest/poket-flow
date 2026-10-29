@@ -383,18 +383,56 @@ storeActiveOfferTracking(
 // Append OGAds tracking ID
 // --------------------------------------------------
 
-/*
- * This retains the existing aff_sub4 parameter.
- * Its compatibility with your OGAds account and postback
- * configuration must be confirmed before live attribution
- * can be considered verified.
- */
-
 $redirectUrl = appendTrackingParameter(
     $networkOfferUrl,
     'aff_sub4',
     $trackingId
 );
+
+// --------------------------------------------------
+// Diagnostic logging
+// --------------------------------------------------
+
+$trackingLog = '/home/u541027683/private/poketflow-tracking-debug.log';
+
+$destinationParts = parse_url($redirectUrl);
+
+$diagnostic = [
+    'time' => date('Y-m-d H:i:s'),
+    'event' => 'OGADS_REDIRECT_PREPARED',
+    'user_id' => $userId,
+    'campaign_id' => $campaignId,
+    'offer_id' => $offerId,
+    'tracking_id' => $trackingId,
+    'tracking_parameter' => 'aff_sub4',
+    'tracking_parameter_present' => false,
+    'destination_host' => $destinationParts['host'] ?? null,
+];
+
+if (isset($destinationParts['query'])) {
+    parse_str($destinationParts['query'], $queryParameters);
+
+    $diagnostic['tracking_parameter_present'] =
+        isset($queryParameters['aff_sub4']) &&
+        is_string($queryParameters['aff_sub4']) &&
+        hash_equals(
+            $trackingId,
+            $queryParameters['aff_sub4']
+        );
+}
+
+$diagnosticJson = json_encode(
+    $diagnostic,
+    JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR
+);
+
+if ($diagnosticJson !== false) {
+    error_log(
+        $diagnosticJson . PHP_EOL,
+        3,
+        $trackingLog
+    );
+}
 
 // --------------------------------------------------
 // Redirect to OGAds
