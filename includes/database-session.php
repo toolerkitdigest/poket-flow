@@ -1,5 +1,3 @@
-
-text/x-generic database-session.php ( PHP script, ASCII text )
 <?php
 
 declare(strict_types=1);
