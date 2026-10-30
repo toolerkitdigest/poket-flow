@@ -15,6 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim($_POST['email'] ?? ''));
     $password = $_POST['password'] ?? '';
 
+    error_log('[PoketFlow Login] POST request received.');
+
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Please enter a valid email address.';
     }
@@ -36,6 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $user = $stmt->fetch();
 
+        error_log(
+    '[PoketFlow Login] User lookup: ' .
+    ($user ? 'FOUND' : 'NOT FOUND')
+);
+
         if (!$user || !password_verify($password, $user['password_hash'])) {
 
             $errors[] = 'Invalid email address or password.';
@@ -45,12 +52,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Your account is not currently active.';
 
         } else {
+session_regenerate_id(true);
+$_SESSION['user_id'] = (int) $user['id'];
+redirect('dashboard.php');
+Replace it temporarily with:
+$sessionResult = session_regenerate_id(true);
 
-            session_regenerate_id(true);
+error_log(
+    '[PoketFlow Login] Session regeneration: ' .
+    ($sessionResult ? 'SUCCESS' : 'FAILED')
+);
 
-            $_SESSION['user_id'] = (int) $user['id'];
+$_SESSION['user_id'] = (int) $user['id'];
 
-            redirect('dashboard.php');
+error_log(
+    '[PoketFlow Login] User ID stored in session: ' .
+    $_SESSION['user_id']
+);
+
+redirect('dashboard.php');
         }
     }
 }
