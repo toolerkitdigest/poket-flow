@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| Load Database and Functions
+| Load Required Files
 |--------------------------------------------------------------------------
 */
 
@@ -23,7 +23,7 @@ require_once __DIR__ . '/database-session.php';
 
 /*
 |--------------------------------------------------------------------------
-| Configure Database Session Handler
+| Start Database Session
 |--------------------------------------------------------------------------
 */
 
@@ -57,14 +57,14 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     $sessionHandler = new PoketFlowDatabaseSessionHandler($pdo);
 
     if (!session_set_save_handler($sessionHandler, true)) {
-        error_log('[PoketFlow] Failed to register database session handler.');
+        error_log('[PoketFlow] Database session handler registration failed.');
 
         http_response_code(500);
         exit('Session service temporarily unavailable.');
     }
 
     if (!session_start()) {
-        error_log('[PoketFlow] Failed to start database session.');
+        error_log('[PoketFlow] Database session start failed.');
 
         http_response_code(500);
         exit('Session service temporarily unavailable.');
