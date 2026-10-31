@@ -94,7 +94,9 @@ final class PoketFlowDatabaseSessionHandler implements
         $this->lockName = null;
     }
 
-    public function read(string $id)    {
+    #[\ReturnTypeWillChange]
+    public function read(string $id)
+    {
         try {
             if (!$this->acquireLock($id)) {
                 return false;
@@ -224,7 +226,9 @@ final class PoketFlowDatabaseSessionHandler implements
         }
     }
 
-    public function gc(int $max_lifetime)    {
+    #[\ReturnTypeWillChange]
+    public function gc(int $max_lifetime)
+    {
         try {
             $stmt = $this->pdo->prepare(
                 'DELETE FROM user_sessions
