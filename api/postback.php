@@ -12,7 +12,7 @@ header('Content-Type: text/plain; charset=UTF-8');
 |--------------------------------------------------------------------------
 */
 
-$debugLog = '/home/u541027683/private/poketflow-postback-debug.log';
+$debugLog = '/home/poketflo/private/poketflow-postback-debug.log';
 
 function pfPostbackDebug(string $message, array $context = []): void
 {
