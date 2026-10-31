@@ -393,7 +393,7 @@ $redirectUrl = appendTrackingParameter(
 // Diagnostic logging
 // --------------------------------------------------
 
-$trackingLog = '/home/u541027683/private/poketflow-tracking-debug.log';
+$trackingLog = '/home/poketflo/private/poketflow-tracking-debug.log';
 
 $destinationParts = parse_url($redirectUrl);
 
