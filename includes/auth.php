@@ -1,3 +1,5 @@
+
+text/x-generic auth.php ( PHP script, ASCII text )
 <?php
 
 declare(strict_types=1);
