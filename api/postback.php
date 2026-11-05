@@ -196,7 +196,7 @@ try {
 
     if (
         !is_finite($rewardRate) ||
-        $rewardRate < 0 ||
+        $rewardRate <= 0 ||
         $rewardRate > 100 ||
         (int) round($storedWorkerReward * 100) !== (int) round($expectedWorkerReward * 100) ||
         (int) round($storedPlatformMargin * 100) !== (int) round($expectedPlatformMargin * 100)
