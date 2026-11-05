@@ -148,6 +148,7 @@ try {
          WHERE cc.tracking_id = ?
            AND COALESCE(cc.snapshot_network_id, c.network_id) = ?
            AND n.slug = 'ogads'
+           AND UPPER(TRIM(c.source_type)) = 'CPA_NETWORK'
          LIMIT 1
          FOR UPDATE"
     );
