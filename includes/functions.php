@@ -740,7 +740,7 @@ function createCampaignClick(
         !is_finite($snapshotWorkerReward) ||
         !is_finite($snapshotPlatformMargin) ||
         $snapshotPayout <= 0 ||
-        $snapshotRewardRate < 0 ||
+        $snapshotRewardRate <= 0 ||
         $snapshotRewardRate > 100 ||
         $snapshotWorkerReward < 0 ||
         $snapshotPlatformMargin < 0 ||
