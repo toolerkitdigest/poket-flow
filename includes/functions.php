@@ -744,7 +744,9 @@ function createCampaignClick(
         $snapshotRewardRate > 100 ||
         $snapshotWorkerReward < 0 ||
         $snapshotPlatformMargin < 0 ||
-        round($snapshotWorkerReward + $snapshotPlatformMargin, 2) !== round($snapshotPayout, 2)
+        (int) round($snapshotWorkerReward * 100) !== (int) round(round($snapshotPayout * ($snapshotRewardRate / 100), 2) * 100) ||
+        (int) round($snapshotPlatformMargin * 100) !== (int) round(round($snapshotPayout - $snapshotWorkerReward, 2) * 100) ||
+        (int) round(($snapshotWorkerReward + $snapshotPlatformMargin) * 100) !== (int) round($snapshotPayout * 100)
     ) {
         throw new InvalidArgumentException('Invalid campaign reward snapshot.');
     }
