@@ -1,34 +1,33 @@
 <?php
-require_once __DIR__ . '/../includes/auth.php';
-
-header('Content-Type: text/plain; charset=UTF-8');
+declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| OGAds conversion postback
+| PoketFlow OGAds conversion postback
 |--------------------------------------------------------------------------
-| The affiliate click ID is sent to OGAds as aff_sub4 and returned to
-| this endpoint. A database UNIQUE key on (network_id,
-| external_transaction_id) is the final duplicate-callback safeguard.
+| Uses the existing database bootstrap without starting a worker session.
+| The database UNIQUE key on (network_id, external_transaction_id) remains
+| the final protection against duplicate rewards.
 |--------------------------------------------------------------------------
 */
 
+header('Content-Type: text/plain; charset=UTF-8');
+
+require_once __DIR__ . '/../includes/database.php';
+
 $debugLog = '/home/poketflo/private/poketflow-postback-debug.log';
 
-function pfPostbackDebug(string $message, array $context = []): void
+function pfPostbackDebug(string $event, array $context = []): void
 {
     global $debugLog;
 
     $entry = [
         'time' => date('Y-m-d H:i:s'),
-        'event' => $message,
+        'event' => $event,
         'context' => $context,
     ];
 
-    $json = json_encode(
-        $entry,
-        JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR
-    );
+    $json = json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR);
 
     if ($json !== false) {
         error_log($json . PHP_EOL, 3, $debugLog);
@@ -44,64 +43,59 @@ function pfIsDuplicateKey(PDOException $exception): bool
         && (int) $errorInfo[1] === 1062;
 }
 
-pfPostbackDebug('POSTBACK_REACHED', [
-    'method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown',
-    'pdo_available' => isset($pdo) && $pdo instanceof PDO,
-    'parameters_present' => [
-        'offer_id' => isset($_GET['offer_id']),
-        'payout' => isset($_GET['payout']),
-        'aff_sub4' => isset($_GET['aff_sub4']),
-        'datetime' => isset($_GET['datetime']),
-    ],
-]);
+function pfPostbackFail(int $status, string $message): never
+{
+    http_response_code($status);
+    exit($message);
+}
 
-// Accept only scalar callback values.
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
+    header('Allow: GET');
+    pfPostbackFail(405, 'Method not allowed.');
+}
+
 $offerIdValue = $_GET['offer_id'] ?? '';
 $payoutValue = $_GET['payout'] ?? '';
 $trackingIdValue = $_GET['aff_sub4'] ?? '';
-$conversionDateTimeValue = $_GET['datetime'] ?? '';
+$dateTimeValue = $_GET['datetime'] ?? '';
 
 if (
     !is_scalar($offerIdValue) ||
     !is_scalar($payoutValue) ||
     !is_scalar($trackingIdValue) ||
-    !is_scalar($conversionDateTimeValue)
+    !is_scalar($dateTimeValue)
 ) {
-    http_response_code(400);
-    exit('Invalid postback.');
+    pfPostbackFail(400, 'Invalid postback.');
 }
 
 $offerId = trim((string) $offerIdValue);
 $payoutText = trim((string) $payoutValue);
 $trackingId = trim((string) $trackingIdValue);
-$conversionDateTime = trim((string) $conversionDateTimeValue);
+$conversionDateTime = trim((string) $dateTimeValue);
 
 if (
-    $offerId === '' ||
-    !ctype_digit($offerId) ||
-    (int) $offerId < 1 ||
-    $payoutText === '' ||
-    !is_numeric($payoutText) ||
-    $trackingId === '' ||
-    !preg_match('/^[a-f0-9]{32}$/i', $trackingId)
+    !preg_match('/^[1-9][0-9]*$/D', $offerId) ||
+    !preg_match('/^[0-9]{1,10}(?:\.[0-9]{1,2})?$/D', $payoutText) ||
+    !preg_match('/^[a-f0-9]{32}$/iD', $trackingId)
 ) {
-    http_response_code(400);
-    exit('Invalid postback.');
+    pfPostbackFail(400, 'Invalid postback.');
 }
 
 $payout = (float) $payoutText;
+$payoutCents = (int) round($payout * 100);
 
-if (
-    !is_finite($payout) ||
-    $payout <= 0 ||
-    $payout > 9999999999.99
-) {
-    http_response_code(400);
-    exit('Invalid payout.');
+if (!is_finite($payout) || $payoutCents < 1 || $payoutCents > 999999999999) {
+    pfPostbackFail(400, 'Invalid payout.');
 }
 
+pfPostbackDebug('POSTBACK_RECEIVED', [
+    'method' => 'GET',
+    'offer_id_present' => true,
+    'payout_present' => true,
+    'tracking_id_present' => true,
+]);
+
 try {
-    // Require the configured OGAds network; never create a NULL network ID.
     $networkStmt = $pdo->prepare(
         "SELECT id
          FROM networks
@@ -114,63 +108,88 @@ try {
 
     if ($networkIdValue === false) {
         pfPostbackDebug('OGADS_NETWORK_UNAVAILABLE');
-        http_response_code(503);
-        exit('Offer network unavailable.');
+        pfPostbackFail(503, 'Offer network unavailable.');
     }
 
     $networkId = (int) $networkIdValue;
 
-    // Resolve the click and verify that the callback offer matches the
-    // exact OGAds campaign to which that click was originally sent.
+    // Lock the click and campaign while validating and recording this event.
+    // This serializes retries for the same tracking ID before wallet credit.
+    $pdo->beginTransaction();
+
     $clickStmt = $pdo->prepare(
         "SELECT
             cc.id AS click_id,
             cc.campaign_id,
             cc.worker_id,
-            cc.tracking_id,
-            c.external_offer_id
+            c.external_offer_id,
+            c.network_payout,
+            c.reward_rate,
+            c.worker_reward,
+            c.platform_margin
          FROM campaign_clicks cc
-         INNER JOIN campaigns c
-            ON c.id = cc.campaign_id
-         INNER JOIN networks n
-            ON n.id = c.network_id
+         INNER JOIN campaigns c ON c.id = cc.campaign_id
+         INNER JOIN networks n ON n.id = c.network_id
          WHERE cc.tracking_id = ?
            AND c.network_id = ?
            AND c.source_type = 'CPA_NETWORK'
            AND n.slug = 'ogads'
-         LIMIT 1"
+         LIMIT 1
+         FOR UPDATE"
     );
-    $clickStmt->execute([
-        $trackingId,
-        $networkId,
-    ]);
-
+    $clickStmt->execute([$trackingId, $networkId]);
     $click = $clickStmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$click) {
-        pfPostbackDebug('TRACKING_ID_NOT_FOUND', [
-            'network_id' => $networkId,
-        ]);
-        http_response_code(404);
-        exit('Tracking ID not found.');
+        $pdo->rollBack();
+        pfPostbackDebug('TRACKING_ID_NOT_FOUND', ['network_id' => $networkId]);
+        pfPostbackFail(404, 'Tracking ID not found.');
     }
 
+    if ((string) $click['external_offer_id'] !== $offerId) {
+        $pdo->rollBack();
+        pfPostbackDebug('OFFER_ID_MISMATCH', ['network_id' => $networkId]);
+        pfPostbackFail(400, 'Offer does not match tracking record.');
+    }
+
+    $campaignPayoutCents = (int) round((float) $click['network_payout'] * 100);
+
+    if ($campaignPayoutCents < 1 || $payoutCents !== $campaignPayoutCents) {
+        $pdo->rollBack();
+        pfPostbackDebug('PAYOUT_MISMATCH', ['network_id' => $networkId]);
+        pfPostbackFail(400, 'Payout does not match campaign.');
+    }
+
+    $rewardRate = (float) $click['reward_rate'];
+    $storedWorkerReward = round((float) $click['worker_reward'], 2);
+    $storedPlatformMargin = round((float) $click['platform_margin'], 2);
+    $expectedWorkerReward = round($payout * ($rewardRate / 100), 2);
+    $expectedPlatformMargin = round($payout - $expectedWorkerReward, 2);
+
     if (
-        (string) $click['external_offer_id'] !== $offerId
+        !is_finite($rewardRate) ||
+        $rewardRate < 0 ||
+        $rewardRate > 100 ||
+        (int) round($storedWorkerReward * 100) !== (int) round($expectedWorkerReward * 100) ||
+        (int) round($storedPlatformMargin * 100) !== (int) round($expectedPlatformMargin * 100)
     ) {
-        pfPostbackDebug('OFFER_ID_MISMATCH', [
-            'network_id' => $networkId,
+        $pdo->rollBack();
+        pfPostbackDebug('CAMPAIGN_REWARD_CONFIGURATION_INVALID', [
             'campaign_id' => (int) $click['campaign_id'],
         ]);
-        http_response_code(400);
-        exit('Offer does not match tracking record.');
+        pfPostbackFail(409, 'Campaign reward configuration is invalid.');
     }
 
     $campaignId = (int) $click['campaign_id'];
     $workerId = (int) $click['worker_id'];
 
-    // Fast path for ordinary retries. The UNIQUE database key below is
-    // still required to protect against simultaneous callbacks.
+    if ($campaignId < 1 || $workerId < 1) {
+        $pdo->rollBack();
+        pfPostbackDebug('INVALID_CLICK_OWNER');
+        pfPostbackFail(409, 'Invalid tracking record.');
+    }
+
+    // Fast duplicate check. The unique database index remains authoritative.
     $existingStmt = $pdo->prepare(
         "SELECT id
          FROM conversions
@@ -178,44 +197,34 @@ try {
            AND external_transaction_id = ?
          LIMIT 1"
     );
-    $existingStmt->execute([
-        $networkId,
-        $trackingId,
-    ]);
+    $existingStmt->execute([$networkId, $trackingId]);
 
     if ($existingStmt->fetchColumn() !== false) {
-        pfPostbackDebug('DUPLICATE_CALLBACK_IGNORED', [
-            'network_id' => $networkId,
-        ]);
+        $pdo->rollBack();
+        pfPostbackDebug('DUPLICATE_CALLBACK_IGNORED', ['network_id' => $networkId]);
         http_response_code(200);
         exit('OK');
     }
 
-    // PoketFlow reward split: worker 40%, platform 60%.
-    $rewardRate = 40.00;
-    $workerReward = round($payout * ($rewardRate / 100), 2);
-    $platformMargin = round($payout - $workerReward, 2);
+    // Use the campaign's stored reward amounts after validating their
+    // consistency with its stored payout and reward percentage.
+    $workerReward = $storedWorkerReward;
+    $platformMargin = $storedPlatformMargin;
 
     $convertedAt = null;
-
     if ($conversionDateTime !== '') {
         $timestamp = strtotime($conversionDateTime);
-
         if ($timestamp !== false) {
             $convertedAt = date('Y-m-d H:i:s', $timestamp);
         }
     }
-
     if ($convertedAt === null) {
         $convertedAt = date('Y-m-d H:i:s');
     }
 
-    $pdo->beginTransaction();
-
-    // Serialize balance snapshots for simultaneous rewards to this worker.
-    $workerStmt = $pdo->prepare(
-        'SELECT id FROM users WHERE id = ? FOR UPDATE'
-    );
+    // Lock the worker row so simultaneous rewards cannot share a stale
+    // balance snapshot.
+    $workerStmt = $pdo->prepare('SELECT id FROM users WHERE id = ? FOR UPDATE');
     $workerStmt->execute([$workerId]);
 
     if ($workerStmt->fetchColumn() === false) {
@@ -236,13 +245,12 @@ try {
             converted_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'APPROVED', ?)"
     );
-
     $conversionStmt->execute([
         $campaignId,
         $workerId,
         $networkId,
         $trackingId,
-        $payout,
+        number_format($payoutCents / 100, 2, '.', ''),
         $rewardRate,
         $workerReward,
         $platformMargin,
@@ -258,7 +266,6 @@ try {
            AND status = 'COMPLETED'"
     );
     $balanceStmt->execute([$workerId]);
-
     $balanceBefore = (float) $balanceStmt->fetchColumn();
     $balanceAfter = round($balanceBefore + $workerReward, 2);
 
@@ -274,20 +281,8 @@ try {
             balance_after,
             status,
             description
-        ) VALUES (
-            ?,
-            'OFFER_REWARD',
-            'CONVERSION',
-            ?,
-            ?,
-            'USD',
-            ?,
-            ?,
-            'COMPLETED',
-            ?
-        )"
+        ) VALUES (?, 'OFFER_REWARD', 'CONVERSION', ?, ?, 'USD', ?, ?, 'COMPLETED', ?)"
     );
-
     $walletStmt->execute([
         $workerId,
         $conversionId,
@@ -315,8 +310,6 @@ try {
         $pdo->rollBack();
     }
 
-    // A simultaneous callback may pass the fast duplicate check.
-    // The unique key rejects the second insert; acknowledge it safely.
     if (pfIsDuplicateKey($e)) {
         pfPostbackDebug('DUPLICATE_CALLBACK_BLOCKED_BY_UNIQUE_KEY');
         http_response_code(200);
@@ -326,7 +319,6 @@ try {
     pfPostbackDebug('POSTBACK_DATABASE_ERROR', [
         'sqlstate' => (string) $e->getCode(),
     ]);
-
     error_log('PoketFlow OGAds postback database error.');
     http_response_code(500);
     exit('Postback processing failed.');
@@ -339,7 +331,6 @@ try {
     pfPostbackDebug('POSTBACK_PROCESSING_ERROR', [
         'error_type' => get_class($e),
     ]);
-
     error_log('PoketFlow OGAds postback processing error.');
     http_response_code(500);
     exit('Postback processing failed.');
