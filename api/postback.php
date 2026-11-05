@@ -100,7 +100,6 @@ try {
         "SELECT id
          FROM networks
          WHERE slug = 'ogads'
-           AND status = 'ACTIVE'
          LIMIT 1"
     );
     $networkStmt->execute();
@@ -128,13 +127,26 @@ try {
             COALESCE(cc.snapshot_reward_rate, c.reward_rate) AS effective_reward_rate,
             COALESCE(cc.snapshot_worker_reward, c.worker_reward) AS effective_worker_reward,
             COALESCE(cc.snapshot_platform_margin, c.platform_margin) AS effective_platform_margin,
-            CASE WHEN cc.snapshot_network_id IS NULL THEN 1 ELSE 0 END AS legacy_snapshot
+            CASE
+                WHEN cc.snapshot_network_id IS NULL
+                 AND cc.snapshot_external_offer_id IS NULL
+                 AND cc.snapshot_network_payout IS NULL
+                 AND cc.snapshot_reward_rate IS NULL
+                 AND cc.snapshot_worker_reward IS NULL
+                 AND cc.snapshot_platform_margin IS NULL THEN 1
+                WHEN cc.snapshot_network_id IS NOT NULL
+                 AND cc.snapshot_external_offer_id IS NOT NULL
+                 AND cc.snapshot_network_payout IS NOT NULL
+                 AND cc.snapshot_reward_rate IS NOT NULL
+                 AND cc.snapshot_worker_reward IS NOT NULL
+                 AND cc.snapshot_platform_margin IS NOT NULL THEN 0
+                ELSE 2
+            END AS snapshot_state
          FROM campaign_clicks cc
          INNER JOIN campaigns c ON c.id = cc.campaign_id
          INNER JOIN networks n ON n.id = COALESCE(cc.snapshot_network_id, c.network_id)
          WHERE cc.tracking_id = ?
            AND COALESCE(cc.snapshot_network_id, c.network_id) = ?
-           AND c.source_type = 'CPA_NETWORK'
            AND n.slug = 'ogads'
          LIMIT 1
          FOR UPDATE"
@@ -146,6 +158,16 @@ try {
         $pdo->rollBack();
         pfPostbackDebug('TRACKING_ID_NOT_FOUND', ['network_id' => $networkId]);
         pfPostbackFail(404, 'Tracking ID not found.');
+    }
+
+    if ((int) $click['snapshot_state'] === 2) {
+        $pdo->rollBack();
+        pfPostbackDebug('CLICK_SNAPSHOT_INCOMPLETE');
+        pfPostbackFail(409, 'Tracking record is incomplete.');
+    }
+
+    if ((int) $click['snapshot_state'] === 1) {
+        pfPostbackDebug('LEGACY_CLICK_WITHOUT_SNAPSHOT');
     }
 
     if ((string) $click['effective_offer_id'] !== $offerId) {
