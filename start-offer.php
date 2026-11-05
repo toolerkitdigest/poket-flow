@@ -357,6 +357,7 @@ try {
         $pdo,
         $campaignId,
         $userId,
+        $campaign,
         $_SERVER['REMOTE_ADDR'] ?? null,
         $_SERVER['HTTP_USER_AGENT'] ?? null
     );
