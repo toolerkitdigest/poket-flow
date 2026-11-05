@@ -122,16 +122,18 @@ try {
             cc.id AS click_id,
             cc.campaign_id,
             cc.worker_id,
-            c.external_offer_id,
-            c.network_payout,
-            c.reward_rate,
-            c.worker_reward,
-            c.platform_margin
+            COALESCE(cc.snapshot_network_id, c.network_id) AS effective_network_id,
+            COALESCE(cc.snapshot_external_offer_id, c.external_offer_id) AS effective_offer_id,
+            COALESCE(cc.snapshot_network_payout, c.network_payout) AS effective_network_payout,
+            COALESCE(cc.snapshot_reward_rate, c.reward_rate) AS effective_reward_rate,
+            COALESCE(cc.snapshot_worker_reward, c.worker_reward) AS effective_worker_reward,
+            COALESCE(cc.snapshot_platform_margin, c.platform_margin) AS effective_platform_margin,
+            CASE WHEN cc.snapshot_network_id IS NULL THEN 1 ELSE 0 END AS legacy_snapshot
          FROM campaign_clicks cc
          INNER JOIN campaigns c ON c.id = cc.campaign_id
-         INNER JOIN networks n ON n.id = c.network_id
+         INNER JOIN networks n ON n.id = COALESCE(cc.snapshot_network_id, c.network_id)
          WHERE cc.tracking_id = ?
-           AND c.network_id = ?
+           AND COALESCE(cc.snapshot_network_id, c.network_id) = ?
            AND c.source_type = 'CPA_NETWORK'
            AND n.slug = 'ogads'
          LIMIT 1
@@ -146,13 +148,16 @@ try {
         pfPostbackFail(404, 'Tracking ID not found.');
     }
 
-    if ((string) $click['external_offer_id'] !== $offerId) {
+    if ((string) $click['effective_offer_id'] !== $offerId) {
         $pdo->rollBack();
         pfPostbackDebug('OFFER_ID_MISMATCH', ['network_id' => $networkId]);
         pfPostbackFail(400, 'Offer does not match tracking record.');
     }
 
-    $campaignPayoutCents = (int) round((float) $click['network_payout'] * 100);
+    // New clicks use their immutable click-time financial snapshot. Older
+    // rows created before the snapshot migration fall back to current campaign
+    // values so legitimate in-flight legacy clicks are not discarded.
+    $campaignPayoutCents = (int) round((float) $click['effective_network_payout'] * 100);
 
     if ($campaignPayoutCents < 1 || $payoutCents !== $campaignPayoutCents) {
         $pdo->rollBack();
@@ -160,9 +165,9 @@ try {
         pfPostbackFail(400, 'Payout does not match campaign.');
     }
 
-    $rewardRate = (float) $click['reward_rate'];
-    $storedWorkerReward = round((float) $click['worker_reward'], 2);
-    $storedPlatformMargin = round((float) $click['platform_margin'], 2);
+    $rewardRate = (float) $click['effective_reward_rate'];
+    $storedWorkerReward = round((float) $click['effective_worker_reward'], 2);
+    $storedPlatformMargin = round((float) $click['effective_platform_margin'], 2);
     $expectedWorkerReward = round($payout * ($rewardRate / 100), 2);
     $expectedPlatformMargin = round($payout - $expectedWorkerReward, 2);
 
@@ -206,8 +211,8 @@ try {
         exit('OK');
     }
 
-    // Use the campaign's stored reward amounts after validating their
-    // consistency with its stored payout and reward percentage.
+    // Use the click-time reward amounts after validating their consistency
+    // with the click-time payout and reward percentage.
     $workerReward = $storedWorkerReward;
     $platformMargin = $storedPlatformMargin;
 
@@ -250,7 +255,7 @@ try {
         $workerId,
         $networkId,
         $trackingId,
-        number_format($payoutCents / 100, 2, '.', ''),
+        number_format($campaignPayoutCents / 100, 2, '.', ''),
         $rewardRate,
         $workerReward,
         $platformMargin,
@@ -310,10 +315,30 @@ try {
         $pdo->rollBack();
     }
 
-    if (pfIsDuplicateKey($e)) {
-        pfPostbackDebug('DUPLICATE_CALLBACK_BLOCKED_BY_UNIQUE_KEY');
-        http_response_code(200);
-        exit('OK');
+    if (pfIsDuplicateKey($e) && isset($networkId, $trackingId)) {
+        try {
+            // Confirm that this exact conversion already exists. A duplicate
+            // from some unrelated unique index must not be acknowledged as a
+            // successfully processed callback.
+            $duplicateCheck = $pdo->prepare(
+                'SELECT id
+                 FROM conversions
+                 WHERE network_id = ?
+                   AND external_transaction_id = ?
+                 LIMIT 1'
+            );
+            $duplicateCheck->execute([$networkId, $trackingId]);
+
+            if ($duplicateCheck->fetchColumn() !== false) {
+                pfPostbackDebug('DUPLICATE_CALLBACK_CONFIRMED', [
+                    'network_id' => $networkId,
+                ]);
+                http_response_code(200);
+                exit('OK');
+            }
+        } catch (Throwable $duplicateCheckError) {
+            pfPostbackDebug('DUPLICATE_CONFIRMATION_CHECK_FAILED');
+        }
     }
 
     pfPostbackDebug('POSTBACK_DATABASE_ERROR', [
