@@ -50,8 +50,8 @@ $pdo = new PDO(
 );
 
 $requiredTables = [
-    'users', 'wallet_transactions', 'withdrawals',
-    'pf_wallets', 'pf_wallet_ledger', 'pf_withdrawals',
+    'users', 'wallet_transactions', 'withdrawals', 'campaigns', 'conversions',
+    'pf_wallets', 'pf_wallet_ledger', 'pf_withdrawals', 'pf_legacy_history',
 ];
 foreach ($requiredTables as $table) {
     $check = $pdo->prepare('SHOW TABLES LIKE ?');
@@ -97,6 +97,8 @@ foreach (['advertisers','advertiser_transactions','ad_campaigns'] as $table) {
         $unsupportedCounts[$table] = (int) $pdo->query('SELECT COUNT(*) FROM `' . $table . '`')->fetchColumn();
     }
 }
+$campaignCount = (int) $pdo->query('SELECT COUNT(*) FROM campaigns')->fetchColumn();
+$conversionCount = (int) $pdo->query('SELECT COUNT(*) FROM conversions')->fetchColumn();
 $walletSummary = $pdo->query(
     "SELECT user_id,currency,COUNT(*) AS transactions,COALESCE(SUM(amount),0) AS total
      FROM wallet_transactions
@@ -118,6 +120,8 @@ foreach ($walletSummary as $row) {
         (int) $row['user_id'], (string) $row['currency'], (int) $row['transactions'], (string) $row['total']);
 }
 echo "Withdrawal history rows to preserve: {$withdrawalCount}\n";
+echo "Inactive campaign history rows to archive: {$campaignCount}\n";
+echo "Historical conversion rows to archive: {$conversionCount}\n";
 foreach ($withdrawalSummary as $row) {
     printf("  status=%s | count=%d\n", (string) $row['status'], (int) $row['total']);
 }
@@ -307,8 +311,52 @@ try {
         $importedWithdrawals++;
     }
 
+    // Archive historical campaign and conversion facts without restoring delivery.
+    // The network_offer_url column is intentionally excluded because it may contain
+    // old affiliate credentials or tracking tokens.
+    $campaignRequired = ['id','source_type','advertiser_id','network_id','external_offer_id','image_url','title','description','category','instructions','network_payout','reward_rate','worker_reward','platform_margin','budget','spent','countries','devices','os','incentive_allowed','status','approval_status','start_at','end_at','created_at','updated_at'];
+    $campaignColumns = $legacyColumns($pdo, 'campaigns');
+    foreach ($campaignRequired as $column) {
+        if (!in_array($column, $campaignColumns, true)) throw new RuntimeException('Legacy campaigns schema mismatch: missing ' . $column);
+    }
+    $conversionRequired = ['id','campaign_id','worker_id','network_id','external_transaction_id','network_payout','reward_rate','worker_reward','platform_margin','status','converted_at','created_at','updated_at'];
+    $conversionColumns = $legacyColumns($pdo, 'conversions');
+    foreach ($conversionRequired as $column) {
+        if (!in_array($column, $conversionColumns, true)) throw new RuntimeException('Legacy conversions schema mismatch: missing ' . $column);
+    }
+
+    $archiveFind = $pdo->prepare('SELECT owner_user_id FROM pf_legacy_history WHERE source_table=? AND legacy_id=? FOR UPDATE');
+    $archiveInsert = $pdo->prepare('INSERT INTO pf_legacy_history (source_table,legacy_id,owner_user_id,snapshot_json,source_created_at) VALUES (?,?,?,?,?)');
+    $campaignRows = $pdo->query('SELECT id,source_type,advertiser_id,network_id,external_offer_id,image_url,title,description,category,instructions,network_payout,reward_rate,worker_reward,platform_margin,budget,spent,countries,devices,os,incentive_allowed,status,approval_status,start_at,end_at,created_at,updated_at FROM campaigns ORDER BY id FOR UPDATE')->fetchAll();
+    $archivedCampaigns = 0;
+    foreach ($campaignRows as $row) {
+        $archiveFind->execute(['campaigns', (int) $row['id']]);
+        $existing = $archiveFind->fetch();
+        $ownerId = $row['advertiser_id'] !== null ? (int) $row['advertiser_id'] : null;
+        if ($existing) {
+            if (($existing['owner_user_id'] === null ? null : (int) $existing['owner_user_id']) !== $ownerId) throw new RuntimeException('Existing legacy campaign archive does not match campaign ID ' . (int) $row['id']);
+            continue;
+        }
+        $archiveInsert->execute(['campaigns',(int) $row['id'],$ownerId,json_encode($row, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE),$row['created_at']]);
+        $archivedCampaigns++;
+    }
+
+    $conversionRows = $pdo->query('SELECT id,campaign_id,worker_id,network_id,external_transaction_id,network_payout,reward_rate,worker_reward,platform_margin,status,converted_at,created_at,updated_at FROM conversions ORDER BY id FOR UPDATE')->fetchAll();
+    $archivedConversions = 0;
+    foreach ($conversionRows as $row) {
+        $archiveFind->execute(['conversions', (int) $row['id']]);
+        $existing = $archiveFind->fetch();
+        $ownerId = $row['worker_id'] !== null ? (int) $row['worker_id'] : null;
+        if ($existing) {
+            if (($existing['owner_user_id'] === null ? null : (int) $existing['owner_user_id']) !== $ownerId) throw new RuntimeException('Existing legacy conversion archive does not match conversion ID ' . (int) $row['id']);
+            continue;
+        }
+        $archiveInsert->execute(['conversions',(int) $row['id'],$ownerId,json_encode($row, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE),$row['created_at']]);
+        $archivedConversions++;
+    }
+
     $pdo->commit();
-    echo "Import complete. Wallet transactions added: {$importedTransactions}; withdrawal history rows added: {$importedWithdrawals}.\n";
+    echo "Import complete. Wallet transactions added: {$importedTransactions}; withdrawal history rows added: {$importedWithdrawals}; campaign archives added: {$archivedCampaigns}; conversion archives added: {$archivedConversions}.\n";
     echo "Legacy source tables and user rows were not modified. Verify per-user balances and history before enabling member access.\n";
 } catch (Throwable $exception) {
     if ($pdo->inTransaction()) {
