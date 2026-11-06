@@ -57,7 +57,7 @@ foreach ($tables as $table) {
 }
 $add('');
 
-$knownTables = ['users','wallet_transactions','withdrawals','campaigns','campaign_clicks','conversions','networks','settings','offer_filters'];
+$knownTables = ['users','advertisers','advertiser_transactions','ad_campaigns','ad_placements','wallet_transactions','withdrawals','campaigns','campaign_clicks','conversions','networks','settings','offer_filters'];
 $existing = array_column($tables, 'TABLE_NAME');
 
 foreach ($knownTables as $tableName) {
@@ -114,7 +114,49 @@ foreach ($knownTables as $tableName) {
         }
     }
 
-    if (in_array($tableName, ['wallet_transactions','withdrawals','campaigns','conversions'], true)) {
+    if ($tableName === 'advertisers') {
+        $columns = $pdo->query('SHOW FULL COLUMNS FROM ' . $quoted)->fetchAll();
+        $columnNames = array_column($columns, 'Field');
+        if (in_array('user_id', $columnNames, true) && in_array('balance', $columnNames, true)) {
+            $groups = $pdo->query(
+                'SELECT user_id, status, currency, COALESCE(SUM(balance),0) AS balance_total '
+                . 'FROM advertisers GROUP BY user_id,status,currency ORDER BY user_id'
+            )->fetchAll();
+            $add('LEGACY ADVERTISER BALANCES BY ACCOUNT');
+            foreach ($groups as $group) {
+                $add(sprintf('  user_id=%s | status=%s | currency=%s | balance=%s',
+                    (string) $group['user_id'],
+                    (string) ($group['status'] ?? 'NULL'),
+                    (string) ($group['currency'] ?? 'USD'),
+                    (string) $group['balance_total']));
+            }
+        } elseif (in_array('user_id', $columnNames, true) && in_array('balance', $columnNames, true)) {
+            $add('LEGACY ADVERTISER BALANCE SUMMARY: currency column is absent; values are assumed USD only for review.');
+        }
+    }
+
+    if ($tableName === 'advertiser_transactions') {
+        $columns = $pdo->query('SHOW FULL COLUMNS FROM ' . $quoted)->fetchAll();
+        $columnNames = array_column($columns, 'Field');
+        if (in_array('advertiser_id', $columnNames, true) && in_array('amount', $columnNames, true)) {
+            $groups = $pdo->query(
+                'SELECT advertiser_id,status,type,COUNT(*) AS transaction_count,'
+                . 'COALESCE(SUM(amount),0) AS amount_total FROM advertiser_transactions '
+                . 'GROUP BY advertiser_id,status,type ORDER BY advertiser_id,status,type'
+            )->fetchAll();
+            $add('LEGACY ADVERTISER TRANSACTIONS BY ADVERTISER / STATUS / TYPE');
+            foreach ($groups as $group) {
+                $add(sprintf('  advertiser_id=%s | status=%s | type=%s | transactions=%d | signed_total=%s',
+                    (string) $group['advertiser_id'],
+                    (string) ($group['status'] ?? 'NULL'),
+                    (string) ($group['type'] ?? 'UNKNOWN'),
+                    (int) $group['transaction_count'],
+                    (string) $group['amount_total']));
+            }
+        }
+    }
+
+    if (in_array($tableName, ['wallet_transactions','withdrawals','campaigns','conversions','ad_campaigns'], true)) {
         $columns = $pdo->query('SHOW FULL COLUMNS FROM ' . $quoted)->fetchAll();
         $columnNames = array_column($columns, 'Field');
         $add(strtoupper($tableName) . ' TABLE COLUMNS');
