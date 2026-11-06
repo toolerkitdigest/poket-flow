@@ -74,6 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare(
                     'INSERT INTO pf_account_modes (user_id,can_work,can_advertise) VALUES (?,1,1)'
                 )->execute([$userId]);
+                $pdo->prepare("INSERT INTO pf_wallets (user_id,wallet_type,currency) VALUES (?,'WORKER','USD'),(?,'ADVERTISER','USD')")
+                    ->execute([$userId,$userId]);
                 $pdo->prepare(
                     'INSERT INTO pf_email_verifications (user_id,token_hash,expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))'
                 )->execute([$userId,hash('sha256',$token)]);
