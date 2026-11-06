@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
         $error = 'Enter a valid email address and password.';
     } else {
-        $stmt = $pdo->prepare('SELECT id, password_hash, status FROM users WHERE email = ? LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, password_hash, status FROM users WHERE LOWER(email) = ? LIMIT 1');
         $stmt->execute([$email]);
         $record = $stmt->fetch();
 
@@ -57,6 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <input id="password" name="password" type="password" autocomplete="current-password" required>
 <button class="button primary" type="submit">Sign in</button>
 </form>
+<p class="muted small"><a href="forgot-password.php">Forgot your password?</a></p>
+<p class="muted small">New to PoketFlow? <a href="register.php">Create an account</a>.</p>
 <p class="muted small">Your existing PoketFlow account and password are used. No new account is created.</p>
 </main>
 </body>
