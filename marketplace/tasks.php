@@ -56,7 +56,7 @@ $stmt = $pdo->query("SELECT c.id,c.title,c.summary,c.description,c.instructions,
 $campaigns = $stmt->fetchAll();
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Available tasks | PoketFlow</title><link rel="stylesheet" href="assets/marketplace.css"></head><body>
-<header class="topbar"><a class="brand" href="index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="dashboard.php">Dashboard</a><a href="campaigns.php">Advertise</a><a href="wallet.php">Wallets</a><a href="logout.php">Sign out</a></nav></header>
+<header class="topbar"><a class="brand" href="index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="dashboard.php">Dashboard</a><a href="campaigns.php">Advertise</a><a href="wallet.php">Wallets</a><a href="blog-campaigns.php">Blog ads</a><a href="logout.php">Sign out</a></nav></header>
 <main class="container"><section class="welcome"><p class="eyebrow">EARN MODE</p><h1>Available tasks</h1><p class="muted">Complete advertiser-created tasks and submit your evidence. Rewards are credited only after approval.</p></section>
 <?php if($message): ?><div class="panel" style="margin-bottom:18px"><?=pf_e($message)?></div><?php endif; ?><?php if($error): ?><div class="alert" style="margin-bottom:18px"><?=pf_e($error)?></div><?php endif; ?>
 <?php if(!$campaigns): ?><div class="panel"><h2>No active tasks right now</h2><p class="muted">Please check again later.</p></div><?php endif; ?>
