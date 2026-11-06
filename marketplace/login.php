@@ -16,20 +16,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
         $error = 'Enter a valid email address and password.';
     } else {
-        $stmt = $pdo->prepare('SELECT id, password_hash, status FROM users WHERE LOWER(email) = ? LIMIT 1');
-        $stmt->execute([$email]);
-        $record = $stmt->fetch();
+        try {
+            if (!pf_auth_rate_allowed($pdo, 'LOGIN', $email, 10, 15)) {
+                $error = 'Too many sign-in attempts. Please wait 15 minutes before trying again.';
+            } else {
+                $stmt = $pdo->prepare('SELECT id, password_hash, status FROM users WHERE LOWER(email) = ? LIMIT 1');
+                $stmt->execute([$email]);
+                $record = $stmt->fetch();
 
-        if (!$record || !password_verify($password, (string) $record['password_hash'])) {
-            $error = 'Email address or password is incorrect.';
-        } elseif (strtoupper((string) $record['status']) !== 'ACTIVE') {
-            $error = 'This account is not currently active. Please contact support.';
-        } else {
-            session_regenerate_id(true);
-            $_SESSION['pf_user_id'] = (int) $record['id'];
-            $_SESSION['pf_csrf'] = bin2hex(random_bytes(32));
-            header('Location: dashboard.php');
-            exit;
+                if (!$record || !password_verify($password, (string) $record['password_hash'])) {
+                    $error = 'Email address or password is incorrect.';
+                } elseif (strtoupper((string) $record['status']) !== 'ACTIVE') {
+                    $error = 'This account is not currently active. Please contact support.';
+                } else {
+                    session_regenerate_id(true);
+                    $_SESSION['pf_user_id'] = (int) $record['id'];
+                    $_SESSION['pf_csrf'] = bin2hex(random_bytes(32));
+                    header('Location: dashboard.php');
+                    exit;
+                }
+            }
+        } catch (Throwable $exception) {
+            error_log('PoketFlow sign-in security check failed: ' . $exception->getMessage());
+            $error = 'Sign-in is temporarily unavailable. Please try again later.';
         }
     }
 }
