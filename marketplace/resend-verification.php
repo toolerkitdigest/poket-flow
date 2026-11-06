@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         "Hello {$user['name']},\n\nUse this link within 24 hours to verify your PoketFlow email address:\n{$link}\n\nPoketFlow Support");
                 }
             }
-            $notice = 'If that address belongs to an account awaiting verification, a fresh verification link has been sent.';
+            $notice = 'If that address belongs to an account awaiting verification, a fresh verification request has been processed.';
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) $pdo->rollBack();
             error_log('PoketFlow verification resend failed: ' . $exception->getMessage());
