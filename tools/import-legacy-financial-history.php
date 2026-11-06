@@ -52,6 +52,7 @@ $pdo = new PDO(
 $requiredTables = [
     'users', 'wallet_transactions', 'withdrawals', 'campaigns', 'conversions',
     'pf_wallets', 'pf_wallet_ledger', 'pf_withdrawals', 'pf_legacy_history',
+    'pf_legacy_advertiser_accounts', 'pf_legacy_advertiser_history',
 ];
 foreach ($requiredTables as $table) {
     $check = $pdo->query('SHOW TABLES LIKE ' . $pdo->quote($table));
@@ -88,13 +89,67 @@ foreach (['legacy_withdrawal_id','method_network','hold_ledger_entry_id','destin
     }
 }
 
-$unsupportedCounts = [];
-foreach (['advertisers','advertiser_transactions','ad_campaigns'] as $table) {
+// Advertiser financial preservation is intentionally strict: map legacy
+// advertisers.id -> advertisers.user_id -> users.id, never assume the IDs match.
+$advertiserRequired = ['id','user_id','company_name','website','description','contact_email','status','balance','created_at','updated_at'];
+$advertiserTransactionRequired = ['id','advertiser_id','campaign_id','type','amount','reference','status','description','created_at'];
+$adCampaignRequired = ['id','advertiser_id','name','creative_type','creative_url','destination_url','placement','budget','spent','status','approval_status','start_at','end_at','created_at','updated_at'];
+foreach ([
+    'advertisers' => $advertiserRequired,
+    'advertiser_transactions' => $advertiserTransactionRequired,
+    'ad_campaigns' => $adCampaignRequired,
+] as $table => $required) {
     $check = $pdo->query('SHOW TABLES LIKE ' . $pdo->quote($table));
-    if ($check->fetchColumn()) {
-        $unsupportedCounts[$table] = (int) $pdo->query('SELECT COUNT(*) FROM `' . $table . '`')->fetchColumn();
+    if (!$check->fetchColumn()) {
+        fwrite(STDERR, "Required legacy advertiser table is missing: {$table}. No data changed.\\n");
+        exit(1);
+    }
+    $available = $legacyColumns($pdo, $table);
+    foreach ($required as $column) {
+        if (!in_array($column, $available, true)) {
+            fwrite(STDERR, "Legacy {$table} schema mismatch: missing {$column}. No data changed.\\n");
+            exit(1);
+        }
     }
 }
+$advertiserRows = $pdo->query(
+    'SELECT id,user_id,company_name,website,description,contact_email,status,balance,created_at,updated_at
+     FROM advertisers ORDER BY id'
+)->fetchAll();
+$advertiserUserMap = [];
+foreach ($advertiserRows as $advertiser) {
+    $legacyAdvertiserId = (int) $advertiser['id'];
+    $userId = (int) $advertiser['user_id'];
+    if ($legacyAdvertiserId < 1 || $userId < 1 || isset($advertiserUserMap[$legacyAdvertiserId])) {
+        fwrite(STDERR, "Invalid or duplicate legacy advertiser mapping. No data changed.\\n");
+        exit(1);
+    }
+    $advertiserUserMap[$legacyAdvertiserId] = $userId;
+}
+$mappingCheck = $pdo->prepare('SELECT COUNT(*) FROM users WHERE id=?');
+foreach ($advertiserUserMap as $legacyAdvertiserId => $userId) {
+    $mappingCheck->execute([$userId]);
+    if ((int) $mappingCheck->fetchColumn() !== 1) {
+        fwrite(STDERR, "Legacy advertiser {$legacyAdvertiserId} maps to a missing user ID {$userId}. No data changed.\\n");
+        exit(1);
+    }
+}
+$advertiserTransactionCount = (int) $pdo->query('SELECT COUNT(*) FROM advertiser_transactions')->fetchColumn();
+$adCampaignCount = (int) $pdo->query('SELECT COUNT(*) FROM ad_campaigns')->fetchColumn();
+$orphanAdvertiserTransactions = (int) $pdo->query(
+    'SELECT COUNT(*) FROM advertiser_transactions t LEFT JOIN advertisers a ON a.id=t.advertiser_id WHERE a.id IS NULL'
+)->fetchColumn();
+$orphanAdCampaigns = (int) $pdo->query(
+    'SELECT COUNT(*) FROM ad_campaigns c LEFT JOIN advertisers a ON a.id=c.advertiser_id WHERE a.id IS NULL'
+)->fetchColumn();
+if ($orphanAdvertiserTransactions > 0 || $orphanAdCampaigns > 0) {
+    fwrite(STDERR, "Legacy advertiser history contains orphaned advertiser references. Manual reconciliation is required.\\n");
+    exit(1);
+}
+$advertiserBalanceSummary = $pdo->query(
+    "SELECT status,COUNT(*) AS accounts,COALESCE(SUM(balance),0) AS current_balance
+     FROM advertisers GROUP BY status ORDER BY status"
+)->fetchAll();
 $campaignCount = (int) $pdo->query('SELECT COUNT(*) FROM campaigns')->fetchColumn();
 $conversionCount = (int) $pdo->query('SELECT COUNT(*) FROM conversions')->fetchColumn();
 $walletSummary = $pdo->query(
