@@ -357,6 +357,53 @@ try {
         $archivedConversions++;
     }
 
+    // Reconcile imported history against the legacy source before commit.
+    $expectedWalletRows = (int)$pdo->query("SELECT COUNT(*) FROM wallet_transactions WHERE status='COMPLETED' OR (status='PENDING' AND type='WITHDRAWAL')")->fetchColumn();
+    $actualWalletRows = (int)$pdo->query("SELECT COUNT(*) FROM pf_wallet_ledger WHERE reference_type='LEGACY_WALLET_TXN' AND idempotency_key LIKE 'legacy-wallet-txn-%'")->fetchColumn();
+    if ($expectedWalletRows !== $actualWalletRows) {
+        throw new RuntimeException("Legacy wallet transaction count mismatch: source={$expectedWalletRows}, imported={$actualWalletRows}");
+    }
+    $expectedBalances = $pdo->query(
+        "SELECT user_id,currency,COALESCE(SUM(amount),0) AS total
+         FROM wallet_transactions
+         WHERE status='COMPLETED' OR (status='PENDING' AND type='WITHDRAWAL')
+         GROUP BY user_id,currency ORDER BY user_id,currency"
+    )->fetchAll();
+    $actualBalances = $pdo->query(
+        "SELECT user_id,currency,COALESCE(SUM(amount),0) AS total
+         FROM pf_wallet_ledger
+         WHERE reference_type='LEGACY_WALLET_TXN' AND idempotency_key LIKE 'legacy-wallet-txn-%'
+         GROUP BY user_id,currency ORDER BY user_id,currency"
+    )->fetchAll();
+    $balanceKey = static fn(array $row): string => (int)$row['user_id'] . ':' . strtoupper((string)$row['currency']);
+    $actualByKey = [];
+    foreach ($actualBalances as $row) $actualByKey[$balanceKey($row)] = (float)$row['total'];
+    foreach ($expectedBalances as $row) {
+        $keyName = $balanceKey($row);
+        if (!array_key_exists($keyName,$actualByKey)
+            || abs((float)$row['total']-$actualByKey[$keyName])>0.00001) {
+            throw new RuntimeException('Legacy wallet balance reconciliation failed for account/currency ' . $keyName);
+        }
+        unset($actualByKey[$keyName]);
+    }
+    if ($actualByKey) {
+        throw new RuntimeException('Unexpected extra legacy wallet import groups were found.');
+    }
+
+    $expectedWithdrawalRows = (int)$pdo->query('SELECT COUNT(*) FROM withdrawals')->fetchColumn();
+    $actualWithdrawalRows = (int)$pdo->query('SELECT COUNT(*) FROM pf_withdrawals WHERE legacy_withdrawal_id IS NOT NULL')->fetchColumn();
+    if ($expectedWithdrawalRows !== $actualWithdrawalRows) {
+        throw new RuntimeException("Legacy withdrawal count mismatch: source={$expectedWithdrawalRows}, imported={$actualWithdrawalRows}");
+    }
+    foreach (['campaigns','conversions'] as $sourceTable) {
+        $sourceCount = (int)$pdo->query('SELECT COUNT(*) FROM ' . $sourceTable)->fetchColumn();
+        $archiveCount = $pdo->prepare('SELECT COUNT(*) FROM pf_legacy_history WHERE source_table=?');
+        $archiveCount->execute([$sourceTable]);
+        if ($sourceCount !== (int)$archiveCount->fetchColumn()) {
+            throw new RuntimeException('Legacy archive count mismatch for ' . $sourceTable);
+        }
+    }
+
     $pdo->commit();
     echo "Import complete. Wallet transactions added: {$importedTransactions}; withdrawal history rows added: {$importedWithdrawals}; campaign archives added: {$archivedCampaigns}; conversion archives added: {$archivedConversions}.\n";
     echo "Legacy source tables and user rows were not modified. Verify per-user balances and history before enabling member access.\n";
