@@ -121,8 +121,8 @@ jobs:
           PF_TEST_HMAC_SECRET: POKETFLOW_TEST_SECRET_64_CHARACTERS_LONG_000000000000000000000000000000000000000000000000
         run: |
           set -euo pipefail
-          mkdir -p /home/poketflo/private
-          cat > /home/poketflo/private/poketflow-main-database.php <<'PHP'
+          sudo mkdir -p /home/poketflo/private
+          sudo tee /home/poketflo/private/poketflow-main-database.php > /dev/null <<'PHP'
           <?php
           return [
               'host' => '127.0.0.1',
@@ -133,6 +133,7 @@ jobs:
               'blog_integration_secret' => 'POKETFLOW_TEST_SECRET_64_CHARACTERS_LONG_000000000000000000000000000000000000000000000000',
           ];
           PHP
+          sudo chmod 644 /home/poketflo/private/poketflow-main-database.php
           php -S 127.0.0.1:8082 -t marketplace > /tmp/poketflow-main-http.log 2>&1 &
           echo $! > /tmp/poketflow-main-http.pid
           for attempt in $(seq 1 30); do
