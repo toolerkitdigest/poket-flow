@@ -26,6 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($from !== $expected) {
                 throw new RuntimeException('The member status has changed or is not eligible for this action.');
             }
+            $blogCampaignIds = [];
+            if ($action === 'suspend') {
+                $blogQuery = $pdo->prepare("SELECT bc.campaign_id FROM pf_blog_campaigns bc JOIN pf_campaigns c ON c.id=bc.campaign_id WHERE c.advertiser_id=? AND c.campaign_type='BLOG_SPONSORED' AND c.status='ACTIVE' AND bc.status='ACTIVE'");
+                $blogQuery->execute([$targetId]);
+                $blogCampaignIds = array_map('intval',$blogQuery->fetchAll(PDO::FETCH_COLUMN));
+            }
             $update = $pdo->prepare('UPDATE users SET status=? WHERE id=? AND status=?');
             $update->execute([$to,$targetId,$from]);
             if ($update->rowCount() !== 1) {
@@ -36,6 +42,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pause = $pdo->prepare("UPDATE pf_campaigns SET status='PAUSED' WHERE advertiser_id=? AND status='ACTIVE'");
                 $pause->execute([$targetId]);
                 $pausedCampaigns = $pause->rowCount();
+                if ($blogCampaignIds) {
+                    $placeholders = implode(',',array_fill(0,count($blogCampaignIds),'?'));
+                    $pauseBlog = $pdo->prepare("UPDATE pf_blog_campaigns SET status='PAUSED',sync_status='PENDING' WHERE campaign_id IN ({$placeholders})");
+                    $pauseBlog->execute($blogCampaignIds);
+                }
             }
             $audit = $pdo->prepare(
                 'INSERT INTO pf_audit_log (actor_user_id,action,subject_type,subject_id,before_json,after_json,ip_address)
@@ -53,6 +64,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ipBinary,
             ]);
             $pdo->commit();
+            if ($action === 'suspend') {
+                foreach ($blogCampaignIds as $blogCampaignId) {
+                    $sync = pf_sync_blog_campaign($pdo,$blogCampaignId,'upsert');
+                    if ($sync['ok']) {
+                        $pdo->prepare("UPDATE pf_blog_campaigns SET sync_status='SYNCED',last_sync_error=NULL WHERE campaign_id=?")->execute([$blogCampaignId]);
+                    } else {
+                        $pdo->prepare("UPDATE pf_blog_campaigns SET sync_status='FAILED',last_sync_error=? WHERE campaign_id=?")->execute([$sync['error'],$blogCampaignId]);
+                        pf_sync_blog_campaign($pdo,$blogCampaignId,'revoke');
+                    }
+                }
+            }
             $notice = $action === 'suspend' ? 'Member access has been suspended.' : 'Member access has been restored.';
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) $pdo->rollBack();
