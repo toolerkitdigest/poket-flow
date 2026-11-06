@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             if (pf_auth_rate_allowed($pdo, 'VERIFY_RESEND', $email, 3, 60)) {
-                $stmt = $pdo->prepare("SELECT id,name,email FROM users WHERE email=? AND status='PENDING' AND email_verified=0 LIMIT 1");
+                $stmt = $pdo->prepare("SELECT id,name,email FROM users WHERE LOWER(email)=? AND status='PENDING' AND email_verified=0 LIMIT 1");
                 $stmt->execute([$email]);
                 $user = $stmt->fetch();
                 if ($user) {
