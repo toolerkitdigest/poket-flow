@@ -23,8 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($action === 'start_review') {
                 if ($dispute['status'] !== 'OPEN') throw new RuntimeException('Only a newly opened appeal can be moved into review.');
-                $pdo->prepare("UPDATE pf_submission_disputes SET status='UNDER_REVIEW',admin_note=? WHERE id=? AND status='OPEN'")
-                    ->execute([$note ?: null,$disputeId]);
+                $reviewUpdate = $pdo->prepare("UPDATE pf_submission_disputes SET status='UNDER_REVIEW',admin_note=? WHERE id=? AND status='OPEN'");
+                $reviewUpdate->execute([$note ?: null,$disputeId]);
+                if ($reviewUpdate->rowCount() !== 1) throw new RuntimeException('Appeal status changed. Refresh and try again.');
                 $notice = 'Appeal moved into administrator review.';
             } else {
                 if (!in_array($dispute['status'], ['OPEN','UNDER_REVIEW'], true)) {
@@ -76,16 +77,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $ledger->execute([$walletId,(int)$dispute['worker_id'],$reward,$submission['currency'],(int)$submission['id'],'worker-reward-submission-'.(int)$submission['id'],'Appeal resolved in worker favour',(int)$admin['id']]);
                     $ledgerId = (int)$pdo->lastInsertId();
 
-                    $pdo->prepare("UPDATE pf_submissions SET status='APPROVED',reviewed_by=?,reviewed_at=NOW(),review_note=?,reward_ledger_entry_id=? WHERE id=? AND status='DISPUTED'")
-                        ->execute([(int)$admin['id'],$note ?: 'Appeal resolved in worker favour.',$ledgerId,(int)$submission['id']]);
-                    $pdo->prepare("UPDATE pf_submission_disputes SET status='RESOLVED_WORKER',admin_note=?,resolved_by=?,resolved_at=NOW() WHERE id=?")
-                        ->execute([$note ?: null,(int)$admin['id'],$disputeId]);
+                    $submissionUpdate = $pdo->prepare("UPDATE pf_submissions SET status='APPROVED',reviewed_by=?,reviewed_at=NOW(),review_note=?,reward_ledger_entry_id=? WHERE id=? AND status='DISPUTED'");
+                    $submissionUpdate->execute([(int)$admin['id'],$note ?: 'Appeal resolved in worker favour.',$ledgerId,(int)$submission['id']]);
+                    if ($submissionUpdate->rowCount() !== 1) throw new RuntimeException('Submission status changed. Reward transaction was rolled back.');
+                    $disputeUpdate = $pdo->prepare("UPDATE pf_submission_disputes SET status='RESOLVED_WORKER',admin_note=?,resolved_by=?,resolved_at=NOW() WHERE id=? AND status IN ('OPEN','UNDER_REVIEW')");
+                    $disputeUpdate->execute([$note ?: null,(int)$admin['id'],$disputeId]);
+                    if ($disputeUpdate->rowCount() !== 1) throw new RuntimeException('Appeal status changed. Reward transaction was rolled back.');
                     $notice = 'Appeal resolved in the worker’s favour. The reserved reward has been credited.';
                 } else {
-                    $pdo->prepare("UPDATE pf_submissions SET status='REJECTED',reviewed_by=?,reviewed_at=NOW(),review_note=? WHERE id=? AND status='DISPUTED'")
-                        ->execute([(int)$admin['id'],$note ?: 'Appeal reviewed; advertiser decision upheld.',(int)$submission['id']]);
-                    $pdo->prepare("UPDATE pf_submission_disputes SET status='RESOLVED_ADVERTISER',admin_note=?,resolved_by=?,resolved_at=NOW() WHERE id=?")
-                        ->execute([$note ?: null,(int)$admin['id'],$disputeId]);
+                    $submissionUpdate = $pdo->prepare("UPDATE pf_submissions SET status='REJECTED',reviewed_by=?,reviewed_at=NOW(),review_note=? WHERE id=? AND status='DISPUTED'");
+                    $submissionUpdate->execute([(int)$admin['id'],$note ?: 'Appeal reviewed; advertiser decision upheld.',(int)$submission['id']]);
+                    if ($submissionUpdate->rowCount() !== 1) throw new RuntimeException('Submission status changed. No appeal decision was saved.');
+                    $disputeUpdate = $pdo->prepare("UPDATE pf_submission_disputes SET status='RESOLVED_ADVERTISER',admin_note=?,resolved_by=?,resolved_at=NOW() WHERE id=? AND status IN ('OPEN','UNDER_REVIEW')");
+                    $disputeUpdate->execute([$note ?: null,(int)$admin['id'],$disputeId]);
+                    if ($disputeUpdate->rowCount() !== 1) throw new RuntimeException('Appeal status changed. Transaction rolled back.');
                     $notice = 'Appeal resolved in the advertiser’s favour. No worker reward was issued.';
                 }
             }
