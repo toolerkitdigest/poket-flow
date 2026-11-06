@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $startDate = (string)($_POST['start_date'] ?? '');
     $endDate = (string)($_POST['end_date'] ?? '');
     $budget = filter_var($_POST['budget'] ?? null,FILTER_VALIDATE_FLOAT);
+    $policyAccepted = isset($_POST['policy_agree']);
     $parts = parse_url($url);
     $validDate = static fn(string $date): bool =>
         preg_match('/\A\d{4}-\d{2}-\d{2}\z/',$date) === 1 && date('Y-m-d',strtotime($date)) === $date;
@@ -31,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         || !filter_var($url,FILTER_VALIDATE_URL) || strtolower((string)($parts['scheme']??''))!=='https' || empty($parts['host'])
         || !isset($placements[$placement]) || !$validDate($startDate) || !$validDate($endDate)
         || $startDate < date('Y-m-d') || $endDate < $startDate
-        || $budget === false || $budget <= 0 || $budget > 1000000) {
+        || $budget === false || $budget <= 0 || $budget > 1000000 || !$policyAccepted) {
         $error = 'Check the title, summary, HTTPS destination, placement, dates and fixed campaign budget.';
     } else {
         $pdo->beginTransaction();
@@ -100,7 +101,8 @@ $campaigns = $list->fetchAll();
 <label>Start date</label><input type="date" name="start_date" min="<?=date('Y-m-d')?>" required>
 <label>End date</label><input type="date" name="end_date" min="<?=date('Y-m-d')?>" required>
 <label>Proposed fixed total budget (USD)</label><input type="number" name="budget" min="0.01" max="1000000" step="0.01" required>
-<p class="small muted">This first release supports text-only creatives and fixed-duration sponsorship requests. No impression/click billing is applied.</p>
+<p class="small muted">This first release supports text-only creatives and fixed-duration sponsorship requests. No impression/click billing is applied. Gambling, adult content, casinos and alcohol are prohibited. All creatives are reviewed before publication.</p>
+<label><input type="checkbox" name="policy_agree" required> I confirm this advertisement follows PoketFlow's advertising policy.</label>
 <button class="button primary" type="submit">Save sponsorship draft</button></form></section>
 <section class="panel" style="margin-top:24px"><h2>Your blog sponsorships</h2><?php if(!$campaigns):?><p class="muted">You have not created a blog sponsorship yet.</p><?php else:?><div class="table-wrap"><table><thead><tr><th>Campaign</th><th>Placement</th><th>Dates</th><th>Proposed budget</th><th>Status</th><th>Sync</th><th>Action</th></tr></thead><tbody><?php foreach($campaigns as $c):?><tr><td><?=pf_e($c['title'])?></td><td><?=pf_e($placements[$c['placement_key']]??$c['placement_key'])?></td><td><?=pf_e(substr((string)$c['starts_at'],0,10))?> – <?=pf_e(substr((string)$c['ends_at'],0,10))?></td><td><?=pf_e($c['currency'])?> <?=number_format((float)$c['requested_budget'],2)?></td><td><?=pf_e($c['status'])?></td><td><?=pf_e($c['sync_status'])?><?php if($c['last_sync_error']):?><br><span class="small muted"><?=pf_e($c['last_sync_error'])?></span><?php endif;?></td><td><?php if($c['status']==='DRAFT'):?><a href="fund-blog-campaign.php?id=<?=(int)$c['id']?>">Reserve & submit</a><?php else:?>—<?php endif;?></td></tr><?php endforeach;?></tbody></table></div><?php endif;?></section>
 </main></body></html>
