@@ -21,7 +21,7 @@ foreach ($argv as $arg) {
     }
 }
 
-$configFile = '/home/poketflo/private/poketflow-main-database.php';
+$configFile = getenv('POKETFLOW_CONFIG') ?: '/home/poketflo/private/poketflow-main-database.php';
 if (!is_file($configFile) || !is_readable($configFile)) {
     fwrite(STDERR, "Private database configuration is not installed.\n");
     exit(1);
