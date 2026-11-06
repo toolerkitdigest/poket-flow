@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($reservationBefore === false || abs((float)$reservationBefore-(float)$s['reserved_budget'])>0.01) {
                         throw new RuntimeException('Campaign reserve and reservation ledger do not match. No reward was issued.');
                     }
-                    $upd = $pdo->prepare("UPDATE pf_campaigns SET reserved_budget=reserved_budget-?,spent_budget=spent_budget+?,approved_quantity=approved_quantity+1,status=CASE WHEN approved_quantity+1>=total_quantity THEN 'COMPLETED' ELSE status END WHERE id=? AND reserved_budget>=? AND approved_quantity<total_quantity");
+                    $upd = $pdo->prepare("UPDATE pf_campaigns SET reserved_budget=reserved_budget-?,spent_budget=spent_budget+?,status=CASE WHEN approved_quantity+1>=total_quantity THEN 'COMPLETED' ELSE status END,approved_quantity=approved_quantity+1 WHERE id=? AND reserved_budget>=? AND approved_quantity<total_quantity");
                     $upd->execute([$reward,$reward,(int)$s['campaign_id'],$reward]);
                     if ($upd->rowCount() !== 1) {
                         throw new RuntimeException('Campaign budget or completion limit changed. Please refresh and try again.');
