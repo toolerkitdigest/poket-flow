@@ -111,6 +111,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
      $pdo->prepare("INSERT INTO pf_audit_log(actor_user_id,action,subject_type,subject_id,after_json) VALUES (?,?,?,?,?)")
        ->execute([(int)$admin['id'],'ADMIN_BLOG_SYNC_FAILED','BLOG_CAMPAIGN',$id,json_encode(['error'=>$syncResult['error']],JSON_THROW_ON_ERROR)]);
      $pdo->commit();
+     // Best-effort compensation in case the blog accepted the creative but
+     // the response was lost or timed out.
+     pf_sync_blog_campaign($pdo,(int)$id,'revoke');
      $error='Campaign approval was saved, but blog publication failed. The campaign is paused and can be retried from this screen.';
     }
    }
