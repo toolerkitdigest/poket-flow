@@ -101,13 +101,13 @@ foreach ([
 ] as $table => $required) {
     $check = $pdo->query('SHOW TABLES LIKE ' . $pdo->quote($table));
     if (!$check->fetchColumn()) {
-        fwrite(STDERR, "Required legacy advertiser table is missing: {$table}. No data changed.\\n");
+        fwrite(STDERR, "Required legacy advertiser table is missing: {$table}. No data changed.\n");
         exit(1);
     }
     $available = $legacyColumns($pdo, $table);
     foreach ($required as $column) {
         if (!in_array($column, $available, true)) {
-            fwrite(STDERR, "Legacy {$table} schema mismatch: missing {$column}. No data changed.\\n");
+            fwrite(STDERR, "Legacy {$table} schema mismatch: missing {$column}. No data changed.\n");
             exit(1);
         }
     }
@@ -121,16 +121,23 @@ foreach ($advertiserRows as $advertiser) {
     $legacyAdvertiserId = (int) $advertiser['id'];
     $userId = (int) $advertiser['user_id'];
     if ($legacyAdvertiserId < 1 || $userId < 1 || isset($advertiserUserMap[$legacyAdvertiserId])) {
-        fwrite(STDERR, "Invalid or duplicate legacy advertiser mapping. No data changed.\\n");
+        fwrite(STDERR, "Invalid or duplicate legacy advertiser mapping. No data changed.\n");
         exit(1);
     }
     $advertiserUserMap[$legacyAdvertiserId] = $userId;
+}
+$duplicateAdvertiserUsers = (int)$pdo->query(
+    'SELECT COUNT(*) FROM (SELECT user_id FROM advertisers GROUP BY user_id HAVING COUNT(*)>1) duplicates'
+)->fetchColumn();
+if ($duplicateAdvertiserUsers > 0) {
+    fwrite(STDERR, "Multiple legacy advertiser profiles map to the same member account. Manual reconciliation is required.\n");
+    exit(1);
 }
 $mappingCheck = $pdo->prepare('SELECT COUNT(*) FROM users WHERE id=?');
 foreach ($advertiserUserMap as $legacyAdvertiserId => $userId) {
     $mappingCheck->execute([$userId]);
     if ((int) $mappingCheck->fetchColumn() !== 1) {
-        fwrite(STDERR, "Legacy advertiser {$legacyAdvertiserId} maps to a missing user ID {$userId}. No data changed.\\n");
+        fwrite(STDERR, "Legacy advertiser {$legacyAdvertiserId} maps to a missing user ID {$userId}. No data changed.\n");
         exit(1);
     }
 }
@@ -143,7 +150,7 @@ $orphanAdCampaigns = (int) $pdo->query(
     'SELECT COUNT(*) FROM ad_campaigns c LEFT JOIN advertisers a ON a.id=c.advertiser_id WHERE a.id IS NULL'
 )->fetchColumn();
 if ($orphanAdvertiserTransactions > 0 || $orphanAdCampaigns > 0) {
-    fwrite(STDERR, "Legacy advertiser history contains orphaned advertiser references. Manual reconciliation is required.\\n");
+    fwrite(STDERR, "Legacy advertiser history contains orphaned advertiser references. Manual reconciliation is required.\n");
     exit(1);
 }
 $advertiserBalanceSummary = $pdo->query(
@@ -411,7 +418,7 @@ try {
         $walletId = (int)$advertiserWalletFind->fetchColumn();
         if (!$walletId) throw new RuntimeException('Advertiser wallet could not be created for legacy advertiser ID ' . $legacyId);
 
-        $amount = number_format((float)$row['balance'], 2, '.', '');
+        $amount = (string)$row['balance'];
         $keyName = $advertiserOpeningKey($legacyId);
         $ledgerFind->execute([$keyName]);
         $opening = $ledgerFind->fetch();
@@ -441,6 +448,9 @@ try {
         if ($existingAccount) {
             $matches = (int)$existingAccount['user_id'] === $userId
                 && (string)$existingAccount['company_name'] === (string)$row['company_name']
+                && (string)($existingAccount['website'] ?? '') === (string)($row['website'] ?? '')
+                && (string)($existingAccount['description'] ?? '') === (string)($row['description'] ?? '')
+                && (string)($existingAccount['contact_email'] ?? '') === (string)($row['contact_email'] ?? '')
                 && (string)$existingAccount['legacy_status'] === (string)$row['status']
                 && (string)$existingAccount['legacy_balance'] === $amount
                 && (int)$existingAccount['wallet_id'] === $walletId
