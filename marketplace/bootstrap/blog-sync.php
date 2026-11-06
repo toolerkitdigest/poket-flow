@@ -48,6 +48,7 @@ function pf_sync_blog_campaign(PDO $pdo, int $campaignId, string $action = 'upse
         $end = $row['ends_at'] ? date('Y-m-d',strtotime((string)$row['ends_at'])) : null;
         $payload += [
             'name'=>(string)($creative['name'] ?? $row['title']),
+            'summary'=>(string)($creative['summary'] ?? ''),
             'placement'=>(string)$row['placement_key'],
             'image'=>'',
             'url'=>$url,
