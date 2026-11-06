@@ -99,19 +99,20 @@ foreach (['advertisers','advertiser_transactions','ad_campaigns'] as $table) {
 }
 $walletSummary = $pdo->query(
     "SELECT user_id,currency,COUNT(*) AS transactions,COALESCE(SUM(amount),0) AS total
-     FROM wallet_transactions WHERE status='COMPLETED'
+     FROM wallet_transactions
+     WHERE status='COMPLETED' OR (status='PENDING' AND type='WITHDRAWAL')
      GROUP BY user_id,currency ORDER BY user_id,currency"
 )->fetchAll();
 $withdrawalSummary = $pdo->query(
     'SELECT status,COUNT(*) AS total FROM withdrawals GROUP BY status ORDER BY status'
 )->fetchAll();
-$walletCount = (int) $pdo->query("SELECT COUNT(*) FROM wallet_transactions WHERE status='COMPLETED'")->fetchColumn();
+$walletCount = (int) $pdo->query("SELECT COUNT(*) FROM wallet_transactions WHERE status='COMPLETED' OR (status='PENDING' AND type='WITHDRAWAL')")->fetchColumn();
 $withdrawalCount = (int) $pdo->query('SELECT COUNT(*) FROM withdrawals')->fetchColumn();
 
 echo "POKETFLOW LEGACY FINANCIAL IMPORT\n";
 echo "Database: " . $config['dbname'] . "\n";
 echo "Mode: " . ($apply ? 'APPLY REQUESTED' : 'READ-ONLY DRY RUN') . "\n";
-echo "Completed wallet transactions to preserve: {$walletCount}\n";
+echo "Wallet transactions to preserve (completed entries + pending withdrawal holds): {$walletCount}\n";
 foreach ($walletSummary as $row) {
     printf("  user_id=%d | currency=%s | transactions=%d | signed_total=%s\n",
         (int) $row['user_id'], (string) $row['currency'], (int) $row['transactions'], (string) $row['total']);
@@ -173,7 +174,9 @@ try {
 
     $legacyTransactions = $pdo->query(
         "SELECT id,user_id,type,reference_type,reference_id,amount,currency,description,created_at
-         FROM wallet_transactions WHERE status='COMPLETED' ORDER BY id FOR UPDATE"
+         FROM wallet_transactions
+          WHERE status='COMPLETED' OR (status='PENDING' AND type='WITHDRAWAL')
+          ORDER BY id FOR UPDATE"
     )->fetchAll();
 
     $importedTransactions = 0;
