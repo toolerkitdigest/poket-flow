@@ -13,7 +13,10 @@ CREATE TABLE users (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 INSERT INTO users (id,role,name,email,email_verified,password_hash,country,status,referral_code)
-VALUES (1,'WORKER','Test Member','test-member@example.invalid',0,'$2y$10$test-hash','Nigeria','ACTIVE','PFTEST0001');
+VALUES
+(1,'WORKER','Test Member','test-member@example.invalid',0,'$2y$10$test-hash','Nigeria','ACTIVE','PFTEST0001'),
+(2,'WORKER','Suspended Advertiser','suspended@example.invalid',1,'$2y$10$test-hash','Nigeria','ACTIVE','PFTEST0002'),
+(3,'WORKER','Rejected Advertiser','rejected@example.invalid',1,'$2y$10$test-hash','Nigeria','ACTIVE','PFTEST0003');
 
 CREATE TABLE settings (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -123,7 +126,10 @@ CREATE TABLE advertisers (
   UNIQUE KEY uq_advertiser_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 INSERT INTO advertisers (id,user_id,company_name,status,balance,website,description,contact_email,created_at)
-VALUES (1,1,'Test Advertiser','ACTIVE',25.75,'https://advertiser.example.invalid','Legacy advertiser profile','billing@example.invalid','2026-09-01 10:00:00');
+VALUES
+(1,1,'Test Advertiser','ACTIVE',25.75,'https://advertiser.example.invalid','Legacy advertiser profile','billing@example.invalid','2026-09-01 10:00:00'),
+(2,2,'Suspended Advertiser','SUSPENDED',0.00,NULL,'Suspended legacy advertiser','suspended@example.invalid','2026-09-02 10:00:00'),
+(3,3,'Rejected Advertiser','REJECTED',0.00,NULL,'Rejected legacy advertiser','rejected@example.invalid','2026-09-03 10:00:00');
 CREATE TABLE advertiser_transactions (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   advertiser_id BIGINT UNSIGNED NOT NULL,
