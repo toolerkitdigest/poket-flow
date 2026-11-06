@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/bootstrap/app.php';
 $admin=pf_require_login($pdo);
 if(strtoupper((string)$admin['role'])!=='ADMIN'){http_response_code(403);exit('Administrator access required.');}
-$error='';$notice='';
+$error='';$notice='';$syncBlogAfterCommit=false;
 if($_SERVER['REQUEST_METHOD']==='POST'){
  pf_verify_csrf();$action=(string)($_POST['action']??'');$id=filter_var($_POST['id']??null,FILTER_VALIDATE_INT);$decision=(string)($_POST['decision']??'');$note=trim((string)($_POST['note']??''));
  if(!$id){$error='Invalid record.';}
@@ -46,29 +46,74 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
    }elseif($action==='campaign'){
     $q=$pdo->prepare("SELECT * FROM pf_campaigns WHERE id=? FOR UPDATE");$q->execute([$id]);$r=$q->fetch();
     if(!$r||$r['status']!=='PENDING_REVIEW'||!in_array($decision,['approve','reject'],true))throw new RuntimeException('Campaign is no longer awaiting review.');
-    if($decision==='approve'){
-     $reservation=$pdo->prepare("SELECT id,amount FROM pf_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");
-     $reservation->execute([$id]);$reserved=$reservation->fetch();
-     if(!$reserved||(float)$reserved['amount']<=0||(float)$r['reserved_budget']+0.00001<(float)$reserved['amount']){throw new RuntimeException('This campaign has no valid reserved budget. It cannot be activated.');}
-     $pdo->prepare("UPDATE pf_campaigns SET status='ACTIVE',reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=?")->execute([$admin['id'],$note?:null,$id]);
-    }
-    else{
-     $pdo->prepare("UPDATE pf_campaigns SET status='REJECTED',reserved_budget=0,reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=?")->execute([$admin['id'],$note?:null,$id]);
-     $res=$pdo->prepare("SELECT id,amount,advertiser_id,currency,ledger_entry_id FROM pf_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");$res->execute([$id]);$reservation=$res->fetch();
-     if(!$reservation||(float)$reservation['amount']<=0||abs((float)$reservation['amount']-(float)$r['reserved_budget'])>0.01){
-      throw new RuntimeException('The campaign reservation does not match its remaining budget. Rejection was rolled back for manual reconciliation.');
+    if($r['campaign_type']==='BLOG_SPONSORED'){
+     $blog=$pdo->prepare("SELECT * FROM pf_blog_campaigns WHERE campaign_id=? FOR UPDATE");$blog->execute([$id]);$blogRow=$blog->fetch();
+     if(!$blogRow)throw new RuntimeException('Blog sponsorship creative is missing.');
+     if($decision==='approve'){
+      $reservation=$pdo->prepare("SELECT id,amount FROM pf_blog_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");
+      $reservation->execute([$id]);$reserved=$reservation->fetch();
+      if(!$reserved||(float)$reserved['amount']<=0||abs((float)$reserved['amount']-(float)$r['reserved_budget'])>0.01)throw new RuntimeException('Blog sponsorship budget reservation does not match. It cannot be activated.');
+      $pdo->prepare("UPDATE pf_campaigns SET status='ACTIVE',reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=?")->execute([$admin['id'],$note?:null,$id]);
+      $pdo->prepare("UPDATE pf_blog_campaigns SET status='ACTIVE',sync_status='PENDING',last_sync_error=NULL WHERE campaign_id=?")->execute([$id]);
+      $syncBlogAfterCommit=true;
+     }else{
+      $reservation=$pdo->prepare("SELECT id,amount,advertiser_id,currency FROM pf_blog_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");
+      $reservation->execute([$id]);$reserved=$reservation->fetch();
+      if(!$reserved||(float)$reserved['amount']<=0||abs((float)$reserved['amount']-(float)$r['reserved_budget'])>0.01)throw new RuntimeException('Blog sponsorship reservation does not match. Rejection was rolled back for reconciliation.');
+      $pdo->prepare("UPDATE pf_campaigns SET status='REJECTED',reserved_budget=0,reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=?")->execute([$admin['id'],$note?:null,$id]);
+      $wallet=$pdo->prepare("SELECT id FROM pf_wallets WHERE user_id=? AND wallet_type='ADVERTISER' AND currency=? FOR UPDATE");$wallet->execute([(int)$reserved['advertiser_id'],$reserved['currency']]);$wid=(int)$wallet->fetchColumn();
+      if(!$wid)throw new RuntimeException('Advertiser wallet missing; blog budget cannot be released.');
+      $pdo->prepare("INSERT INTO pf_wallet_ledger(wallet_id,user_id,entry_type,amount,currency,reference_type,reference_id,idempotency_key,description,created_by) VALUES (?,?,'CAMPAIGN_RELEASE',?,?,'BLOG_CAMPAIGN',?,?,?,?)")->execute([$wid,(int)$reserved['advertiser_id'],$reserved['amount'],$reserved['currency'],$id,'blog-campaign-release-'.$id,'Released rejected blog sponsorship budget',$admin['id']]);
+      $pdo->prepare("UPDATE pf_blog_campaign_reservations SET status='RELEASED' WHERE id=? AND status='RESERVED'")->execute([(int)$reserved['id']]);
+      $pdo->prepare("UPDATE pf_blog_campaigns SET status='REVOKED',sync_status='PENDING' WHERE campaign_id=?")->execute([$id]);
      }
-     $wallet=$pdo->prepare("SELECT id FROM pf_wallets WHERE user_id=? AND wallet_type='ADVERTISER' AND currency=? FOR UPDATE");$wallet->execute([(int)$reservation['advertiser_id'],$reservation['currency']]);$wid=(int)$wallet->fetchColumn();
-     if(!$wid)throw new RuntimeException('Advertiser wallet missing; budget cannot be safely released.');
-     $pdo->prepare("INSERT INTO pf_wallet_ledger(wallet_id,user_id,entry_type,amount,currency,reference_type,reference_id,idempotency_key,description,created_by) VALUES (?,?,'CAMPAIGN_RELEASE',?,?,'CAMPAIGN',?,?,?,?)")->execute([$wid,(int)$reservation['advertiser_id'],$reservation['amount'],$reservation['currency'],$id,'campaign-release-'.$id,'Released budget for rejected campaign',$admin['id']]);
-     $pdo->prepare("UPDATE pf_campaign_reservations SET status='RELEASED' WHERE id=? AND status='RESERVED'")->execute([(int)$reservation['id']]);
+    }else{
+     if($decision==='approve'){
+      $reservation=$pdo->prepare("SELECT id,amount FROM pf_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");
+      $reservation->execute([$id]);$reserved=$reservation->fetch();
+      if(!$reserved||(float)$reserved['amount']<=0||(float)$r['reserved_budget']+0.00001<(float)$reserved['amount'])throw new RuntimeException('This campaign has no valid reserved budget. It cannot be activated.');
+      $pdo->prepare("UPDATE pf_campaigns SET status='ACTIVE',reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=?")->execute([$admin['id'],$note?:null,$id]);
+     }else{
+      $pdo->prepare("UPDATE pf_campaigns SET status='REJECTED',reserved_budget=0,reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=?")->execute([$admin['id'],$note?:null,$id]);
+      $res=$pdo->prepare("SELECT id,amount,advertiser_id,currency FROM pf_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");$res->execute([$id]);$reserved=$res->fetch();
+      if(!$reserved||(float)$reserved['amount']<=0||abs((float)$reserved['amount']-(float)$r['reserved_budget'])>0.01)throw new RuntimeException('The campaign reservation does not match its remaining budget. Rejection was rolled back for manual reconciliation.');
+      $wallet=$pdo->prepare("SELECT id FROM pf_wallets WHERE user_id=? AND wallet_type='ADVERTISER' AND currency=? FOR UPDATE");$wallet->execute([(int)$reserved['advertiser_id'],$reserved['currency']]);$wid=(int)$wallet->fetchColumn();
+      if(!$wid)throw new RuntimeException('Advertiser wallet missing; budget cannot be safely released.');
+      $pdo->prepare("INSERT INTO pf_wallet_ledger(wallet_id,user_id,entry_type,amount,currency,reference_type,reference_id,idempotency_key,description,created_by) VALUES (?,?,'CAMPAIGN_RELEASE',?,?,'CAMPAIGN',?,?,?,?)")->execute([$wid,(int)$reserved['advertiser_id'],$reserved['amount'],$reserved['currency'],$id,'campaign-release-'.$id,'Released budget for rejected campaign',$admin['id']]);
+      $pdo->prepare("UPDATE pf_campaign_reservations SET status='RELEASED' WHERE id=? AND status='RESERVED'")->execute([(int)$reserved['id']]);
+     }
     }
-   }else{throw new RuntimeException('Unknown admin action.');}
+   }elseif($action==='blog_sync_retry'){
+    $q=$pdo->prepare("SELECT c.id,c.status,bc.status AS blog_status,bc.sync_status FROM pf_campaigns c JOIN pf_blog_campaigns bc ON bc.campaign_id=c.id WHERE c.id=? AND c.campaign_type='BLOG_SPONSORED' FOR UPDATE");
+    $q->execute([$id]);$r=$q->fetch();
+    if(!$r||$r['status']!=='PAUSED'||$r['sync_status']!=='FAILED')throw new RuntimeException('This blog campaign is not awaiting a sync retry.');
+    $reservation=$pdo->prepare("SELECT amount FROM pf_blog_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");
+    $reservation->execute([$id]);$remaining=$reservation->fetchColumn();
+    if($remaining===false||(float)$remaining<=0)throw new RuntimeException('This blog campaign has no remaining reserved budget.');
+    $pdo->prepare("UPDATE pf_campaigns SET status='ACTIVE' WHERE id=? AND status='PAUSED'")->execute([$id]);
+    $pdo->prepare("UPDATE pf_blog_campaigns SET status='ACTIVE',sync_status='PENDING',last_sync_error=NULL WHERE campaign_id=?")->execute([$id]);
+    $syncBlogAfterCommit=true;   }else{throw new RuntimeException('Unknown admin action.');}
    $remoteIp=(string)($_SERVER['REMOTE_ADDR']??'');
    $ipBinary=filter_var($remoteIp,FILTER_VALIDATE_IP)?inet_pton($remoteIp):null;
    $audit=$pdo->prepare('INSERT INTO pf_audit_log(actor_user_id,action,subject_type,subject_id,after_json,ip_address) VALUES (?,?,?,?,?,?)');
    $audit->execute([(int)$admin['id'],'ADMIN_'.strtoupper($action),strtoupper($action),$id,json_encode(['decision'=>$decision,'note'=>$note],JSON_THROW_ON_ERROR),$ipBinary]);
-   $pdo->commit();$notice='The requested finance or campaign action has been recorded.';
+   $pdo->commit();
+   $notice='The requested finance or campaign action has been recorded.';
+   if($syncBlogAfterCommit){
+    $syncResult=pf_sync_blog_campaign($pdo,(int)$id,'upsert');
+    if($syncResult['ok']){
+     $pdo->prepare("UPDATE pf_blog_campaigns SET sync_status='SYNCED',last_sync_error=NULL WHERE campaign_id=?")->execute([$id]);
+     $notice='Blog sponsorship approved and creative successfully synced to blog.poketflow.com.';
+    }else{
+     $pdo->beginTransaction();
+     $pdo->prepare("UPDATE pf_campaigns SET status='PAUSED' WHERE id=? AND campaign_type='BLOG_SPONSORED'")->execute([$id]);
+     $pdo->prepare("UPDATE pf_blog_campaigns SET status='PAUSED',sync_status='FAILED',last_sync_error=? WHERE campaign_id=?")->execute([$syncResult['error'],$id]);
+     $pdo->prepare("INSERT INTO pf_audit_log(actor_user_id,action,subject_type,subject_id,after_json) VALUES (?,?,?,?,?)")
+       ->execute([(int)$admin['id'],'ADMIN_BLOG_SYNC_FAILED','BLOG_CAMPAIGN',$id,json_encode(['error'=>$syncResult['error']],JSON_THROW_ON_ERROR)]);
+     $pdo->commit();
+     $error='Campaign approval was saved, but blog publication failed. The campaign is paused and can be retried from this screen.';
+    }
+   }
   }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();$error=$e instanceof RuntimeException?$e->getMessage():'The action failed and was rolled back.';}
  }
 }
