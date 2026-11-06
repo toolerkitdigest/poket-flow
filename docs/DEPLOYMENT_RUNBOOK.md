@@ -29,7 +29,7 @@ The private configuration remains at `/home/poketflo/private/poketflow-main-data
 1. Obtain fresh private backups of both `poketflo_db` and `poketflo_blog`. Verify the backup files are non-empty and record their checksums.
 2. Run `tools/audit-legacy-database.php` in CLI read-only mode and retain its private report. It must establish exact account IDs, statuses, password hash formats, wallet transaction totals by account/currency/status, and legacy table structures.
 3. Reconcile legacy worker balances, advertiser balances, withdrawals, and transaction histories. Do not assume the new `pf_wallets` start at zero is safe for existing members.
-4. Restore both backups into disposable databases. Apply the additive migrations to the disposable main database only. Apply the blog integration migration to the disposable blog database only.
+4. Restore both backups into disposable databases. Apply the additive main migrations in order (001, 002, then 003) to the disposable main database only. Apply the blog integration migration to the disposable blog database only. Run `php tools/import-legacy-financial-history.php` as a read-only dry run, then run it with `--apply` only on the disposable clone after checking its report.
 5. Run login tests against existing accounts using their original passwords. Do not change password hashes or force resets.
 6. Test funding approval, campaign reservation, worker submission, approval/reward credit, duplicate review, campaign rejection/refund, withdrawal hold, withdrawal paid, withdrawal rejection/release, and ledger reconciliation.
 7. Test the signed blog sync and event endpoints, including invalid signatures, expired timestamps, replayed nonces, duplicate event keys and inactive campaigns.
