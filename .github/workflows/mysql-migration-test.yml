@@ -49,7 +49,8 @@ jobs:
             database/migrations/20261106_002_financial_workflows.sql \
             database/migrations/20261106_003_legacy_financial_preservation.sql \
             database/migrations/20261106_004_authentication_workflows.sql \
-            database/migrations/20261106_005_blog_sponsorship_workflow.sql; do
+            database/migrations/20261106_005_blog_sponsorship_workflow.sql \
+            database/migrations/20261106_006_submission_disputes.sql; do
             echo "Applying marketplace migration $migration"
             mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < "$migration"
           done
