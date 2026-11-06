@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $reservation->execute([$campaignId]);
                 $remaining = $reservation->fetchColumn();
                 if ($remaining===false || (float)$remaining<=0
-                    || (float)$campaign['reserved_budget']+0.00001<(float)$remaining) {
+                    || abs((float)$campaign['reserved_budget']-(float)$remaining)>0.01) {
                     throw new RuntimeException('This sponsorship has no remaining reserved budget.');
                 }
                 $pdo->prepare("UPDATE pf_campaigns SET status='ACTIVE' WHERE id=? AND status='PAUSED'")->execute([$campaignId]);
