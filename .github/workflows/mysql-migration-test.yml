@@ -105,6 +105,10 @@ jobs:
           test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_advertiser_history WHERE source_table='ad_campaigns' AND legacy_advertiser_id=1 AND owner_user_id=1")" = "1"
           test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_history WHERE source_table='campaigns' AND JSON_CONTAINS_PATH(snapshot_json,'one','$.network_offer_url')=1")" = "0"
           test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_blog_campaigns WHERE sync_status='PENDING'")" = "0"
+      - name: Verify legacy advertiser access restrictions
+        env:
+          POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
+        run: php tests/legacy-advertiser-access-test.php
       - name: Verify legacy member identity and password hash are preserved
         run: |
           php <<'PHP'
