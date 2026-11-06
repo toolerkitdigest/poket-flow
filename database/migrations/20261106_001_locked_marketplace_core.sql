@@ -12,6 +12,10 @@ CREATE TABLE IF NOT EXISTS pf_account_modes (
   PRIMARY KEY (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Existing members keep their IDs and become eligible for both platform modes.
+INSERT IGNORE INTO pf_account_modes (user_id,can_work,can_advertise)
+SELECT id,1,1 FROM users;
+
 CREATE TABLE IF NOT EXISTS pf_wallets (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id BIGINT UNSIGNED NOT NULL,
