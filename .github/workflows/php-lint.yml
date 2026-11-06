@@ -16,4 +16,6 @@ jobs:
       - name: Lint all PHP files
         run: |
           set -eu
-          find marketplace tools -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+          find marketplace tools tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Enforce independent marketplace architecture
+        run: php tests/no-external-cpa-integrations-test.php
