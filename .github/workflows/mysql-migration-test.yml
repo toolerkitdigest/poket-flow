@@ -41,6 +41,16 @@ jobs:
           extensions: mbstring, pdo_mysql, openssl
       - name: Load disposable legacy schema
         run: mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < tests/fixtures/legacy-minimal-schema.sql
+      - name: Seed a real legacy password hash for compatibility testing
+        run: |
+          php <<'PHP'
+          <?php
+          $hash = password_hash('LegacyPass!12345', PASSWORD_BCRYPT);
+          if (!is_string($hash)) { throw new RuntimeException('Could not generate test hash'); }
+          $pdo = new PDO('mysql:host=127.0.0.1;dbname=poketflow_test;charset=utf8mb4', 'root', 'root', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+          $pdo->prepare('UPDATE users SET password_hash=? WHERE id=1')->execute([$hash]);
+          file_put_contents('/tmp/poketflow-legacy-password-hash', $hash);
+          PHP
       - name: Apply all marketplace migrations in order
         run: |
           set -euo pipefail
@@ -95,3 +105,25 @@ jobs:
           test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_advertiser_history WHERE source_table='ad_campaigns' AND legacy_advertiser_id=1 AND owner_user_id=1")" = "1"
           test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_history WHERE source_table='campaigns' AND JSON_CONTAINS_PATH(snapshot_json,'one','$.network_offer_url')=1")" = "0"
           test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_blog_campaigns WHERE sync_status='PENDING'")" = "0"
+      - name: Verify legacy member identity and password hash are preserved
+        run: |
+          php <<'PHP'
+          <?php
+          $pdo = new PDO('mysql:host=127.0.0.1;dbname=poketflow_test;charset=utf8mb4', 'root', 'root', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+          $user = $pdo->query('SELECT id,role,name,email,email_verified,password_hash,status FROM users WHERE id=1')->fetch();
+          $originalHash = trim(file_get_contents('/tmp/poketflow-legacy-password-hash'));
+          if (!$user || (int)$user['id'] !== 1 || $user['email'] !== 'test-member@example.invalid' || $user['name'] !== 'Test Member') {
+              throw new RuntimeException('Legacy member identity was not preserved.');
+          }
+          if (!hash_equals($originalHash, (string)$user['password_hash']) || !password_verify('LegacyPass!12345', (string)$user['password_hash'])) {
+              throw new RuntimeException('Legacy password hash changed or no longer verifies.');
+          }
+          if ($user['status'] !== 'ACTIVE' || (int)$user['email_verified'] !== 0 || $user['role'] !== 'WORKER') {
+              throw new RuntimeException('Legacy member account status, verification state or role changed.');
+          }
+          $mode = $pdo->query('SELECT can_work,can_advertise FROM pf_account_modes WHERE user_id=1')->fetch();
+          if (!$mode || (int)$mode['can_work'] !== 1 || (int)$mode['can_advertise'] !== 1) {
+              throw new RuntimeException('Legacy member does not retain both account modes.');
+          }
+          echo "Legacy member ID, email, role, status, verification state and working password hash preserved. Both modes enabled.\n";
+          PHP
