@@ -332,7 +332,9 @@ try {
     foreach ($campaignRows as $row) {
         $archiveFind->execute(['campaigns', (int) $row['id']]);
         $existing = $archiveFind->fetch();
-        $ownerId = $row['advertiser_id'] !== null ? (int) $row['advertiser_id'] : null;
+        // Legacy campaigns.advertiser_id refers to advertisers.id, not users.id.
+        // Keep owner_user_id null unless a separately verified mapping is imported.
+        $ownerId = null;
         if ($existing) {
             if (($existing['owner_user_id'] === null ? null : (int) $existing['owner_user_id']) !== $ownerId) throw new RuntimeException('Existing legacy campaign archive does not match campaign ID ' . (int) $row['id']);
             continue;
