@@ -97,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $campaignId = (int)$pdo->lastInsertId();
             $creative = [
                 'name'=>$title,
+                'summary'=>$summary,
                 'placement'=>$placement,
                 'image'=>'',
                 'url'=>$url,
