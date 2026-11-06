@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $pdo->beginTransaction();
         try {
-            $stmt = $pdo->prepare("SELECT id, advertiser_id, reward_per_completion, currency, total_quantity, approved_quantity, evidence_required FROM pf_campaigns WHERE id=? AND campaign_type='WORKER_TASK' AND status='ACTIVE' AND (starts_at IS NULL OR starts_at<=NOW()) AND (ends_at IS NULL OR ends_at>=NOW()) FOR UPDATE");
+            $stmt = $pdo->prepare("SELECT c.id, c.advertiser_id, c.reward_per_completion, c.currency, c.total_quantity, c.approved_quantity, c.evidence_required FROM pf_campaigns c JOIN users advertiser ON advertiser.id=c.advertiser_id AND advertiser.status='ACTIVE' WHERE c.id=? AND c.campaign_type='WORKER_TASK' AND c.status='ACTIVE' AND (starts_at IS NULL OR starts_at<=NOW()) AND (ends_at IS NULL OR ends_at>=NOW()) FOR UPDATE");
             $stmt->execute([$campaignId]);
             $campaign = $stmt->fetch();
 
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$stmt = $pdo->query("SELECT c.id,c.title,c.summary,c.description,c.instructions,c.requirements,c.reward_per_completion,c.currency,c.total_quantity,c.approved_quantity,(SELECT COUNT(*) FROM pf_submissions ps WHERE ps.campaign_id=c.id AND ps.status IN ('PENDING','APPROVED')) AS claimed_quantity,c.evidence_required,c.evidence_instructions,u.name AS advertiser_name FROM pf_campaigns c JOIN users u ON u.id=c.advertiser_id WHERE c.campaign_type='WORKER_TASK' AND c.status='ACTIVE' AND (c.starts_at IS NULL OR c.starts_at<=NOW()) AND (c.ends_at IS NULL OR c.ends_at>=NOW()) AND (SELECT COUNT(*) FROM pf_submissions ps WHERE ps.campaign_id=c.id AND ps.status IN ('PENDING','APPROVED'))<c.total_quantity ORDER BY c.created_at DESC LIMIT 100");
+$stmt = $pdo->query("SELECT c.id,c.title,c.summary,c.description,c.instructions,c.requirements,c.reward_per_completion,c.currency,c.total_quantity,c.approved_quantity,(SELECT COUNT(*) FROM pf_submissions ps WHERE ps.campaign_id=c.id AND ps.status IN ('PENDING','APPROVED')) AS claimed_quantity,c.evidence_required,c.evidence_instructions,u.name AS advertiser_name FROM pf_campaigns c JOIN users u ON u.id=c.advertiser_id WHERE c.campaign_type='WORKER_TASK' AND c.status='ACTIVE' AND u.status='ACTIVE' AND (c.starts_at IS NULL OR c.starts_at<=NOW()) AND (c.ends_at IS NULL OR c.ends_at>=NOW()) AND (SELECT COUNT(*) FROM pf_submissions ps WHERE ps.campaign_id=c.id AND ps.status IN ('PENDING','APPROVED'))<c.total_quantity ORDER BY c.created_at DESC LIMIT 100");
 $campaigns = $stmt->fetchAll();
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Available tasks | PoketFlow</title><link rel="stylesheet" href="assets/marketplace.css"></head><body>
