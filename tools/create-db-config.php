@@ -73,6 +73,9 @@ $old = is_file($file) ? require $file : [];
 $encryptionKey = (is_array($old) && !empty($old['encryption_key']))
     ? $old['encryption_key']
     : base64_encode(random_bytes(32));
+$blogIntegrationSecret = (is_array($old) && !empty($old['blog_integration_secret']))
+    ? $old['blog_integration_secret']
+    : bin2hex(random_bytes(32));
 
 try {
     $pdo = new PDO(
@@ -98,6 +101,7 @@ $config = [
     'password' => $password,
     'charset' => 'utf8mb4',
     'encryption_key' => $encryptionKey,
+    'blog_integration_secret' => $blogIntegrationSecret,
 ];
 
 $php = "<?php\n// Private PoketFlow configuration. Never place in public_html.\nreturn "
@@ -120,3 +124,4 @@ if (!rename($temp, $file)) {
 chmod($file, 0600);
 chmod($dir, 0700);
 fwrite(STDOUT, "Database connection successful. Private configuration saved.\n");
+fwrite(STDOUT, "BLOG INTEGRATION SECRET (copy securely into the blog's private integration config):\n" . $blogIntegrationSecret . "\n");
