@@ -77,6 +77,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     $notice = 'Submission approved and worker reward credited.';
                 }
+                $remoteIp = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+                $ipBinary = filter_var($remoteIp, FILTER_VALIDATE_IP) ? inet_pton($remoteIp) : null;
+                $audit = $pdo->prepare(
+                    'INSERT INTO pf_audit_log (actor_user_id,action,subject_type,subject_id,before_json,after_json,ip_address)
+                     VALUES (?,?,?,?,?,?,?)'
+                );
+                $audit->execute([
+                    (int) $user['id'],
+                    $decision === 'approve' ? 'ADVERTISER_SUBMISSION_APPROVED' : 'ADVERTISER_SUBMISSION_REJECTED',
+                    'SUBMISSION',
+                    (int) $submissionId,
+                    json_encode(['status'=>'PENDING'], JSON_THROW_ON_ERROR),
+                    json_encode(['status'=>$decision === 'approve' ? 'APPROVED' : 'REJECTED'], JSON_THROW_ON_ERROR),
+                    $ipBinary,
+                ]);
                 $pdo->commit();
             } catch (Throwable $e) {
                 if ($pdo->inTransaction()) $pdo->rollBack();
