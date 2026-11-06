@@ -44,8 +44,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
        ->execute([(int)$r['wallet_id'],(int)$r['user_id'],$r['currency'],$id,'withdrawal-paid-'.$id,'Withdrawal paid; original hold remains the debit',$admin['id']]);
     }
    }elseif($action==='campaign'){
-    $q=$pdo->prepare("SELECT * FROM pf_campaigns WHERE id=? FOR UPDATE");$q->execute([$id]);$r=$q->fetch();
+    $q=$pdo->prepare("SELECT c.*,u.status AS advertiser_status FROM pf_campaigns c JOIN users u ON u.id=c.advertiser_id WHERE c.id=? FOR UPDATE");$q->execute([$id]);$r=$q->fetch();
     if(!$r||$r['status']!=='PENDING_REVIEW'||!in_array($decision,['approve','reject'],true))throw new RuntimeException('Campaign is no longer awaiting review.');
+    if($decision==='approve'&&strtoupper((string)$r['advertiser_status'])!=='ACTIVE')throw new RuntimeException('A suspended advertiser campaign cannot be activated.');
     if($r['campaign_type']==='BLOG_SPONSORED'){
      $blog=$pdo->prepare("SELECT * FROM pf_blog_campaigns WHERE campaign_id=? FOR UPDATE");$blog->execute([$id]);$blogRow=$blog->fetch();
      if(!$blogRow)throw new RuntimeException('Blog sponsorship creative is missing.');
@@ -84,9 +85,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
      }
     }
    }elseif($action==='blog_sync_retry'){
-    $q=$pdo->prepare("SELECT c.id,c.status,bc.status AS blog_status,bc.sync_status FROM pf_campaigns c JOIN pf_blog_campaigns bc ON bc.campaign_id=c.id WHERE c.id=? AND c.campaign_type='BLOG_SPONSORED' FOR UPDATE");
+    $q=$pdo->prepare("SELECT c.id,c.status,bc.status AS blog_status,bc.sync_status,u.status AS advertiser_status FROM pf_campaigns c JOIN pf_blog_campaigns bc ON bc.campaign_id=c.id JOIN users u ON u.id=c.advertiser_id WHERE c.id=? AND c.campaign_type='BLOG_SPONSORED' FOR UPDATE");
     $q->execute([$id]);$r=$q->fetch();
-    if(!$r||$r['status']!=='PAUSED'||$r['sync_status']!=='FAILED')throw new RuntimeException('This blog campaign is not awaiting a sync retry.');
+    if(!$r||$r['status']!=='PAUSED'||$r['sync_status']!=='FAILED'||strtoupper((string)$r['advertiser_status'])!=='ACTIVE')throw new RuntimeException('This blog campaign is not eligible for a sync retry.');
     $reservation=$pdo->prepare("SELECT amount FROM pf_blog_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");
     $reservation->execute([$id]);$remaining=$reservation->fetchColumn();
     if($remaining===false||(float)$remaining<=0)throw new RuntimeException('This blog campaign has no remaining reserved budget.');
