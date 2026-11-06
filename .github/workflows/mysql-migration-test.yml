@@ -38,7 +38,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, pdo_mysql, openssl
+          extensions: curl, mbstring, pdo_mysql, openssl
       - name: Load disposable legacy schema
         run: mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < tests/fixtures/legacy-minimal-schema.sql
       - name: Seed a real legacy password hash for compatibility testing
@@ -116,6 +116,31 @@ jobs:
           VALUES (REPEAT('a',48),UNIX_TIMESTAMP());
           SQL
           test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_blog_event_requests WHERE nonce=REPEAT('a',48)")" = "1"
+      - name: Exercise signed blog event receiver over HTTP
+        env:
+          PF_TEST_HMAC_SECRET: POKETFLOW_TEST_SECRET_64_CHARACTERS_LONG_000000000000000000000000000000000000000000000000
+        run: |
+          set -euo pipefail
+          mkdir -p /home/poketflo/private
+          cat > /home/poketflo/private/poketflow-main-database.php <<'PHP'
+          <?php
+          return [
+              'host' => '127.0.0.1',
+              'dbname' => 'poketflow_test',
+              'username' => 'root',
+              'password' => 'root',
+              'charset' => 'utf8mb4',
+              'blog_integration_secret' => 'POKETFLOW_TEST_SECRET_64_CHARACTERS_LONG_000000000000000000000000000000000000000000000000',
+          ];
+          PHP
+          php -S 127.0.0.1:8082 -t marketplace > /tmp/poketflow-main-http.log 2>&1 &
+          echo $! > /tmp/poketflow-main-http.pid
+          for attempt in $(seq 1 30); do
+            if curl -sS -o /dev/null http://127.0.0.1:8082/api/blog-events.php; then break; fi
+            sleep 1
+          done
+          php tests/blog-events-http-integration-test.php
+          kill "$(cat /tmp/poketflow-main-http.pid)" || true
       - name: Verify legacy advertiser access restrictions
         env:
           POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
