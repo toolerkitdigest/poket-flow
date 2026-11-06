@@ -12,10 +12,11 @@ $stats = [
     'pending_submissions' => (int) $pdo->query("SELECT COUNT(*) FROM pf_submissions WHERE status='PENDING'")->fetchColumn(),
     'pending_funding' => (int) $pdo->query("SELECT COUNT(*) FROM pf_funding_requests WHERE status='PENDING'")->fetchColumn(),
     'pending_withdrawals' => (int) $pdo->query("SELECT COUNT(*) FROM pf_withdrawals WHERE status='PENDING'")->fetchColumn(),
+    'open_disputes' => (int) $pdo->query("SELECT COUNT(*) FROM pf_submission_disputes WHERE status IN ('OPEN','UNDER_REVIEW')")->fetchColumn(),
 ];
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Administration | PoketFlow</title><link rel="stylesheet" href="../assets/marketplace.css"><style>.admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.admin-grid .panel{padding:20px}.admin-grid .metric{font-size:30px}@media(max-width:850px){.admin-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:480px){.admin-grid{grid-template-columns:1fr}}</style></head>
-<body><header class="topbar"><a class="brand" href="../index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="../dashboard.php">Member dashboard</a><a href="users.php">Members</a><a href="finance.php">Finance</a><a href="../logout.php">Sign out</a></nav></header>
+<body><header class="topbar"><a class="brand" href="../index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="../dashboard.php">Member dashboard</a><a href="users.php">Members</a><a href="finance.php">Finance</a><a href="disputes.php">Appeals</a><a href="../logout.php">Sign out</a></nav></header>
 <main class="container"><section class="welcome"><p class="eyebrow">PLATFORM CONTROL</p><h1>Administrator dashboard</h1><p class="muted">Monitor members, worker tasks, submissions and financial queues.</p></section>
 <section class="admin-grid">
 <article class="panel"><p class="eyebrow">ALL MEMBERS</p><div class="metric"><?=number_format($stats['members'])?></div><p class="muted">Registered accounts</p></article>
@@ -26,6 +27,7 @@ $stats = [
 <article class="panel"><p class="eyebrow">SUBMISSIONS</p><div class="metric"><?=number_format($stats['pending_submissions'])?></div><p class="muted">Awaiting advertiser review</p></article>
 <article class="panel"><p class="eyebrow">FUNDING REQUESTS</p><div class="metric"><?=number_format($stats['pending_funding'])?></div><p class="muted">Awaiting payment verification</p></article>
 <article class="panel"><p class="eyebrow">WITHDRAWALS</p><div class="metric"><?=number_format($stats['pending_withdrawals'])?></div><p class="muted">Awaiting payout</p></article>
+<article class="panel"><p class="eyebrow">WORKER APPEALS</p><div class="metric"><?=number_format($stats['open_disputes'])?></div><p class="muted">Awaiting administrator review</p></article>
 </section>
-<section class="panel" style="margin-top:24px"><h2>Administration tools</h2><p><a class="button primary" href="users.php">Manage members</a> <a class="button secondary" href="finance.php">Review finance & campaigns</a></p><p class="small muted">Member status changes are audited. Existing passwords, email addresses and wallet history are not edited here.</p></section>
+<section class="panel" style="margin-top:24px"><h2>Administration tools</h2><p><a class="button primary" href="users.php">Manage members</a> <a class="button secondary" href="finance.php">Review finance & campaigns</a> <a class="button secondary" href="disputes.php">Review worker appeals</a></p><p class="small muted">Member status changes are audited. Existing passwords, email addresses and wallet history are not edited here.</p></section>
 </main></body></html>
