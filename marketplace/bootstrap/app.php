@@ -72,6 +72,51 @@ function pf_require_login(PDO $pdo): array
     return $user;
 }
 
+/**
+ * Require one of the two independent capabilities on a unified member account.
+ * Legacy advertiser suspensions/rejections remain enforced without blocking
+ * the same member from using worker mode.
+ */
+function pf_require_mode(PDO $pdo, string $mode): array
+{
+    $user = pf_require_login($pdo);
+    $column = match ($mode) {
+        'worker' => 'can_work',
+        'advertiser' => 'can_advertise',
+        default => throw new InvalidArgumentException('Unknown account mode.'),
+    };
+
+    $stmt = $pdo->prepare("SELECT {$column} FROM pf_account_modes WHERE user_id=? LIMIT 1");
+    $stmt->execute([(int)$user['id']]);
+    $allowed = $stmt->fetchColumn();
+    if ($allowed === false || (int)$allowed !== 1) {
+        http_response_code(403);
+        exit('This account mode is not enabled for your member account.');
+    }
+
+    if ($mode === 'advertiser') {
+        $legacy = $pdo->prepare('SELECT legacy_status FROM pf_legacy_advertiser_accounts WHERE user_id=? LIMIT 1');
+        $legacy->execute([(int)$user['id']]);
+        $legacyStatus = strtoupper((string)($legacy->fetchColumn() ?: ''));
+        if (in_array($legacyStatus, ['SUSPENDED','REJECTED'], true)) {
+            http_response_code(403);
+            exit('Advertiser access is restricted. Contact PoketFlow support if you believe this is an error.');
+        }
+    }
+
+    return $user;
+}
+
+function pf_require_worker(PDO $pdo): array
+{
+    return pf_require_mode($pdo, 'worker');
+}
+
+function pf_require_advertiser(PDO $pdo): array
+{
+    return pf_require_mode($pdo, 'advertiser');
+}
+
 function pf_require_admin(PDO $pdo): array
 {
     $user = pf_require_login($pdo);
