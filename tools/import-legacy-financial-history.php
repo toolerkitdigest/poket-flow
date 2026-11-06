@@ -378,6 +378,149 @@ try {
         $importedWithdrawals++;
     }
 
+    // Preserve advertiser profiles and the current spendable balance.
+    // Historical advertiser_transactions are archived below, never replayed as
+    // credits/debits: advertisers.balance is the authoritative current snapshot.
+    $advertiserWalletInsert = $pdo->prepare(
+        "INSERT IGNORE INTO pf_wallets (user_id,wallet_type,currency) VALUES (?,'ADVERTISER','USD')"
+    );
+    $advertiserWalletFind = $pdo->prepare(
+        "SELECT id FROM pf_wallets WHERE user_id=? AND wallet_type='ADVERTISER' AND currency='USD' FOR UPDATE"
+    );
+    $advertiserAccountFind = $pdo->prepare(
+        'SELECT * FROM pf_legacy_advertiser_accounts WHERE legacy_advertiser_id=? FOR UPDATE'
+    );
+    $advertiserAccountInsert = $pdo->prepare(
+        'INSERT INTO pf_legacy_advertiser_accounts
+         (legacy_advertiser_id,user_id,company_name,website,description,contact_email,legacy_status,
+          legacy_balance,wallet_id,opening_ledger_entry_id,source_created_at,source_updated_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+    );
+    $advertiserLedgerInsert = $pdo->prepare(
+        "INSERT INTO pf_wallet_ledger
+         (wallet_id,user_id,entry_type,amount,currency,reference_type,reference_id,idempotency_key,description,created_by)
+         VALUES (?,?,'LEGACY_IMPORT',?,'USD','LEGACY_ADVERTISER_BALANCE',?,?,?,NULL)"
+    );
+    $advertiserOpeningKey = static fn(int $id): string => 'legacy-advertiser-opening-balance-' . $id;
+    $importedAdvertiserAccounts = 0;
+    foreach ($advertiserRows as $row) {
+        $legacyId = (int)$row['id'];
+        $userId = (int)$row['user_id'];
+        $advertiserWalletInsert->execute([$userId]);
+        $advertiserWalletFind->execute([$userId]);
+        $walletId = (int)$advertiserWalletFind->fetchColumn();
+        if (!$walletId) throw new RuntimeException('Advertiser wallet could not be created for legacy advertiser ID ' . $legacyId);
+
+        $amount = number_format((float)$row['balance'], 2, '.', '');
+        $keyName = $advertiserOpeningKey($legacyId);
+        $ledgerFind->execute([$keyName]);
+        $opening = $ledgerFind->fetch();
+        if ($opening) {
+            if ((int)$opening['user_id'] !== $userId || (int)$opening['wallet_id'] !== $walletId
+                || (string)$opening['amount'] !== $amount || (string)$opening['currency'] !== 'USD'
+                || $opening['reference_type'] !== 'LEGACY_ADVERTISER_BALANCE'
+                || (int)$opening['reference_id'] !== $legacyId) {
+                throw new RuntimeException('Existing advertiser opening balance does not match legacy advertiser ID ' . $legacyId);
+            }
+            $openingLedgerId = (int)$opening['id'];
+        } else {
+            $otherLedger = $pdo->prepare('SELECT COUNT(*) FROM pf_wallet_ledger WHERE wallet_id=?');
+            $otherLedger->execute([$walletId]);
+            if ((int)$otherLedger->fetchColumn() > 0) {
+                throw new RuntimeException('Advertiser wallet already has non-legacy ledger activity for user ID ' . $userId . '; reconcile before importing the opening balance.');
+            }
+            $advertiserLedgerInsert->execute([
+                $walletId,$userId,$amount,$legacyId,$keyName,
+                'Opening balance imported from legacy advertiser account #' . $legacyId
+            ]);
+            $openingLedgerId = (int)$pdo->lastInsertId();
+        }
+
+        $advertiserAccountFind->execute([$legacyId]);
+        $existingAccount = $advertiserAccountFind->fetch();
+        if ($existingAccount) {
+            $matches = (int)$existingAccount['user_id'] === $userId
+                && (string)$existingAccount['company_name'] === (string)$row['company_name']
+                && (string)$existingAccount['legacy_status'] === (string)$row['status']
+                && (string)$existingAccount['legacy_balance'] === $amount
+                && (int)$existingAccount['wallet_id'] === $walletId
+                && (int)$existingAccount['opening_ledger_entry_id'] === $openingLedgerId;
+            if (!$matches) throw new RuntimeException('Existing legacy advertiser account archive does not match source ID ' . $legacyId);
+            continue;
+        }
+        $advertiserAccountInsert->execute([
+            $legacyId,$userId,$row['company_name'],$row['website'],$row['description'],
+            $row['contact_email'],$row['status'],$amount,$walletId,$openingLedgerId,
+            $row['created_at'],$row['updated_at']
+        ]);
+        $importedAdvertiserAccounts++;
+    }
+
+    // Archive every advertiser transaction status and old ad creative. No old
+    // campaign is reactivated, and historical transaction amounts are not replayed.
+    $advertiserHistoryFind = $pdo->prepare(
+        'SELECT owner_user_id,legacy_advertiser_id,snapshot_json FROM pf_legacy_advertiser_history WHERE source_table=? AND legacy_id=? FOR UPDATE'
+    );
+    $advertiserHistoryInsert = $pdo->prepare(
+        'INSERT INTO pf_legacy_advertiser_history
+         (source_table,legacy_id,legacy_advertiser_id,owner_user_id,snapshot_json,source_created_at)
+         VALUES (?,?,?,?,?,?)'
+    );
+    $importedAdvertiserTransactions = 0;
+    $legacyAdvertiserTransactions = $pdo->query(
+        'SELECT id,advertiser_id,campaign_id,type,amount,reference,status,description,created_at
+         FROM advertiser_transactions ORDER BY id FOR UPDATE'
+    )->fetchAll();
+    foreach ($legacyAdvertiserTransactions as $row) {
+        $legacyAdvertiserId = (int)$row['advertiser_id'];
+        if (!isset($advertiserUserMap[$legacyAdvertiserId])) {
+            throw new RuntimeException('Advertiser transaction references an unmapped legacy advertiser ID ' . $legacyAdvertiserId);
+        }
+        $advertiserHistoryFind->execute(['advertiser_transactions',(int)$row['id']]);
+        $existing = $advertiserHistoryFind->fetch();
+        if ($existing) {
+            if ((int)$existing['legacy_advertiser_id'] !== $legacyAdvertiserId
+                || (int)$existing['owner_user_id'] !== $advertiserUserMap[$legacyAdvertiserId]) {
+                throw new RuntimeException('Existing advertiser transaction archive does not match source transaction ID ' . (int)$row['id']);
+            }
+            continue;
+        }
+        $advertiserHistoryInsert->execute([
+            'advertiser_transactions',(int)$row['id'],$legacyAdvertiserId,
+            $advertiserUserMap[$legacyAdvertiserId],
+            json_encode($row,JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE),$row['created_at']
+        ]);
+        $importedAdvertiserTransactions++;
+    }
+
+    $importedAdCampaigns = 0;
+    $legacyAdCampaigns = $pdo->query(
+        'SELECT id,advertiser_id,name,creative_type,creative_url,destination_url,placement,budget,spent,
+                status,approval_status,start_at,end_at,created_at,updated_at
+         FROM ad_campaigns ORDER BY id FOR UPDATE'
+    )->fetchAll();
+    foreach ($legacyAdCampaigns as $row) {
+        $legacyAdvertiserId = (int)$row['advertiser_id'];
+        if (!isset($advertiserUserMap[$legacyAdvertiserId])) {
+            throw new RuntimeException('Legacy ad campaign references an unmapped advertiser ID ' . $legacyAdvertiserId);
+        }
+        $advertiserHistoryFind->execute(['ad_campaigns',(int)$row['id']]);
+        $existing = $advertiserHistoryFind->fetch();
+        if ($existing) {
+            if ((int)$existing['legacy_advertiser_id'] !== $legacyAdvertiserId
+                || (int)$existing['owner_user_id'] !== $advertiserUserMap[$legacyAdvertiserId]) {
+                throw new RuntimeException('Existing advertiser ad archive does not match source campaign ID ' . (int)$row['id']);
+            }
+            continue;
+        }
+        $advertiserHistoryInsert->execute([
+            'ad_campaigns',(int)$row['id'],$legacyAdvertiserId,
+            $advertiserUserMap[$legacyAdvertiserId],
+            json_encode($row,JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE),$row['created_at']
+        ]);
+        $importedAdCampaigns++;
+    }
+
     // Archive historical campaign and conversion facts without restoring delivery.
     // The network_offer_url column is intentionally excluded because it may contain
     // old affiliate credentials or tracking tokens.
