@@ -31,6 +31,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($update->rowCount() !== 1) {
                 throw new RuntimeException('Member status could not be updated.');
             }
+            $pausedCampaigns = 0;
+            if ($action === 'suspend') {
+                $pause = $pdo->prepare("UPDATE pf_campaigns SET status='PAUSED' WHERE advertiser_id=? AND status='ACTIVE'");
+                $pause->execute([$targetId]);
+                $pausedCampaigns = $pause->rowCount();
+            }
             $audit = $pdo->prepare(
                 'INSERT INTO pf_audit_log (actor_user_id,action,subject_type,subject_id,before_json,after_json,ip_address)
                  VALUES (?,?,?,?,?,?,?)'
@@ -43,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'USER',
                 $targetId,
                 json_encode(['status'=>$from],JSON_THROW_ON_ERROR),
-                json_encode(['status'=>$to],JSON_THROW_ON_ERROR),
+                json_encode(['status'=>$to,'active_campaigns_paused'=>$pausedCampaigns],JSON_THROW_ON_ERROR),
                 $ipBinary,
             ]);
             $pdo->commit();
