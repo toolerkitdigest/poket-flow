@@ -94,14 +94,9 @@ function pf_require_mode(PDO $pdo, string $mode): array
         exit('This account mode is not enabled for your member account.');
     }
 
-    if ($mode === 'advertiser') {
-        $legacy = $pdo->prepare('SELECT legacy_status FROM pf_legacy_advertiser_accounts WHERE user_id=? LIMIT 1');
-        $legacy->execute([(int)$user['id']]);
-        $legacyStatus = strtoupper((string)($legacy->fetchColumn() ?: ''));
-        if (in_array($legacyStatus, ['SUSPENDED','REJECTED'], true)) {
-            http_response_code(403);
-            exit('Advertiser access is restricted. Contact PoketFlow support if you believe this is an error.');
-        }
+    if ($mode === 'advertiser' && !pf_legacy_advertiser_access_allowed($pdo, (int) $user['id'])) {
+        http_response_code(403);
+        exit('Advertiser access is restricted. Contact PoketFlow support if you believe this is an error.');
     }
 
     return $user;
