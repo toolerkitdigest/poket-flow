@@ -40,7 +40,7 @@ $campaignCount = (int)$myCampaigns->fetchColumn();
 <link rel="stylesheet" href="assets/marketplace.css">
 </head>
 <body>
-<header class="topbar"><a class="brand" href="index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="tasks.php">Find tasks</a><a href="campaigns.php">My campaigns</a><a href="wallet.php">Wallets</a><a href="funding.php">Add funds</a><?php if (strtoupper((string) $user['role']) === 'ADMIN'): ?><a href="admin/finance.php">Finance admin</a><?php endif; ?><a href="logout.php">Sign out</a></nav></header>
+<header class="topbar"><a class="brand" href="index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="tasks.php">Find tasks</a><a href="campaigns.php">My campaigns</a><a href="wallet.php">Wallets</a><a href="funding.php">Add funds</a><?php if (strtoupper((string) $user['role']) === 'ADMIN'): ?><a href="admin/index.php">Admin</a><?php endif; ?><a href="logout.php">Sign out</a></nav></header>
 <main class="container">
 <section class="welcome"><p class="eyebrow">YOUR UNIFIED ACCOUNT</p><h1>Welcome, <?= pf_e((string)$user['name']) ?></h1><p class="muted">Use the same account to earn from tasks and advertise to the PoketFlow community.</p></section>
 <section class="mode-grid">
