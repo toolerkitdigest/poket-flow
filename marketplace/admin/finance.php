@@ -27,12 +27,19 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
      $pdo->prepare("INSERT INTO pf_wallet_ledger(wallet_id,user_id,entry_type,amount,currency,reference_type,reference_id,idempotency_key,description,created_by) VALUES (?,?,'REFUND',?,?,'WITHDRAWAL',?,?,?,?)")->execute([(int)$r['wallet_id'],(int)$r['user_id'],$r['amount'],$r['currency'],$id,'withdrawal-release-'.$id,'Released rejected withdrawal hold',$admin['id']]);
      $pdo->prepare("UPDATE pf_withdrawals SET status='REJECTED',reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=? AND status='PENDING'")->execute([$admin['id'],$note?:null,$id]);
     }else{
-     $pdo->prepare("UPDATE pf_withdrawals SET status='PAID',reviewed_by=?,reviewed_at=NOW(),payout_reference=?,admin_note=? WHERE id=? AND status='PENDING'")->execute([$admin['id'],trim((string)($_POST['payout_reference']??''))?:null,$note?:null,$id]);
+     $payoutReference=trim((string)($_POST['payout_reference']??''));
+     if($payoutReference===''){throw new RuntimeException('Enter the real payment transaction reference before marking a withdrawal as paid.');}
+     $pdo->prepare("UPDATE pf_withdrawals SET status='PAID',reviewed_by=?,reviewed_at=NOW(),payout_reference=?,admin_note=? WHERE id=? AND status='PENDING'")->execute([$admin['id'],$payoutReference,$note?:null,$id]);
     }
    }elseif($action==='campaign'){
     $q=$pdo->prepare("SELECT * FROM pf_campaigns WHERE id=? FOR UPDATE");$q->execute([$id]);$r=$q->fetch();
     if(!$r||$r['status']!=='PENDING_REVIEW'||!in_array($decision,['approve','reject'],true))throw new RuntimeException('Campaign is no longer awaiting review.');
-    if($decision==='approve'){$pdo->prepare("UPDATE pf_campaigns SET status='ACTIVE',reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=?")->execute([$admin['id'],$note?:null,$id]);}
+    if($decision==='approve'){
+     $reservation=$pdo->prepare("SELECT id,amount FROM pf_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");
+     $reservation->execute([$id]);$reserved=$reservation->fetch();
+     if(!$reserved||(float)$reserved['amount']<=0||(float)$r['reserved_budget']+0.00001<(float)$reserved['amount']){throw new RuntimeException('This campaign has no valid reserved budget. It cannot be activated.');}
+     $pdo->prepare("UPDATE pf_campaigns SET status='ACTIVE',reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=?")->execute([$admin['id'],$note?:null,$id]);
+    }
     else{
      $pdo->prepare("UPDATE pf_campaigns SET status='REJECTED',reserved_budget=0,reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=?")->execute([$admin['id'],$note?:null,$id]);
      $res=$pdo->prepare("SELECT id,amount,advertiser_id,currency,ledger_entry_id FROM pf_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");$res->execute([$id]);$reservation=$res->fetch();
@@ -43,6 +50,10 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
      }
     }
    }else{throw new RuntimeException('Unknown admin action.');}
+   $remoteIp=(string)($_SERVER['REMOTE_ADDR']??'');
+   $ipBinary=filter_var($remoteIp,FILTER_VALIDATE_IP)?inet_pton($remoteIp):null;
+   $audit=$pdo->prepare('INSERT INTO pf_audit_log(actor_user_id,action,subject_type,subject_id,after_json,ip_address) VALUES (?,?,?,?,?,?)');
+   $audit->execute([(int)$admin['id'],'ADMIN_'.strtoupper($action),strtoupper($action),$id,json_encode(['decision'=>$decision,'note'=>$note],JSON_THROW_ON_ERROR),$ipBinary]);
    $pdo->commit();$notice='The requested finance or campaign action has been recorded.';
   }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();$error=$e instanceof RuntimeException?$e->getMessage():'The action failed and was rolled back.';}
  }
