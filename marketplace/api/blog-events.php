@@ -6,6 +6,7 @@ declare(strict_types=1);
  * The blog has its own database and never receives main-database credentials.
  */
 require_once dirname(__DIR__) . '/bootstrap/database.php';
+require_once dirname(__DIR__) . '/bootstrap/blog-events.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -36,8 +37,8 @@ $timestamp = (string) ($_SERVER['HTTP_X_PF_TIMESTAMP'] ?? '');
 $nonce = (string) ($_SERVER['HTTP_X_PF_NONCE'] ?? '');
 $signature = strtolower((string) ($_SERVER['HTTP_X_PF_SIGNATURE'] ?? ''));
 if (!ctype_digit($timestamp) || abs(time() - (int) $timestamp) > 300
-    || !preg_match('/\A[a-f0-9]{32,96}\z/', $nonce)
-    || !preg_match('/\A[a-f0-9]{64}\z/', $signature)) {
+    || !preg_match('/\\A[a-f0-9]{32,96}\\z/', $nonce)
+    || !preg_match('/\\A[a-f0-9]{64}\\z/', $signature)) {
     pf_blog_api_reply(401, ['ok' => false, 'error' => 'invalid_signature_headers']);
 }
 
@@ -55,27 +56,35 @@ try {
 $campaignId = filter_var($payload['campaign_id'] ?? null, FILTER_VALIDATE_INT);
 $eventType = strtoupper((string) ($payload['event_type'] ?? ''));
 $eventKey = (string) ($payload['event_key'] ?? '');
-$occurredAt = (string) ($payload['occurred_at'] ?? '');
+$occurredAtRaw = (string) ($payload['occurred_at'] ?? '');
 $metadata = $payload['metadata'] ?? null;
 
+try {
+    $occurredAt = new DateTimeImmutable($occurredAtRaw !== '' ? $occurredAtRaw : 'now');
+} catch (Throwable $exception) {
+    pf_blog_api_reply(422, ['ok' => false, 'error' => 'invalid_event']);
+}
+
 if (!$campaignId || !in_array($eventType, ['IMPRESSION', 'CLICK'], true)
-    || !preg_match('/\A[a-zA-Z0-9._:-]{12,120}\z/', $eventKey)
-    || ($occurredAt !== '' && strtotime($occurredAt) === false)
+    || !preg_match('/\\A[a-zA-Z0-9._:-]{12,120}\\z/', $eventKey)
     || ($metadata !== null && !is_array($metadata))) {
     pf_blog_api_reply(422, ['ok' => false, 'error' => 'invalid_event']);
 }
 
 try {
-    $campaign = $pdo->prepare(
-        "SELECT bc.campaign_id
+    $campaignQuery = $pdo->prepare(
+        "SELECT c.status AS campaign_status, bc.status AS blog_status,
+                bc.starts_at, bc.ends_at
          FROM pf_blog_campaigns bc
          JOIN pf_campaigns c ON c.id = bc.campaign_id
-         WHERE bc.campaign_id = ? AND bc.status = 'ACTIVE' AND c.status = 'ACTIVE'
+         WHERE bc.campaign_id = ? AND c.campaign_type = 'BLOG_SPONSORED'
          LIMIT 1"
     );
-    $campaign->execute([$campaignId]);
-    if (!$campaign->fetchColumn()) {
-        pf_blog_api_reply(404, ['ok' => false, 'error' => 'campaign_not_active']);
+    $campaignQuery->execute([$campaignId]);
+    $campaign = $campaignQuery->fetch();
+
+    if (!$campaign || !pf_blog_event_is_eligible($campaign, $occurredAt)) {
+        pf_blog_api_reply(404, ['ok' => false, 'error' => 'campaign_not_eligible_for_event']);
     }
 
     $insert = $pdo->prepare(
@@ -87,7 +96,7 @@ try {
         $campaignId,
         $eventType,
         $eventKey,
-        $occurredAt !== '' ? date('Y-m-d H:i:s', strtotime($occurredAt)) : date('Y-m-d H:i:s'),
+        $occurredAt->format('Y-m-d H:i:s'),
         $metadata !== null ? json_encode($metadata, JSON_THROW_ON_ERROR) : null,
     ]);
 
