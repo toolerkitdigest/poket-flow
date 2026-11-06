@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         "Hello {$user['name']},\n\nA password reset was requested for your PoketFlow account. Use this link within one hour:\n{$link}\n\nIf you did not request this, ignore this email. Your current password remains unchanged.\n\nPoketFlow Support");
                 }
             }
-            $notice = 'If an active account matches that address, the password-reset request has been processed. Check your inbox shortly.';
+            $notice = 'If an active account matches that address, the password-reset request has been processed. If email delivery is available, check your inbox shortly.';
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) $pdo->rollBack();
             error_log('PoketFlow password reset request failed: ' . $exception->getMessage());
