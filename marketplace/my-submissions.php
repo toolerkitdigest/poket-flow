@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/bootstrap/app.php';
-$user = pf_require_login($pdo);
+$user = pf_require_worker($pdo);
 $stmt = $pdo->prepare(
     'SELECT s.id,s.status,s.reward_amount,s.currency,s.created_at,s.reviewed_at,s.review_note,
             c.title,u.name AS advertiser_name
