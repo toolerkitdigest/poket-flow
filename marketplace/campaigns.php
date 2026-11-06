@@ -36,12 +36,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $pdo->beginTransaction();
             try {
-                $stmt = $pdo->prepare('SELECT id,status,approved_quantity,total_quantity,reserved_budget,ends_at FROM pf_campaigns WHERE id=? AND advertiser_id=? FOR UPDATE');
+                $stmt = $pdo->prepare('SELECT id,status,approved_quantity,total_quantity,reserved_budget FROM pf_campaigns WHERE id=? AND advertiser_id=? AND (starts_at IS NULL OR starts_at<=NOW()) AND (ends_at IS NULL OR ends_at>=NOW()) FOR UPDATE');
                 $stmt->execute([$campaignId,(int)$user['id']]);
                 $campaign = $stmt->fetch();
                 if (!$campaign || $campaign['status'] !== 'PAUSED'
-                    || (int)$campaign['approved_quantity'] >= (int)$campaign['total_quantity']
-                    || ($campaign['ends_at'] !== null && strtotime((string)$campaign['ends_at']) < time())) {
+                    || (int)$campaign['approved_quantity'] >= (int)$campaign['total_quantity']) {
                     throw new RuntimeException('This campaign cannot be resumed. Check its status, remaining quantity and end date.');
                 }
                 $reservation = $pdo->prepare("SELECT id,amount FROM pf_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");
