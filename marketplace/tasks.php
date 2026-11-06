@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$campaign || (int)$campaign['advertiser_id'] === (int)$user['id']) {
                 throw new RuntimeException('This task is not available to your account.');
             }
-            $claimed = $pdo->prepare("SELECT COUNT(*) FROM pf_submissions WHERE campaign_id=? AND status IN ('PENDING','APPROVED')");
+            $claimed = $pdo->prepare("SELECT COUNT(*) FROM pf_submissions WHERE campaign_id=? AND (status IN ('PENDING','APPROVED','DISPUTED') OR (status='REJECTED' AND reviewed_at>=DATE_SUB(NOW(),INTERVAL 72 HOUR)))");
             $claimed->execute([$campaignId]);
             if ((int)$claimed->fetchColumn() >= (int)$campaign['total_quantity']) {
                 throw new RuntimeException('All available places for this task have already been claimed.');
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new RuntimeException('Provide the requested evidence or completion details.');
             }
 
-            $dupe = $pdo->prepare("SELECT id FROM pf_submissions WHERE campaign_id=? AND worker_id=? AND status IN ('PENDING','APPROVED') LIMIT 1");
+            $dupe = $pdo->prepare("SELECT id FROM pf_submissions WHERE campaign_id=? AND worker_id=? AND (status IN ('PENDING','APPROVED','DISPUTED') OR (status='REJECTED' AND reviewed_at>=DATE_SUB(NOW(),INTERVAL 72 HOUR))) LIMIT 1");
             $dupe->execute([$campaignId, (int)$user['id']]);
             if ($dupe->fetchColumn()) {
                 throw new RuntimeException('You have already submitted this task.');
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$stmt = $pdo->query("SELECT c.id,c.title,c.summary,c.description,c.instructions,c.requirements,c.reward_per_completion,c.currency,c.total_quantity,c.approved_quantity,(SELECT COUNT(*) FROM pf_submissions ps WHERE ps.campaign_id=c.id AND ps.status IN ('PENDING','APPROVED')) AS claimed_quantity,c.evidence_required,c.evidence_instructions,u.name AS advertiser_name FROM pf_campaigns c JOIN users u ON u.id=c.advertiser_id WHERE c.campaign_type='WORKER_TASK' AND c.status='ACTIVE' AND u.status='ACTIVE' AND (c.starts_at IS NULL OR c.starts_at<=NOW()) AND (c.ends_at IS NULL OR c.ends_at>=NOW()) AND (SELECT COUNT(*) FROM pf_submissions ps WHERE ps.campaign_id=c.id AND ps.status IN ('PENDING','APPROVED'))<c.total_quantity ORDER BY c.created_at DESC LIMIT 100");
+$stmt = $pdo->query("SELECT c.id,c.title,c.summary,c.description,c.instructions,c.requirements,c.reward_per_completion,c.currency,c.total_quantity,c.approved_quantity,(SELECT COUNT(*) FROM pf_submissions ps WHERE ps.campaign_id=c.id AND (ps.status IN ('PENDING','APPROVED','DISPUTED') OR (ps.status='REJECTED' AND ps.reviewed_at>=DATE_SUB(NOW(),INTERVAL 72 HOUR)))) AS claimed_quantity,c.evidence_required,c.evidence_instructions,u.name AS advertiser_name FROM pf_campaigns c JOIN users u ON u.id=c.advertiser_id WHERE c.campaign_type='WORKER_TASK' AND c.status='ACTIVE' AND u.status='ACTIVE' AND (c.starts_at IS NULL OR c.starts_at<=NOW()) AND (c.ends_at IS NULL OR c.ends_at>=NOW()) AND (SELECT COUNT(*) FROM pf_submissions ps WHERE ps.campaign_id=c.id AND (ps.status IN ('PENDING','APPROVED','DISPUTED') OR (ps.status='REJECTED' AND ps.reviewed_at>=DATE_SUB(NOW(),INTERVAL 72 HOUR))))<c.total_quantity ORDER BY c.created_at DESC LIMIT 100");
 $campaigns = $stmt->fetchAll();
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Available tasks | PoketFlow</title><link rel="stylesheet" href="assets/marketplace.css"></head><body>
