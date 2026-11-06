@@ -141,6 +141,33 @@ foreach ($knownTables as $tableName) {
         if ($tableName === 'wallet_transactions' && in_array('amount', $columnNames, true) && in_array('status', $columnNames, true)) {
             $balance = $pdo->query("SELECT COALESCE(SUM(amount),0) FROM wallet_transactions WHERE status='COMPLETED'")->fetchColumn();
             $add('LEGACY COMPLETED WALLET LEDGER SUM (all currencies, if present): ' . (string) $balance);
+
+            // Aggregate by legacy account ID and currency so balances can be
+            // reconciled before any import. Never print names, emails or hashes.
+            if (in_array('user_id', $columnNames, true)) {
+                $currencyExpression = in_array('currency', $columnNames, true)
+                    ? 'COALESCE(currency, "UNKNOWN")'
+                    : '"UNSPECIFIED"';
+                $groups = $pdo->query(
+                    'SELECT user_id, ' . $currencyExpression . ' AS currency, status, '
+                    . 'COUNT(*) AS transaction_count, COALESCE(SUM(amount),0) AS amount_total '
+                    . 'FROM wallet_transactions GROUP BY user_id, currency, status '
+                    . 'ORDER BY user_id, currency, status'
+                )->fetchAll();
+                $add('LEGACY WALLET TOTALS BY ACCOUNT ID / CURRENCY / STATUS');
+                foreach ($groups as $group) {
+                    $add(sprintf(
+                        '  user_id=%s | currency=%s | status=%s | transactions=%d | amount_total=%s',
+                        (string) $group['user_id'],
+                        (string) $group['currency'],
+                        (string) ($group['status'] ?? 'NULL'),
+                        (int) $group['transaction_count'],
+                        (string) $group['amount_total']
+                    ));
+                }
+            } else {
+                $add('LEGACY WALLET ACCOUNT RECONCILIATION: unavailable; no user_id column found.');
+            }
         }
     }
     $add('');
