@@ -16,7 +16,7 @@ $member = pf_user($pdo);
 </style>
 </head>
 <body>
-<header class="topbar"><a class="brand" href="index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="#how">How it works</a><a href="#advertise">Advertise</a><?php if($member): ?><a class="button primary" href="dashboard.php">My dashboard</a><?php else: ?><a href="login.php">Sign in</a><a class="button primary" href="login.php">Get started</a><?php endif; ?></nav></header>
+<header class="topbar"><a class="brand" href="index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="#how">How it works</a><a href="#advertise">Advertise</a><?php if($member): ?><a class="button primary" href="dashboard.php">My dashboard</a><?php else: ?><a href="login.php">Sign in</a><a class="button primary" href="register.php">Get started</a><?php endif; ?></nav></header>
 <main>
 <section class="hero">
 <div><p class="eyebrow">ONE ACCOUNT · TWO OPPORTUNITIES</p><h1>Earn rewards.<br><span>Grow your reach.</span></h1><p class="muted">PoketFlow connects people who want to earn with advertisers who need real people to complete tasks and discover their products or services.</p><div class="hero-actions"><a class="button primary" href="tasks.php">Explore tasks</a><a class="button secondary" href="campaigns.php">Advertise on PoketFlow</a></div></div>
