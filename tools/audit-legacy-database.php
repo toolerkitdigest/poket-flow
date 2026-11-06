@@ -119,19 +119,16 @@ foreach ($knownTables as $tableName) {
         $columnNames = array_column($columns, 'Field');
         if (in_array('user_id', $columnNames, true) && in_array('balance', $columnNames, true)) {
             $groups = $pdo->query(
-                'SELECT user_id, status, currency, COALESCE(SUM(balance),0) AS balance_total '
-                . 'FROM advertisers GROUP BY user_id,status,currency ORDER BY user_id'
+                'SELECT user_id, status, COALESCE(SUM(balance),0) AS balance_total '
+                . 'FROM advertisers GROUP BY user_id,status ORDER BY user_id'
             )->fetchAll();
-            $add('LEGACY ADVERTISER BALANCES BY ACCOUNT');
+            $add('LEGACY ADVERTISER BALANCES BY ACCOUNT (legacy schema has no currency column; verify platform currency)');
             foreach ($groups as $group) {
-                $add(sprintf('  user_id=%s | status=%s | currency=%s | balance=%s',
+                $add(sprintf('  user_id=%s | status=%s | balance=%s',
                     (string) $group['user_id'],
                     (string) ($group['status'] ?? 'NULL'),
-                    (string) ($group['currency'] ?? 'USD'),
                     (string) $group['balance_total']));
             }
-        } elseif (in_array('user_id', $columnNames, true) && in_array('balance', $columnNames, true)) {
-            $add('LEGACY ADVERTISER BALANCE SUMMARY: currency column is absent; values are assumed USD only for review.');
         }
     }
 
