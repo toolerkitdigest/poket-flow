@@ -19,5 +19,7 @@ jobs:
           find marketplace tools tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Test delayed blog event eligibility
         run: php tests/blog-event-eligibility-test.php
+      - name: Test signed blog bridge contract
+        run: php tests/blog-bridge-contract-test.php
       - name: Enforce independent marketplace architecture
         run: php tests/no-external-cpa-integrations-test.php
