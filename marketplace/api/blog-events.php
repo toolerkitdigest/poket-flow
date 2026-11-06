@@ -87,6 +87,19 @@ try {
         pf_blog_api_reply(404, ['ok' => false, 'error' => 'campaign_not_eligible_for_event']);
     }
 
+    $pdo->beginTransaction();
+
+    // Timestamp validation limits request age; this short-lived nonce table
+    // prevents the same signed HTTP request from being replayed within that window.
+    $pdo->exec(
+        "DELETE FROM pf_blog_event_requests
+         WHERE created_at < (CURRENT_TIMESTAMP - INTERVAL 10 MINUTE)"
+    );
+    $request = $pdo->prepare(
+        'INSERT INTO pf_blog_event_requests (nonce,request_timestamp) VALUES (?,?)'
+    );
+    $request->execute([$nonce, (int) $timestamp]);
+
     $insert = $pdo->prepare(
         'INSERT IGNORE INTO pf_blog_events
          (campaign_id,event_type,event_key,occurred_at,metadata_json)
@@ -100,12 +113,27 @@ try {
         $metadata !== null ? json_encode($metadata, JSON_THROW_ON_ERROR) : null,
     ]);
 
+    $accepted = $insert->rowCount() === 1;
+    $pdo->commit();
+
     pf_blog_api_reply(200, [
         'ok' => true,
-        'accepted' => $insert->rowCount() === 1,
-        'duplicate' => $insert->rowCount() === 0,
+        'accepted' => $accepted,
+        'duplicate' => !$accepted,
     ]);
+} catch (PDOException $exception) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    if ($exception->getCode() === '23000') {
+        pf_blog_api_reply(409, ['ok' => false, 'error' => 'request_replayed']);
+    }
+    error_log('PoketFlow blog event ingestion failed: ' . $exception->getMessage());
+    pf_blog_api_reply(500, ['ok' => false, 'error' => 'event_processing_failed']);
 } catch (Throwable $exception) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     error_log('PoketFlow blog event ingestion failed: ' . $exception->getMessage());
     pf_blog_api_reply(500, ['ok' => false, 'error' => 'event_processing_failed']);
 }
