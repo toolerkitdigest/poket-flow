@@ -1,6 +1,17 @@
 <?php
 declare(strict_types=1);
 
+/** Preserve advertiser restrictions without disabling a member's worker mode. */
+function pf_legacy_advertiser_access_allowed(PDO $pdo, int $userId): bool
+{
+    $stmt = $pdo->prepare(
+        'SELECT legacy_status FROM pf_legacy_advertiser_accounts WHERE user_id=? LIMIT 1'
+    );
+    $stmt->execute([$userId]);
+    $status = strtoupper((string) ($stmt->fetchColumn() ?: ''));
+    return !in_array($status, ['SUSPENDED', 'REJECTED'], true);
+}
+
 /** Privacy-preserving rate limit for public authentication forms. */
 function pf_auth_rate_allowed(PDO $pdo, string $action, string $identity, int $limit, int $minutes): bool
 {
