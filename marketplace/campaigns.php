@@ -29,6 +29,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($action === 'resume') {
+        $campaignId = filter_var($_POST['campaign_id'] ?? null, FILTER_VALIDATE_INT);
+        if (!$campaignId) {
+            $error = 'Invalid campaign.';
+        } else {
+            $pdo->beginTransaction();
+            try {
+                $stmt = $pdo->prepare('SELECT id,status,approved_quantity,total_quantity,reserved_budget,ends_at FROM pf_campaigns WHERE id=? AND advertiser_id=? FOR UPDATE');
+                $stmt->execute([$campaignId,(int)$user['id']]);
+                $campaign = $stmt->fetch();
+                if (!$campaign || $campaign['status'] !== 'PAUSED'
+                    || (int)$campaign['approved_quantity'] >= (int)$campaign['total_quantity']
+                    || ($campaign['ends_at'] !== null && strtotime((string)$campaign['ends_at']) < time())) {
+                    throw new RuntimeException('This campaign cannot be resumed. Check its status, remaining quantity and end date.');
+                }
+                $reservation = $pdo->prepare("SELECT id,amount FROM pf_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");
+                $reservation->execute([$campaignId]);
+                $reserved = $reservation->fetch();
+                if (!$reserved || (float)$reserved['amount'] <= 0
+                    || (float)$campaign['reserved_budget'] + 0.00001 < (float)$reserved['amount']) {
+                    throw new RuntimeException('This campaign has no remaining reserved budget and cannot be resumed.');
+                }
+                $update = $pdo->prepare("UPDATE pf_campaigns SET status='ACTIVE' WHERE id=? AND advertiser_id=? AND status='PAUSED'");
+                $update->execute([$campaignId,(int)$user['id']]);
+                if ($update->rowCount() !== 1) {
+                    throw new RuntimeException('Campaign status changed. Please refresh and try again.');
+                }
+                $remoteIp = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+                $ipBinary = filter_var($remoteIp,FILTER_VALIDATE_IP) ? inet_pton($remoteIp) : null;
+                $audit = $pdo->prepare('INSERT INTO pf_audit_log(actor_user_id,action,subject_type,subject_id,before_json,after_json,ip_address) VALUES (?,?,?,?,?,?,?)');
+                $audit->execute([(int)$user['id'],'ADVERTISER_CAMPAIGN_RESUMED','CAMPAIGN',$campaignId,json_encode(['status'=>'PAUSED'],JSON_THROW_ON_ERROR),json_encode(['status'=>'ACTIVE'],JSON_THROW_ON_ERROR),$ipBinary]);
+                $pdo->commit();
+                $notice = 'Your campaign has been resumed.';
+            } catch (Throwable $exception) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                $error = $exception instanceof RuntimeException ? $exception->getMessage() : 'Campaign could not be resumed.';
+            }
+        }
+    }
+
     if ($action === 'review') {
         $submissionId = filter_var($_POST['submission_id'] ?? null, FILTER_VALIDATE_INT);
         $decision = (string)($_POST['decision'] ?? '');
@@ -113,6 +153,6 @@ $reviews = $submissions->fetchAll();
 <main class="container"><section class="welcome"><p class="eyebrow">ADVERTISE MODE</p><h1>Your campaigns</h1><p class="muted">Create tasks for workers and review submitted evidence. Campaigns remain drafts until funding and moderation are complete.</p></section>
 <?php if($notice): ?><div class="panel" style="margin-bottom:18px"><?=pf_e($notice)?></div><?php endif; ?><?php if($error): ?><div class="alert" style="margin-bottom:18px"><?=pf_e($error)?></div><?php endif; ?>
 <section class="panel" style="margin-bottom:24px"><h2>Create a worker task</h2><form class="stack" method="post"><input type="hidden" name="_token" value="<?=pf_e(pf_csrf_token())?>"><input type="hidden" name="action" value="create"><label>Campaign title</label><input name="title" maxlength="180" required><label>Short summary</label><input name="summary" maxlength="500"><label>Description</label><textarea name="description" rows="3" required></textarea><label>Worker instructions</label><textarea name="instructions" rows="4" required></textarea><label>Requirements</label><textarea name="requirements" rows="3"></textarea><label>Reward per approved completion (USD)</label><input name="reward" type="number" min="0.01" step="0.01" required><label>Number of completions</label><input name="quantity" type="number" min="1" max="100000" required><label><input type="checkbox" name="evidence_required" checked> Evidence required</label><button class="button primary" type="submit">Save campaign draft</button></form></section>
-<section class="panel" style="margin-bottom:24px"><h2>Campaign history</h2><?php if(!$myCampaigns): ?><p class="muted">You have not created a campaign yet.</p><?php else: ?><div class="table-wrap"><table style="width:100%;border-collapse:collapse;text-align:left"><thead><tr><th>Campaign</th><th>Status</th><th>Reward</th><th>Progress</th><th>Reserved</th><th>Action</th></tr></thead><tbody><?php foreach($myCampaigns as $c): ?><tr><td><?=pf_e($c['title'])?></td><td><?=pf_e($c['status'])?></td><td><?=pf_e($c['currency'])?> <?=number_format((float)$c['reward_per_completion'],2)?></td><td><?=(int)$c['approved_quantity']?> / <?=(int)$c['total_quantity']?></td><td><?=number_format((float)$c['reserved_budget'],2)?></td><td><?php if($c['status']==='DRAFT'): ?><a href='fund-campaign.php?id=<?=(int)$c['id']?>'>Fund &amp; submit</a><?php else: ?>—<?php endif; ?></td></tr><?php endforeach; ?></tbody></table></div><?php endif; ?></section>
+<section class="panel" style="margin-bottom:24px"><h2>Campaign history</h2><?php if(!$myCampaigns): ?><p class="muted">You have not created a campaign yet.</p><?php else: ?><div class="table-wrap"><table style="width:100%;border-collapse:collapse;text-align:left"><thead><tr><th>Campaign</th><th>Status</th><th>Reward</th><th>Progress</th><th>Reserved</th><th>Action</th></tr></thead><tbody><?php foreach($myCampaigns as $c): ?><tr><td><?=pf_e($c['title'])?></td><td><?=pf_e($c['status'])?></td><td><?=pf_e($c['currency'])?> <?=number_format((float)$c['reward_per_completion'],2)?></td><td><?=(int)$c['approved_quantity']?> / <?=(int)$c['total_quantity']?></td><td><?=number_format((float)$c['reserved_budget'],2)?></td><td><?php if($c['status']==='DRAFT'): ?><a href='fund-campaign.php?id=<?=(int)$c['id']?>'>Fund &amp; submit</a><?php elseif($c['status']==='PAUSED'): ?><form method="post" style="display:inline"><input type="hidden" name="_token" value="<?=pf_e(pf_csrf_token())?>"><input type="hidden" name="action" value="resume"><input type="hidden" name="campaign_id" value="<?=(int)$c['id']?>"><button class="button primary" type="submit">Resume</button></form><?php else: ?>—<?php endif; ?></td></tr><?php endforeach; ?></tbody></table></div><?php endif; ?></section>
 <section class="panel"><h2>Worker submissions</h2><?php if(!$reviews): ?><p class="muted">No submissions have arrived yet.</p><?php else: ?><?php foreach($reviews as $s): ?><div class="review-row"><p class="eyebrow"><?=pf_e($s['title'])?> · <?=pf_e($s['status'])?></p><strong><?=pf_e($s['worker_name'])?></strong> <span class="small muted"><?=pf_e($s['worker_email'])?></span><p><?=nl2br(pf_e((string)$s['submission_text']))?></p><?php if($s['evidence_json']): ?><pre style="white-space:pre-wrap"><?=pf_e((string)$s['evidence_json'])?></pre><?php endif; ?><p class="small muted">Reward: <?=pf_e($s['currency'])?> <?=number_format((float)$s['reward_amount'],2)?></p><?php if($s['status']==='PENDING'): ?><form method="post" class="review-actions"><input type="hidden" name="_token" value="<?=pf_e(pf_csrf_token())?>"><input type="hidden" name="action" value="review"><input type="hidden" name="submission_id" value="<?=(int)$s['id']?>"><input name="review_note" placeholder="Optional review note"><button class="button primary" name="decision" value="approve">Approve & pay</button><button class="button danger" name="decision" value="reject">Reject</button></form><?php endif; ?></div><?php endforeach; ?><?php endif; ?></section>
 </main></body></html>
