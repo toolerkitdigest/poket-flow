@@ -70,3 +70,13 @@ function pf_require_login(PDO $pdo): array
     }
     return $user;
 }
+
+function pf_require_admin(PDO $pdo): array
+{
+    $user = pf_require_login($pdo);
+    if (strtoupper((string) ($user['role'] ?? '')) !== 'ADMIN') {
+        http_response_code(403);
+        exit('Administrator access required.');
+    }
+    return $user;
+}
