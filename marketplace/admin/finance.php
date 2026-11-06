@@ -18,18 +18,30 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
      $w=$pdo->prepare("SELECT id FROM pf_wallets WHERE user_id=? AND wallet_type='ADVERTISER' AND currency=? FOR UPDATE");$w->execute([(int)$r['advertiser_id'],$r['currency']]);$wid=(int)$w->fetchColumn();
      $l=$pdo->prepare("INSERT INTO pf_wallet_ledger(wallet_id,user_id,entry_type,amount,currency,reference_type,reference_id,idempotency_key,description,created_by) VALUES (?,?,'DEPOSIT',?,?,'FUNDING_REQUEST',?,?,?,?)");
      $l->execute([$wid,(int)$r['advertiser_id'],$r['amount'],$r['currency'],$id,'funding-request-'.$id,'Verified advertiser deposit',$admin['id']]);$lid=(int)$pdo->lastInsertId();
-     $pdo->prepare("UPDATE pf_funding_requests SET status='APPROVED',ledger_entry_id=?,reviewed_by=?,reviewed_at=NOW(),review_note=? WHERE id=? AND status='PENDING'")->execute([$lid,$admin['id'],$note?:null,$id]);
+     $fundingUpdate=$pdo->prepare("UPDATE pf_funding_requests SET status='APPROVED',ledger_entry_id=?,reviewed_by=?,reviewed_at=NOW(),review_note=? WHERE id=? AND status='PENDING'");
+     $fundingUpdate->execute([$lid,$admin['id'],$note?:null,$id]);
+     if($fundingUpdate->rowCount()!==1)throw new RuntimeException('Funding request changed during approval. No credit was applied.');
     }else{$pdo->prepare("UPDATE pf_funding_requests SET status='REJECTED',reviewed_by=?,reviewed_at=NOW(),review_note=? WHERE id=? AND status='PENDING'")->execute([$admin['id'],$note?:null,$id]);}
    }elseif($action==='withdrawal'){
     $q=$pdo->prepare("SELECT * FROM pf_withdrawals WHERE id=? FOR UPDATE");$q->execute([$id]);$r=$q->fetch();
     if(!$r||$r['status']!=='PENDING'||!in_array($decision,['paid','reject'],true))throw new RuntimeException('Withdrawal is no longer pending.');
     if($decision==='reject'){
+     if(empty($r['hold_ledger_entry_id']))throw new RuntimeException('This withdrawal has no recorded wallet hold. Manual reconciliation is required.');
      $pdo->prepare("INSERT INTO pf_wallet_ledger(wallet_id,user_id,entry_type,amount,currency,reference_type,reference_id,idempotency_key,description,created_by) VALUES (?,?,'REFUND',?,?,'WITHDRAWAL',?,?,?,?)")->execute([(int)$r['wallet_id'],(int)$r['user_id'],$r['amount'],$r['currency'],$id,'withdrawal-release-'.$id,'Released rejected withdrawal hold',$admin['id']]);
-     $pdo->prepare("UPDATE pf_withdrawals SET status='REJECTED',reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=? AND status='PENDING'")->execute([$admin['id'],$note?:null,$id]);
+     $withdrawalUpdate=$pdo->prepare("UPDATE pf_withdrawals SET status='REJECTED',reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=? AND status='PENDING'");
+     $withdrawalUpdate->execute([$admin['id'],$note?:null,$id]);
+     if($withdrawalUpdate->rowCount()!==1)throw new RuntimeException('Withdrawal changed during rejection. The transaction was rolled back.');
     }else{
      $payoutReference=trim((string)($_POST['payout_reference']??''));
      if($payoutReference===''){throw new RuntimeException('Enter the real payment transaction reference before marking a withdrawal as paid.');}
-     $pdo->prepare("UPDATE pf_withdrawals SET status='PAID',reviewed_by=?,reviewed_at=NOW(),payout_reference=?,admin_note=? WHERE id=? AND status='PENDING'")->execute([$admin['id'],$payoutReference,$note?:null,$id]);
+     if(empty($r['hold_ledger_entry_id']))throw new RuntimeException('This withdrawal has no recorded wallet hold. Manual reconciliation is required.');
+     $withdrawalUpdate=$pdo->prepare("UPDATE pf_withdrawals SET status='PAID',reviewed_by=?,reviewed_at=NOW(),payout_reference=?,admin_note=? WHERE id=? AND status='PENDING'");
+     $withdrawalUpdate->execute([$admin['id'],$payoutReference,$note?:null,$id]);
+     if($withdrawalUpdate->rowCount()!==1)throw new RuntimeException('Withdrawal changed during settlement. The transaction was rolled back.');
+     // The original hold already debited the wallet. Record settlement with a
+     // zero-value immutable ledger event so available balance is not debited twice.
+     $pdo->prepare("INSERT INTO pf_wallet_ledger(wallet_id,user_id,entry_type,amount,currency,reference_type,reference_id,idempotency_key,description,created_by) VALUES (?,?,'WITHDRAWAL_PAID',0,?,'WITHDRAWAL',?,?,?,?)")
+       ->execute([(int)$r['wallet_id'],(int)$r['user_id'],$r['currency'],$id,'withdrawal-paid-'.$id,'Withdrawal paid; original hold remains the debit',$admin['id']]);
     }
    }elseif($action==='campaign'){
     $q=$pdo->prepare("SELECT * FROM pf_campaigns WHERE id=? FOR UPDATE");$q->execute([$id]);$r=$q->fetch();
@@ -43,11 +55,13 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     else{
      $pdo->prepare("UPDATE pf_campaigns SET status='REJECTED',reserved_budget=0,reviewed_by=?,reviewed_at=NOW(),admin_note=? WHERE id=?")->execute([$admin['id'],$note?:null,$id]);
      $res=$pdo->prepare("SELECT id,amount,advertiser_id,currency,ledger_entry_id FROM pf_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");$res->execute([$id]);$reservation=$res->fetch();
-     if($reservation){
-      $wallet=$pdo->prepare("SELECT id FROM pf_wallets WHERE user_id=? AND wallet_type='ADVERTISER' AND currency=? FOR UPDATE");$wallet->execute([(int)$reservation['advertiser_id'],$reservation['currency']]);$wid=(int)$wallet->fetchColumn();
-      $pdo->prepare("INSERT INTO pf_wallet_ledger(wallet_id,user_id,entry_type,amount,currency,reference_type,reference_id,idempotency_key,description,created_by) VALUES (?,?,'CAMPAIGN_RELEASE',?,?,'CAMPAIGN',?,?,?,?)")->execute([$wid,(int)$reservation['advertiser_id'],$reservation['amount'],$reservation['currency'],$id,'campaign-release-'.$id,'Released budget for rejected campaign',$admin['id']]);
-      $pdo->prepare("UPDATE pf_campaign_reservations SET status='RELEASED' WHERE id=?")->execute([(int)$reservation['id']]);
+     if(!$reservation||(float)$reservation['amount']<=0||abs((float)$reservation['amount']-(float)$r['reserved_budget'])>0.01){
+      throw new RuntimeException('The campaign reservation does not match its remaining budget. Rejection was rolled back for manual reconciliation.');
      }
+     $wallet=$pdo->prepare("SELECT id FROM pf_wallets WHERE user_id=? AND wallet_type='ADVERTISER' AND currency=? FOR UPDATE");$wallet->execute([(int)$reservation['advertiser_id'],$reservation['currency']]);$wid=(int)$wallet->fetchColumn();
+     if(!$wid)throw new RuntimeException('Advertiser wallet missing; budget cannot be safely released.');
+     $pdo->prepare("INSERT INTO pf_wallet_ledger(wallet_id,user_id,entry_type,amount,currency,reference_type,reference_id,idempotency_key,description,created_by) VALUES (?,?,'CAMPAIGN_RELEASE',?,?,'CAMPAIGN',?,?,?,?)")->execute([$wid,(int)$reservation['advertiser_id'],$reservation['amount'],$reservation['currency'],$id,'campaign-release-'.$id,'Released budget for rejected campaign',$admin['id']]);
+     $pdo->prepare("UPDATE pf_campaign_reservations SET status='RELEASED' WHERE id=? AND status='RESERVED'")->execute([(int)$reservation['id']]);
     }
    }else{throw new RuntimeException('Unknown admin action.');}
    $remoteIp=(string)($_SERVER['REMOTE_ADDR']??'');
