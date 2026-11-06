@@ -92,6 +92,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($s['campaign_status'] !== 'ACTIVE' || (float)$s['reserved_budget'] < $reward) {
                         throw new RuntimeException('This campaign has insufficient reserved budget or is not active. No reward was issued.');
                     }
+                    $reservationCheck = $pdo->prepare("SELECT amount FROM pf_campaign_reservations WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");
+                    $reservationCheck->execute([(int)$s['campaign_id']]);
+                    $reservationBefore = $reservationCheck->fetchColumn();
+                    if ($reservationBefore === false || abs((float)$reservationBefore-(float)$s['reserved_budget'])>0.01) {
+                        throw new RuntimeException('Campaign reserve and reservation ledger do not match. No reward was issued.');
+                    }
                     $upd = $pdo->prepare("UPDATE pf_campaigns SET reserved_budget=reserved_budget-?,spent_budget=spent_budget+?,approved_quantity=approved_quantity+1 WHERE id=? AND reserved_budget>=? AND approved_quantity<total_quantity");
                     $upd->execute([$reward,$reward,(int)$s['campaign_id'],$reward]);
                     if ($upd->rowCount() !== 1) {
