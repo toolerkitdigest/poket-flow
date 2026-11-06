@@ -27,6 +27,9 @@ PoketFlow is an independent advertiser–worker marketplace. OGAds, CPAGrip and 
 - Retain existing users rows, primary keys, email addresses, password hashes, profile data, statuses and historical financial records.
 - No bulk password reset, account recreation, user deletion or balance rewrite.
 - Account modes are additive and do not replace the legacy role field.
+- Existing and newly registered members receive both Earn and Advertise capabilities by default; each protected workflow checks its corresponding `pf_account_modes` capability.
+- Legacy advertiser profiles marked `SUSPENDED` or `REJECTED` retain that restriction in Advertise mode, while their separate Earn mode remains available unless the member account itself is suspended.
+- Legacy advertiser `PENDING` status is retained as history; new campaigns still require the marketplace's own funding and moderation workflow before delivery.
 - Existing login continues to verify password_hash with PHP password_verify().
 - Before any migration: inspect the exact live schema, compare the dated SQL backup, create a fresh backup, and test on a clone.
 
