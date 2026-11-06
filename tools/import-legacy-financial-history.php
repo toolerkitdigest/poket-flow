@@ -110,6 +110,15 @@ $withdrawalSummary = $pdo->query(
 )->fetchAll();
 $walletCount = (int) $pdo->query("SELECT COUNT(*) FROM wallet_transactions WHERE status='COMPLETED' OR (status='PENDING' AND type='WITHDRAWAL')")->fetchColumn();
 $withdrawalCount = (int) $pdo->query('SELECT COUNT(*) FROM withdrawals')->fetchColumn();
+$unmatchedPaidWithdrawals = (int) $pdo->query(
+    "SELECT COUNT(*) FROM withdrawals w
+     WHERE w.status='PAID' AND NOT EXISTS (
+       SELECT 1 FROM wallet_transactions t
+       WHERE t.user_id=w.user_id AND t.type='WITHDRAWAL'
+         AND LOWER(COALESCE(t.reference_type,''))='withdrawal'
+         AND t.reference_id=w.id AND t.status='COMPLETED'
+     )"
+)->fetchColumn();
 
 echo "POKETFLOW LEGACY FINANCIAL IMPORT\n";
 echo "Database: " . $config['dbname'] . "\n";
@@ -120,6 +129,7 @@ foreach ($walletSummary as $row) {
         (int) $row['user_id'], (string) $row['currency'], (int) $row['transactions'], (string) $row['total']);
 }
 echo "Withdrawal history rows to preserve: {$withdrawalCount}\n";
+echo "Paid withdrawals without a completed legacy debit: {$unmatchedPaidWithdrawals}\n";
 echo "Inactive campaign history rows to archive: {$campaignCount}\n";
 echo "Historical conversion rows to archive: {$conversionCount}\n";
 foreach ($withdrawalSummary as $row) {
@@ -130,6 +140,10 @@ foreach ($unsupportedCounts as $table => $count) {
 }
 if (array_sum($unsupportedCounts) > 0) {
     fwrite(STDERR, "Advertiser financial/campaign records exist. This worker-history importer will not run until a separate reconciliation/import path is prepared.\n");
+    exit(1);
+}
+if ($unmatchedPaidWithdrawals > 0) {
+    fwrite(STDERR, "Paid legacy withdrawals are missing their completed wallet debits. Manual reconciliation is required before import.\n");
     exit(1);
 }
 
