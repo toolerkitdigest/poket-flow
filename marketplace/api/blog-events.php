@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Signed event receiver for the isolated PoketFlow Blog application.
  * The blog has its own database and never receives main-database credentials.
  */
-require_once dirname(__DIR__) . '/bootstrap/app.php';
+require_once dirname(__DIR__) . '/bootstrap/database.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
