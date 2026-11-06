@@ -61,7 +61,7 @@ jobs:
             database/migrations/20261106_004_authentication_workflows.sql \
             database/migrations/20261106_005_blog_sponsorship_workflow.sql \
             database/migrations/20261106_006_submission_disputes.sql \
-            database/migrations/20261106_007_legacy_advertiser_preservation.sql; do
+            database/migrations/20261106_007_legacy_advertiser_preservation.sql \\\n            database/migrations/20261106_008_blog_event_request_replay_protection.sql; do
             echo "Applying marketplace migration $migration"
             mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < "$migration"
           done
@@ -105,6 +105,16 @@ jobs:
           test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_advertiser_history WHERE source_table='ad_campaigns' AND legacy_advertiser_id=1 AND owner_user_id=1")" = "1"
           test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_history WHERE source_table='campaigns' AND JSON_CONTAINS_PATH(snapshot_json,'one','$.network_offer_url')=1")" = "0"
           test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_blog_campaigns WHERE sync_status='PENDING'")" = "0"
+      - name: Verify signed blog event request replay protection
+        run: |
+          set -euo pipefail
+          mysql -h127.0.0.1 -uroot -proot poketflow_test <<'SQL'
+          INSERT INTO pf_blog_event_requests (nonce,request_timestamp)
+          VALUES (REPEAT('a',48),UNIX_TIMESTAMP());
+          INSERT IGNORE INTO pf_blog_event_requests (nonce,request_timestamp)
+          VALUES (REPEAT('a',48),UNIX_TIMESTAMP());
+          SQL
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_blog_event_requests WHERE nonce=REPEAT('a',48)")" = "1"
       - name: Verify legacy advertiser access restrictions
         env:
           POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
