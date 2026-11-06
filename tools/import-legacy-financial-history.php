@@ -54,8 +54,7 @@ $requiredTables = [
     'pf_wallets', 'pf_wallet_ledger', 'pf_withdrawals', 'pf_legacy_history',
 ];
 foreach ($requiredTables as $table) {
-    $check = $pdo->prepare('SHOW TABLES LIKE ?');
-    $check->execute([$table]);
+    $check = $pdo->query('SHOW TABLES LIKE ' . $pdo->quote($table));
     if (!$check->fetchColumn()) {
         fwrite(STDERR, "Required table is missing: {$table}. Apply and verify the required schema migrations on a disposable database first.\n");
         exit(1);
@@ -91,8 +90,7 @@ foreach (['legacy_withdrawal_id','method_network','hold_ledger_entry_id','destin
 
 $unsupportedCounts = [];
 foreach (['advertisers','advertiser_transactions','ad_campaigns'] as $table) {
-    $check = $pdo->prepare('SHOW TABLES LIKE ?');
-    $check->execute([$table]);
+    $check = $pdo->query('SHOW TABLES LIKE ' . $pdo->quote($table));
     if ($check->fetchColumn()) {
         $unsupportedCounts[$table] = (int) $pdo->query('SELECT COUNT(*) FROM `' . $table . '`')->fetchColumn();
     }
