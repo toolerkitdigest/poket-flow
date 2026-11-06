@@ -129,12 +129,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $list = $pdo->prepare(
-    'SELECT c.id,c.title,c.status,c.reserved_budget,c.spent_budget,c.currency,c.created_at,
+    "SELECT c.id,c.title,c.status,c.reserved_budget,c.spent_budget,c.currency,c.created_at,
             b.placement_key,b.requested_budget,b.sync_status,b.last_sync_error,b.starts_at,b.ends_at,
             (SELECT COUNT(*) FROM pf_blog_events e WHERE e.campaign_id=c.id AND e.event_type='IMPRESSION') AS impressions,
             (SELECT COUNT(*) FROM pf_blog_events e WHERE e.campaign_id=c.id AND e.event_type='CLICK') AS clicks
      FROM pf_campaigns c JOIN pf_blog_campaigns b ON b.campaign_id=c.id
-     WHERE c.advertiser_id=? ORDER BY c.created_at DESC'
+     WHERE c.advertiser_id=? ORDER BY c.created_at DESC"
 );
 $list->execute([(int)$user['id']]);
 $campaigns = $list->fetchAll();
