@@ -88,8 +88,8 @@ CREATE TABLE campaigns (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-INSERT INTO campaigns (id,source_type,network_id,external_offer_id,network_offer_url,title,description,category,instructions,network_payout,reward_rate,worker_reward,platform_margin,status,approval_status,created_at)
-VALUES (1,'DIRECT_ADVERTISER',1,'TEST-OFFER','https://affiliate.invalid/secret-token','Archived test offer','Historical campaign snapshot','Offer','Old instructions',1.00,40.00,0.40,0.60,'PAUSED','APPROVED','2026-09-30 09:04:41');
+INSERT INTO campaigns (id,source_type,advertiser_id,network_id,external_offer_id,network_offer_url,title,description,category,instructions,network_payout,reward_rate,worker_reward,platform_margin,status,approval_status,created_at)
+VALUES (1,'DIRECT_ADVERTISER',1,1,'TEST-OFFER','https://affiliate.invalid/secret-token','Archived test offer','Historical campaign snapshot','Offer','Old instructions',1.00,40.00,0.40,0.60,'PAUSED','APPROVED','2026-09-30 09:04:41');
 
 CREATE TABLE conversions (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
