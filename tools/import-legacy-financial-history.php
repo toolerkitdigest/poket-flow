@@ -188,12 +188,12 @@ echo "Historical conversion rows to archive: {$conversionCount}\n";
 foreach ($withdrawalSummary as $row) {
     printf("  status=%s | count=%d\n", (string) $row['status'], (int) $row['total']);
 }
-foreach ($unsupportedCounts as $table => $count) {
-    echo "Legacy {$table} rows: {$count}\n";
-}
-if (array_sum($unsupportedCounts) > 0) {
-    fwrite(STDERR, "Advertiser financial/campaign records exist. This worker-history importer will not run until a separate reconciliation/import path is prepared.\n");
-    exit(1);
+echo "Legacy advertiser accounts to preserve: " . count($advertiserRows) . "\n";
+echo "Legacy advertiser transaction history rows to archive: {$advertiserTransactionCount}\n";
+echo "Legacy advertiser ad campaign rows to archive: {$adCampaignCount}\n";
+foreach ($advertiserBalanceSummary as $row) {
+    printf("  status=%s | accounts=%d | current_balance=%s USD (legacy advertiser table has no currency column)\n",
+        (string)$row['status'],(int)$row['accounts'],(string)$row['current_balance']);
 }
 if ($unmatchedPaidWithdrawals > 0) {
     fwrite(STDERR, "Paid legacy withdrawals are missing their completed wallet debits. Manual reconciliation is required before import.\n");
@@ -543,8 +543,11 @@ try {
         $archiveFind->execute(['campaigns', (int) $row['id']]);
         $existing = $archiveFind->fetch();
         // Legacy campaigns.advertiser_id refers to advertisers.id, not users.id.
-        // Keep owner_user_id null unless a separately verified mapping is imported.
-        $ownerId = null;
+        $legacyAdvertiserId = $row['advertiser_id'] !== null ? (int)$row['advertiser_id'] : 0;
+        if ($legacyAdvertiserId > 0 && !isset($advertiserUserMap[$legacyAdvertiserId])) {
+            throw new RuntimeException('Legacy campaign references an unmapped advertiser ID ' . $legacyAdvertiserId);
+        }
+        $ownerId = $legacyAdvertiserId > 0 ? $advertiserUserMap[$legacyAdvertiserId] : null;
         if ($existing) {
             if (($existing['owner_user_id'] === null ? null : (int) $existing['owner_user_id']) !== $ownerId) throw new RuntimeException('Existing legacy campaign archive does not match campaign ID ' . (int) $row['id']);
             continue;
@@ -605,6 +608,31 @@ try {
     if ($expectedWithdrawalRows !== $actualWithdrawalRows) {
         throw new RuntimeException("Legacy withdrawal count mismatch: source={$expectedWithdrawalRows}, imported={$actualWithdrawalRows}");
     }
+    $expectedAdvertiserAccounts = (int)$pdo->query('SELECT COUNT(*) FROM advertisers')->fetchColumn();
+    $actualAdvertiserAccounts = (int)$pdo->query('SELECT COUNT(*) FROM pf_legacy_advertiser_accounts')->fetchColumn();
+    if ($expectedAdvertiserAccounts !== $actualAdvertiserAccounts) {
+        throw new RuntimeException("Legacy advertiser account count mismatch: source={$expectedAdvertiserAccounts}, imported={$actualAdvertiserAccounts}");
+    }
+    $openingBalanceMismatch = (int)$pdo->query(
+        "SELECT COUNT(*) FROM advertisers a
+         JOIN pf_legacy_advertiser_accounts x ON x.legacy_advertiser_id=a.id
+         JOIN pf_wallet_ledger l ON l.id=x.opening_ledger_entry_id
+         WHERE x.user_id<>a.user_id OR x.legacy_balance<>a.balance OR l.amount<>a.balance
+            OR l.user_id<>a.user_id OR l.reference_type<>'LEGACY_ADVERTISER_BALANCE'
+            OR l.reference_id<>a.id"
+    )->fetchColumn();
+    if ($openingBalanceMismatch !== 0) {
+        throw new RuntimeException('Legacy advertiser opening-balance reconciliation failed.');
+    }
+    foreach (['advertiser_transactions','ad_campaigns'] as $sourceTable) {
+        $sourceCount = (int)$pdo->query('SELECT COUNT(*) FROM ' . $sourceTable)->fetchColumn();
+        $archiveCount = $pdo->prepare('SELECT COUNT(*) FROM pf_legacy_advertiser_history WHERE source_table=?');
+        $archiveCount->execute([$sourceTable]);
+        if ($sourceCount !== (int)$archiveCount->fetchColumn()) {
+            throw new RuntimeException('Legacy advertiser history count mismatch for ' . $sourceTable);
+        }
+    }
+
     foreach (['campaigns','conversions'] as $sourceTable) {
         $sourceCount = (int)$pdo->query('SELECT COUNT(*) FROM ' . $sourceTable)->fetchColumn();
         $archiveCount = $pdo->prepare('SELECT COUNT(*) FROM pf_legacy_history WHERE source_table=?');
@@ -615,7 +643,7 @@ try {
     }
 
     $pdo->commit();
-    echo "Import complete. Wallet transactions added: {$importedTransactions}; withdrawal history rows added: {$importedWithdrawals}; campaign archives added: {$archivedCampaigns}; conversion archives added: {$archivedConversions}.\n";
+    echo "Import complete. Worker wallet transactions added: {$importedTransactions}; withdrawals added: {$importedWithdrawals}; advertiser accounts added: {$importedAdvertiserAccounts}; advertiser transactions archived: {$importedAdvertiserTransactions}; advertiser ad campaigns archived: {$importedAdCampaigns}; old campaigns archived: {$archivedCampaigns}; conversions archived: {$archivedConversions}.\n";
     echo "Legacy source tables and user rows were not modified. Verify per-user balances and history before enabling member access.\n";
 } catch (Throwable $exception) {
     if ($pdo->inTransaction()) {
