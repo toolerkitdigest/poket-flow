@@ -89,7 +89,7 @@ CREATE TABLE campaigns (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 INSERT INTO campaigns (id,source_type,network_id,external_offer_id,network_offer_url,title,description,category,instructions,network_payout,reward_rate,worker_reward,platform_margin,status,approval_status,created_at)
-VALUES (1,'CPA_NETWORK',1,'TEST-OFFER','https://affiliate.invalid/secret-token','Archived test offer','Historical campaign snapshot','Offer','Old instructions',1.00,40.00,0.40,0.60,'PAUSED','APPROVED','2026-09-30 09:04:41');
+VALUES (1,'DIRECT_ADVERTISER',1,'TEST-OFFER','https://affiliate.invalid/secret-token','Archived test offer','Historical campaign snapshot','Offer','Old instructions',1.00,40.00,0.40,0.60,'PAUSED','APPROVED','2026-09-30 09:04:41');
 
 CREATE TABLE conversions (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -114,21 +114,48 @@ CREATE TABLE advertisers (
   user_id BIGINT UNSIGNED NOT NULL,
   company_name VARCHAR(150) NOT NULL,
   status ENUM('PENDING','ACTIVE','SUSPENDED','REJECTED') NOT NULL DEFAULT 'PENDING',
-  balance DECIMAL(12,2) NOT NULL DEFAULT 0.00
+  balance DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  website VARCHAR(255) NULL,
+  description TEXT NULL,
+  contact_email VARCHAR(190) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_advertiser_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO advertisers (id,user_id,company_name,status,balance,website,description,contact_email,created_at)
+VALUES (1,1,'Test Advertiser','ACTIVE',25.75,'https://advertiser.example.invalid','Legacy advertiser profile','billing@example.invalid','2026-09-01 10:00:00');
 CREATE TABLE advertiser_transactions (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   advertiser_id BIGINT UNSIGNED NOT NULL,
   type ENUM('DEPOSIT','CAMPAIGN_FUNDING','CAMPAIGN_SPEND','REFUND','ADJUSTMENT') NOT NULL,
   amount DECIMAL(12,2) NOT NULL,
-  status ENUM('PENDING','COMPLETED','FAILED','REVERSED') NOT NULL DEFAULT 'COMPLETED'
+  status ENUM('PENDING','COMPLETED','FAILED','REVERSED') NOT NULL DEFAULT 'COMPLETED',
+  campaign_id BIGINT UNSIGNED NULL,
+  reference VARCHAR(190) NULL,
+  description VARCHAR(255) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO advertiser_transactions (id,advertiser_id,campaign_id,type,amount,reference,status,description,created_at) VALUES
+(1,1,NULL,'DEPOSIT',40.00,'legacy-deposit-1','COMPLETED','Historical advertiser deposit','2026-09-01 10:10:00'),
+(2,1,1,'CAMPAIGN_SPEND',14.25,'legacy-spend-1','COMPLETED','Historical campaign spend','2026-09-02 10:10:00'),
+(3,1,NULL,'DEPOSIT',10.00,'legacy-pending-1','PENDING','Unsettled advertiser deposit','2026-09-03 10:10:00');
 CREATE TABLE ad_campaigns (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   advertiser_id BIGINT UNSIGNED NOT NULL,
   name VARCHAR(150) NOT NULL,
   destination_url VARCHAR(500) NOT NULL,
   budget DECIMAL(12,2) NULL,
-  status VARCHAR(30) NOT NULL DEFAULT 'DRAFT'
+  status VARCHAR(30) NOT NULL DEFAULT 'DRAFT',
+  creative_type ENUM('BANNER','IMAGE','TEXT') NOT NULL DEFAULT 'TEXT',
+  creative_url VARCHAR(500) NULL,
+  placement VARCHAR(100) NULL,
+  spent DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  approval_status ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+  start_at DATETIME NULL,
+  end_at DATETIME NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO ad_campaigns (id,advertiser_id,name,destination_url,budget,status,creative_type,creative_url,placement,spent,approval_status,created_at)
+VALUES (1,1,'Archived banner campaign','https://example.invalid',20.00,'PAUSED','BANNER','https://example.invalid/banner.png','sidebar',3.00,'APPROVED','2026-09-04 10:00:00');
 SET FOREIGN_KEY_CHECKS=1;
