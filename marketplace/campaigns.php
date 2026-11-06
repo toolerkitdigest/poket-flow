@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $reservation->execute([$campaignId]);
                 $reserved = $reservation->fetch();
                 if (!$reserved || (float)$reserved['amount'] <= 0
-                    || (float)$campaign['reserved_budget'] + 0.00001 < (float)$reserved['amount']) {
+                    || abs((float)$campaign['reserved_budget']-(float)$reserved['amount'])>0.01) {
                     throw new RuntimeException('This campaign has no remaining reserved budget and cannot be resumed.');
                 }
                 $update = $pdo->prepare("UPDATE pf_campaigns SET status='ACTIVE' WHERE id=? AND advertiser_id=? AND status='PAUSED'");
