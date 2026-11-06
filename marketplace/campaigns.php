@@ -58,6 +58,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($upd->rowCount() !== 1) {
                         throw new RuntimeException('Campaign budget or completion limit changed. Please refresh and try again.');
                     }
+                    $reservationUpdate = $pdo->prepare("UPDATE pf_campaign_reservations SET status=CASE WHEN amount<=? THEN 'CONSUMED' ELSE 'RESERVED' END, amount=amount-? WHERE campaign_id=? AND status='RESERVED' AND amount>=?");
+                    $reservationUpdate->execute([$reward,$reward,(int)$s['campaign_id'],$reward]);
+                    if ($reservationUpdate->rowCount() !== 1) {
+                        throw new RuntimeException('Campaign reservation does not match the remaining campaign budget.');
+                    }
                     $pdo->prepare("INSERT IGNORE INTO pf_wallets (user_id,wallet_type,currency) VALUES (?,'WORKER',?)")->execute([(int)$s['worker_id'],$s['currency']]);
                     $walletStmt = $pdo->prepare("SELECT id FROM pf_wallets WHERE user_id=? AND wallet_type='WORKER' AND currency=? FOR UPDATE");
                     $walletStmt->execute([(int)$s['worker_id'],$s['currency']]);
