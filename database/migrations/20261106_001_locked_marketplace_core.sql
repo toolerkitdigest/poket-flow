@@ -27,6 +27,12 @@ CREATE TABLE IF NOT EXISTS pf_wallets (
   KEY idx_pf_wallet_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Create empty USD ledgers for all existing members; no balances are fabricated.
+INSERT IGNORE INTO pf_wallets (user_id,wallet_type,currency)
+SELECT id,'WORKER','USD' FROM users
+UNION ALL
+SELECT id,'ADVERTISER','USD' FROM users;
+
 CREATE TABLE IF NOT EXISTS pf_wallet_ledger (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   wallet_id BIGINT UNSIGNED NOT NULL,
