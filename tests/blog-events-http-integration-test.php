@@ -106,10 +106,9 @@ if ($delayedStatus !== 200 || empty($delayed['accepted'])) {
 }
 
 // Events outside the approved schedule must never be counted, even after expiry.
-$pdo->prepare("UPDATE pf_campaigns SET status='COMPLETED' WHERE id=?")->execute([$campaignId]);
-$pdo->prepare("UPDATE pf_blog_campaigns SET status='ENDED' WHERE campaign_id=?")->execute([$campaignId]);
-$end = $pdo->query('SELECT ends_at FROM pf_blog_campaigns WHERE campaign_id=' . $campaignId)->fetchColumn();
-$outside = date('Y-m-d H:i:s', strtotime((string) $end . ' +1 second'));
+$pdo->prepare("UPDATE pf_campaigns SET status='COMPLETED',ends_at=NOW()-INTERVAL 30 MINUTE WHERE id=?")->execute([$campaignId]);
+$pdo->prepare("UPDATE pf_blog_campaigns SET status='ENDED',ends_at=NOW()-INTERVAL 30 MINUTE WHERE campaign_id=?")->execute([$campaignId]);
+$outside = date('Y-m-d H:i:s', time() - 20 * 60);
 [$outsideStatus, $outsideBody] = sendEvent(
     $campaignId,
     'CLICK',
