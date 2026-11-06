@@ -115,8 +115,14 @@ foreach ($knownTables as $tableName) {
     }
 
     if (in_array($tableName, ['wallet_transactions','withdrawals','campaigns','conversions'], true)) {
-        $columns = $pdo->query('SHOW COLUMNS FROM ' . $quoted)->fetchAll();
+        $columns = $pdo->query('SHOW FULL COLUMNS FROM ' . $quoted)->fetchAll();
         $columnNames = array_column($columns, 'Field');
+        $add(strtoupper($tableName) . ' TABLE COLUMNS');
+        foreach ($columns as $column) {
+            $add(sprintf('  %s | %s | null=%s | key=%s | default=%s | extra=%s',
+                $column['Field'], $column['Type'], $column['Null'], $column['Key'],
+                $column['Default'] === null ? 'NULL' : (string) $column['Default'], $column['Extra']));
+        }
         if (in_array('status', $columnNames, true)) {
             $amountSelect = in_array('amount', $columnNames, true) ? ', COALESCE(SUM(amount),0) AS amount_total' : '';
             $groups = $pdo->query(
