@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/bootstrap/app.php';
-$user = pf_require_login($pdo);
+$user = pf_require_advertiser($pdo);
 $error = '';
 $notice = '';
 $id = filter_input(INPUT_GET,'id',FILTER_VALIDATE_INT);
