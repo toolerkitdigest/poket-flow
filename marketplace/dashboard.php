@@ -40,12 +40,12 @@ $campaignCount = (int)$myCampaigns->fetchColumn();
 <link rel="stylesheet" href="assets/marketplace.css">
 </head>
 <body>
-<header class="topbar"><a class="brand" href="index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="tasks.php">Find tasks</a><a href="campaigns.php">My campaigns</a><a href="wallet.php">Wallets</a><a href="funding.php">Add funds</a><?php if (strtoupper((string) $user['role']) === 'ADMIN'): ?><a href="admin/index.php">Admin</a><?php endif; ?><a href="logout.php">Sign out</a></nav></header>
+<header class="topbar"><a class="brand" href="index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="tasks.php">Find tasks</a><a href="campaigns.php">Worker tasks</a><a href="blog-campaigns.php">Blog ads</a><a href="wallet.php">Wallets</a><a href="funding.php">Add funds</a><?php if (strtoupper((string) $user['role']) === 'ADMIN'): ?><a href="admin/index.php">Admin</a><?php endif; ?><a href="logout.php">Sign out</a></nav></header>
 <main class="container">
 <section class="welcome"><p class="eyebrow">YOUR UNIFIED ACCOUNT</p><h1>Welcome, <?= pf_e((string)$user['name']) ?></h1><p class="muted">Use the same account to earn from tasks and advertise to the PoketFlow community.</p></section>
 <section class="mode-grid">
 <article class="panel mode-worker"><p class="eyebrow">EARN MODE</p><h2>Complete tasks. Earn rewards.</h2><p class="muted">Browse advertiser-created tasks, follow instructions and submit evidence for review.</p><div class="metric">$<?= number_format($workerBalance,2) ?><span>Worker wallet</span></div><p class="muted"><?= number_format($availableTasks) ?> active tasks available</p><a class="button primary" href="tasks.php">Explore tasks</a></article>
-<article class="panel mode-advertiser"><p class="eyebrow">ADVERTISE MODE</p><h2>Reach real people.</h2><p class="muted">Create campaigns, set rewards and budgets, then review worker submissions.</p><div class="metric">$<?= number_format($advertiserBalance,2) ?><span>Advertiser wallet</span></div><p class="muted"><?= number_format($campaignCount) ?> campaigns in your account</p><a class="button primary" href="campaigns.php">Manage campaigns</a></article>
+<article class="panel mode-advertiser"><p class="eyebrow">ADVERTISE MODE</p><h2>Reach real people.</h2><p class="muted">Create worker tasks or request sponsored blog placements from one advertiser account.</p><div class="metric">$<?= number_format($advertiserBalance,2) ?><span>Advertiser wallet</span></div><p class="muted"><?= number_format($campaignCount) ?> campaigns in your account</p><a class="button primary" href="campaigns.php">Worker task campaigns</a><a class="button secondary" href="blog-campaigns.php">Blog sponsorships</a></article>
 </section>
 <p class="small muted">Both modes belong to this one account. Your advertiser funds and worker earnings are kept in separate ledgers.</p>
 </main>
