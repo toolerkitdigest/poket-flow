@@ -153,7 +153,7 @@ foreach ($knownTables as $tableName) {
         }
     }
 
-    if (in_array($tableName, ['wallet_transactions','withdrawals','campaigns','conversions','ad_campaigns'], true)) {
+    if (in_array($tableName, ['wallet_transactions','withdrawals','campaigns','conversions','ad_campaigns','advertisers','advertiser_transactions'], true)) {
         $columns = $pdo->query('SHOW FULL COLUMNS FROM ' . $quoted)->fetchAll();
         $columnNames = array_column($columns, 'Field');
         $add(strtoupper($tableName) . ' TABLE COLUMNS');
