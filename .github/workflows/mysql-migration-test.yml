@@ -78,6 +78,7 @@ jobs:
           cat > /tmp/poketflow-test-config.php <<'PHP'
           <?php
           return [
+              'environment' => 'disposable',
               'host' => '127.0.0.1',
               'dbname' => 'poketflow_test',
               'username' => 'root',
@@ -86,6 +87,27 @@ jobs:
               'encryption_key' => base64_encode(str_repeat('K', 32)),
           ];
           PHP
+      - name: Verify importer refuses implicit and non-disposable configurations
+        run: |
+          set -euo pipefail
+          if env -u POKETFLOW_CONFIG php tools/import-legacy-financial-history.php --apply </dev/null >/tmp/poketflow-no-config.log 2>&1; then
+            echo "Importer unexpectedly accepted an implicit database configuration."
+            exit 1
+          fi
+          grep -q "Implicit/live database defaults are disabled" /tmp/poketflow-no-config.log
+          cat > /tmp/poketflow-production-config.php <<'PHP'
+          <?php
+          return [
+              'environment' => 'production',
+              'dbname' => 'poketflow_test',
+              'encryption_key' => base64_encode(str_repeat('K', 32)),
+          ];
+          PHP
+          if POKETFLOW_CONFIG=/tmp/poketflow-production-config.php php tools/import-legacy-financial-history.php --apply </dev/null >/tmp/poketflow-production-config.log 2>&1; then
+            echo "Importer unexpectedly accepted a production-marked configuration."
+            exit 1
+          fi
+          grep -q "non-production disposable database" /tmp/poketflow-production-config.log
       - name: Run guarded legacy import and reconciliation
         env:
           POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
