@@ -153,6 +153,10 @@ jobs:
         env:
           POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
         run: php tests/legacy-advertiser-access-test.php
+      - name: Verify worker submission appeal invariants
+        env:
+          POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
+        run: php tests/submission-appeal-db-test.php
       - name: Verify legacy member identity and password hash are preserved
         run: |
           php <<'PHP'
