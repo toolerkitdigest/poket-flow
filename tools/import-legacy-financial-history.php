@@ -21,14 +21,31 @@ foreach ($argv as $arg) {
     }
 }
 
-$configFile = getenv('POKETFLOW_CONFIG') ?: '/home/poketflo/private/poketflow-main-database.php';
-if (!is_file($configFile) || !is_readable($configFile)) {
-    fwrite(STDERR, "Private database configuration is not installed.\n");
+$configFile = getenv('POKETFLOW_CONFIG');
+if (!is_string($configFile) || trim($configFile) === '') {
+    fwrite(STDERR, "Set POKETFLOW_CONFIG to an explicit disposable-database configuration. Implicit/live database defaults are disabled.\n");
+    exit(1);
+}
+$resolvedConfigFile = realpath($configFile);
+if ($resolvedConfigFile === false || !is_file($resolvedConfigFile) || !is_readable($resolvedConfigFile)) {
+    fwrite(STDERR, "Explicit disposable database configuration is missing or unreadable.\n");
+    exit(1);
+}
+$configFile = $resolvedConfigFile;
+$liveConfigFile = realpath('/home/poketflo/private/poketflow-main-database.php')
+    ?: '/home/poketflo/private/poketflow-main-database.php';
+if ($configFile === $liveConfigFile) {
+    fwrite(STDERR, "Refusing to use the live PoketFlow database configuration.\n");
     exit(1);
 }
 $config = require $configFile;
 if (!is_array($config) || empty($config['dbname']) || empty($config['encryption_key'])) {
     fwrite(STDERR, "Database or encryption configuration is incomplete.\n");
+    exit(1);
+}
+if (($config['environment'] ?? null) !== 'disposable'
+    || strcasecmp((string) $config['dbname'], 'poketflo_db') === 0) {
+    fwrite(STDERR, "Refusing import: configuration must explicitly identify a non-production disposable database.\n");
     exit(1);
 }
 
@@ -64,6 +81,22 @@ foreach ($requiredTables as $table) {
 
 $legacyColumns = static function (PDO $pdo, string $table): array {
     return array_column($pdo->query('SHOW COLUMNS FROM `' . str_replace('`', '``', $table) . '`')->fetchAll(), 'Field');
+};
+$canonicalSnapshot = static function (array $row): string {
+    ksort($row);
+    return json_encode($row, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
+};
+$matchesSnapshot = static function (string $storedJson, array $sourceRow) use ($canonicalSnapshot): bool {
+    try {
+        $stored = json_decode($storedJson, true, 512, JSON_THROW_ON_ERROR);
+    } catch (Throwable) {
+        return false;
+    }
+    return is_array($stored)
+        && hash_equals(
+            hash('sha256', $canonicalSnapshot($sourceRow)),
+            hash('sha256', $canonicalSnapshot($stored))
+        );
 };
 $walletColumns = $legacyColumns($pdo, 'wallet_transactions');
 $withdrawalColumns = $legacyColumns($pdo, 'withdrawals');
@@ -230,6 +263,24 @@ $encrypt = static function (string $plain, string $key): string {
     }
     return base64_encode($iv . $tag . $cipher);
 };
+$decrypt = static function (string $encoded, string $key): string {
+    $raw = base64_decode($encoded, true);
+    if ($raw === false || strlen($raw) < 28) {
+        throw new RuntimeException('Stored legacy withdrawal destination is not valid encrypted data.');
+    }
+    $plain = openssl_decrypt(
+        substr($raw, 28),
+        'aes-256-gcm',
+        $key,
+        OPENSSL_RAW_DATA,
+        substr($raw, 0, 12),
+        substr($raw, 12, 16)
+    );
+    if ($plain === false) {
+        throw new RuntimeException('Stored legacy withdrawal destination could not be authenticated.');
+    }
+    return $plain;
+};
 
 $pdo->beginTransaction();
 try {
@@ -304,7 +355,11 @@ try {
          FROM withdrawals ORDER BY id FOR UPDATE'
     );
     $legacyWithdrawals = $withdrawalSelect->fetchAll();
-    $withdrawalCheck = $pdo->prepare('SELECT id,user_id,amount,method,status FROM pf_withdrawals WHERE legacy_withdrawal_id=? FOR UPDATE');
+    $withdrawalCheck = $pdo->prepare(
+        'SELECT id,user_id,wallet_id,amount,currency,method,method_network,destination_encrypted,status,
+                hold_ledger_entry_id,payout_reference,reviewed_by,reviewed_at,admin_note,created_at,updated_at
+         FROM pf_withdrawals WHERE legacy_withdrawal_id=? FOR UPDATE'
+    );
     $withdrawalInsert = $pdo->prepare(
         'INSERT INTO pf_withdrawals
          (legacy_withdrawal_id,user_id,wallet_id,amount,currency,method,method_network,destination_encrypted,
@@ -312,12 +367,19 @@ try {
          VALUES (?,?,?,?,"USD",?,?,?,?,?,?,?,?,?,?,?)'
     );
     $holdSource = $pdo->prepare(
-        "SELECT id FROM wallet_transactions
+        "SELECT id,user_id,amount,currency,status FROM wallet_transactions
          WHERE user_id=? AND type='WITHDRAWAL' AND LOWER(COALESCE(reference_type,''))='withdrawal'
-           AND reference_id=? ORDER BY id LIMIT 1"
+           AND reference_id=? ORDER BY id FOR UPDATE"
     );
     $holdLedger = $pdo->prepare(
-        "SELECT id FROM pf_wallet_ledger WHERE idempotency_key=? LIMIT 1"
+        "SELECT id,wallet_id,user_id,amount,currency,reference_type,reference_id
+         FROM pf_wallet_ledger WHERE idempotency_key=? FOR UPDATE"
+    );
+    $holdAmountMatches = $pdo->prepare(
+        'SELECT CAST(? AS DECIMAL(18,2)) = -CAST(? AS DECIMAL(18,2))'
+    );
+    $ledgerAmountMatches = $pdo->prepare(
+        'SELECT CAST(? AS DECIMAL(18,2)) = CAST(? AS DECIMAL(18,2))'
     );
 
     $importedWithdrawals = 0;
@@ -340,30 +402,70 @@ try {
         $walletFind->execute([$userId, 'USD']);
         $walletId = (int) $walletFind->fetchColumn();
 
+        $holdSource->execute([$userId, $legacyId]);
+        $sourceHolds = $holdSource->fetchAll();
+        if (count($sourceHolds) > 1) {
+            throw new RuntimeException('Legacy withdrawal ' . $legacyId . ' has multiple matching wallet debits; manual reconciliation is required.');
+        }
+        $holdLedgerId = null;
+        if ($sourceHolds) {
+            $sourceHold = $sourceHolds[0];
+            if ((int)$sourceHold['user_id'] !== $userId
+                || strtoupper((string)$sourceHold['currency']) !== 'USD'
+                || !in_array(strtoupper((string)$sourceHold['status']), ['COMPLETED','PENDING'], true)) {
+                throw new RuntimeException('Legacy withdrawal ' . $legacyId . ' has an invalid matching wallet debit.');
+            }
+            $holdAmountMatches->execute([$sourceHold['amount'], $row['amount']]);
+            if ((int)$holdAmountMatches->fetchColumn() !== 1) {
+                throw new RuntimeException('Legacy withdrawal ' . $legacyId . ' wallet debit does not exactly match the withdrawal amount.');
+            }
+            $sourceHoldId = (int)$sourceHold['id'];
+            $holdLedger->execute(['legacy-wallet-txn-' . $sourceHoldId]);
+            $holdLedgerRow = $holdLedger->fetch();
+            if (!$holdLedgerRow
+                || (int)$holdLedgerRow['user_id'] !== $userId
+                || (int)$holdLedgerRow['wallet_id'] !== $walletId
+                || strtoupper((string)$holdLedgerRow['currency']) !== 'USD'
+                || $holdLedgerRow['reference_type'] !== 'LEGACY_WALLET_TXN'
+                || (int)$holdLedgerRow['reference_id'] !== $sourceHoldId) {
+                throw new RuntimeException('Legacy withdrawal ' . $legacyId . ' has no matching imported wallet debit.');
+            }
+            $ledgerAmountMatches->execute([$holdLedgerRow['amount'], $sourceHold['amount']]);
+            if ((int)$ledgerAmountMatches->fetchColumn() !== 1) {
+                throw new RuntimeException('Imported wallet debit does not match the source debit for withdrawal ' . $legacyId . '.');
+            }
+            $holdLedgerId = (int)$holdLedgerRow['id'];
+        }
+        if (in_array($status, ['PENDING','PROCESSING','PAID'], true) && !$holdLedgerId) {
+            throw new RuntimeException('Open or paid legacy withdrawal ' . $legacyId . ' has no matching wallet debit. Manual reconciliation is required.');
+        }
+
         $withdrawalCheck->execute([$legacyId]);
         $existing = $withdrawalCheck->fetch();
+        $destination = (string) $row['payment_details'];
         if ($existing) {
-            if ((int) $existing['user_id'] !== $userId
-                || (string) $existing['amount'] !== (string) $row['amount']
-                || (string) $existing['method'] !== $method
-                || (string) $existing['status'] !== $status) {
-                throw new RuntimeException('Existing legacy withdrawal import does not match source withdrawal ID ' . $legacyId);
+            $existingDestination = $decrypt((string)$existing['destination_encrypted'], $key);
+            $matches = (int)$existing['user_id'] === $userId
+                && (int)$existing['wallet_id'] === $walletId
+                && (string)$existing['currency'] === 'USD'
+                && (string)$existing['amount'] === (string)$row['amount']
+                && (string)$existing['method'] === $method
+                && (string)($existing['method_network'] ?? '') === (string)($row['method_network'] ?? '')
+                && hash_equals($existingDestination, $destination)
+                && (string)$existing['status'] === $status
+                && ($existing['hold_ledger_entry_id'] === null ? null : (int)$existing['hold_ledger_entry_id']) === $holdLedgerId
+                && (string)($existing['payout_reference'] ?? '') === (string)($row['transaction_reference'] ?? '')
+                && ($existing['reviewed_by'] === null ? null : (int)$existing['reviewed_by']) === ($row['processed_by'] === null ? null : (int)$row['processed_by'])
+                && (string)($existing['reviewed_at'] ?? '') === (string)($row['processed_at'] ?? '')
+                && (string)($existing['admin_note'] ?? '') === (string)($row['admin_note'] ?? '')
+                && (string)($existing['created_at'] ?? '') === (string)($row['created_at'] ?? '')
+                && (string)($existing['updated_at'] ?? '') === (string)($row['updated_at'] ?? '');
+            if (!$matches) {
+                throw new RuntimeException('Existing legacy withdrawal import does not fully match source withdrawal ID ' . $legacyId);
             }
             continue;
         }
 
-        $holdSource->execute([$userId, $legacyId]);
-        $sourceHoldId = $holdSource->fetchColumn();
-        $holdLedgerId = null;
-        if ($sourceHoldId) {
-            $holdLedger->execute(['legacy-wallet-txn-' . (int) $sourceHoldId]);
-            $holdLedgerId = $holdLedger->fetchColumn() ?: null;
-        }
-        if (in_array($status, ['PENDING','PROCESSING'], true) && !$holdLedgerId) {
-            throw new RuntimeException('Open legacy withdrawal ' . $legacyId . ' has no matching completed wallet debit. Manual reconciliation is required.');
-        }
-
-        $destination = (string) $row['payment_details'];
         $encryptedDestination = $encrypt($destination, $key);
         $withdrawalInsert->execute([
             $legacyId,
@@ -490,7 +592,8 @@ try {
         $existing = $advertiserHistoryFind->fetch();
         if ($existing) {
             if ((int)$existing['legacy_advertiser_id'] !== $legacyAdvertiserId
-                || (int)$existing['owner_user_id'] !== $advertiserUserMap[$legacyAdvertiserId]) {
+                || (int)$existing['owner_user_id'] !== $advertiserUserMap[$legacyAdvertiserId]
+                || !$matchesSnapshot((string)$existing['snapshot_json'], $row)) {
                 throw new RuntimeException('Existing advertiser transaction archive does not match source transaction ID ' . (int)$row['id']);
             }
             continue;
@@ -518,7 +621,8 @@ try {
         $existing = $advertiserHistoryFind->fetch();
         if ($existing) {
             if ((int)$existing['legacy_advertiser_id'] !== $legacyAdvertiserId
-                || (int)$existing['owner_user_id'] !== $advertiserUserMap[$legacyAdvertiserId]) {
+                || (int)$existing['owner_user_id'] !== $advertiserUserMap[$legacyAdvertiserId]
+                || !$matchesSnapshot((string)$existing['snapshot_json'], $row)) {
                 throw new RuntimeException('Existing advertiser ad archive does not match source campaign ID ' . (int)$row['id']);
             }
             continue;
@@ -545,7 +649,7 @@ try {
         if (!in_array($column, $conversionColumns, true)) throw new RuntimeException('Legacy conversions schema mismatch: missing ' . $column);
     }
 
-    $archiveFind = $pdo->prepare('SELECT owner_user_id FROM pf_legacy_history WHERE source_table=? AND legacy_id=? FOR UPDATE');
+    $archiveFind = $pdo->prepare('SELECT owner_user_id,snapshot_json FROM pf_legacy_history WHERE source_table=? AND legacy_id=? FOR UPDATE');
     $archiveInsert = $pdo->prepare('INSERT INTO pf_legacy_history (source_table,legacy_id,owner_user_id,snapshot_json,source_created_at) VALUES (?,?,?,?,?)');
     $campaignRows = $pdo->query('SELECT id,source_type,advertiser_id,network_id,external_offer_id,image_url,title,description,category,instructions,network_payout,reward_rate,worker_reward,platform_margin,budget,spent,countries,devices,os,incentive_allowed,status,approval_status,start_at,end_at,created_at,updated_at FROM campaigns ORDER BY id FOR UPDATE')->fetchAll();
     $archivedCampaigns = 0;
@@ -559,7 +663,10 @@ try {
         }
         $ownerId = $legacyAdvertiserId > 0 ? $advertiserUserMap[$legacyAdvertiserId] : null;
         if ($existing) {
-            if (($existing['owner_user_id'] === null ? null : (int) $existing['owner_user_id']) !== $ownerId) throw new RuntimeException('Existing legacy campaign archive does not match campaign ID ' . (int) $row['id']);
+            if (($existing['owner_user_id'] === null ? null : (int) $existing['owner_user_id']) !== $ownerId
+                || !$matchesSnapshot((string)$existing['snapshot_json'], $row)) {
+                throw new RuntimeException('Existing legacy campaign archive does not fully match campaign ID ' . (int) $row['id']);
+            }
             continue;
         }
         $archiveInsert->execute(['campaigns',(int) $row['id'],$ownerId,json_encode($row, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE),$row['created_at']]);
@@ -573,7 +680,10 @@ try {
         $existing = $archiveFind->fetch();
         $ownerId = $row['worker_id'] !== null ? (int) $row['worker_id'] : null;
         if ($existing) {
-            if (($existing['owner_user_id'] === null ? null : (int) $existing['owner_user_id']) !== $ownerId) throw new RuntimeException('Existing legacy conversion archive does not match conversion ID ' . (int) $row['id']);
+            if (($existing['owner_user_id'] === null ? null : (int) $existing['owner_user_id']) !== $ownerId
+                || !$matchesSnapshot((string)$existing['snapshot_json'], $row)) {
+                throw new RuntimeException('Existing legacy conversion archive does not fully match conversion ID ' . (int) $row['id']);
+            }
             continue;
         }
         $archiveInsert->execute(['conversions',(int) $row['id'],$ownerId,json_encode($row, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE),$row['created_at']]);
@@ -586,31 +696,29 @@ try {
     if ($expectedWalletRows !== $actualWalletRows) {
         throw new RuntimeException("Legacy wallet transaction count mismatch: source={$expectedWalletRows}, imported={$actualWalletRows}");
     }
-    $expectedBalances = $pdo->query(
-        "SELECT user_id,currency,COALESCE(SUM(amount),0) AS total
-         FROM wallet_transactions
-         WHERE status='COMPLETED' OR (status='PENDING' AND type='WITHDRAWAL')
-         GROUP BY user_id,currency ORDER BY user_id,currency"
-    )->fetchAll();
-    $actualBalances = $pdo->query(
-        "SELECT user_id,currency,COALESCE(SUM(amount),0) AS total
-         FROM pf_wallet_ledger
-         WHERE reference_type='LEGACY_WALLET_TXN' AND idempotency_key LIKE 'legacy-wallet-txn-%'
-         GROUP BY user_id,currency ORDER BY user_id,currency"
-    )->fetchAll();
-    $balanceKey = static fn(array $row): string => (int)$row['user_id'] . ':' . strtoupper((string)$row['currency']);
-    $actualByKey = [];
-    foreach ($actualBalances as $row) $actualByKey[$balanceKey($row)] = (float)$row['total'];
-    foreach ($expectedBalances as $row) {
-        $keyName = $balanceKey($row);
-        if (!array_key_exists($keyName,$actualByKey)
-            || abs((float)$row['total']-$actualByKey[$keyName])>0.00001) {
-            throw new RuntimeException('Legacy wallet balance reconciliation failed for account/currency ' . $keyName);
-        }
-        unset($actualByKey[$keyName]);
-    }
-    if ($actualByKey) {
-        throw new RuntimeException('Unexpected extra legacy wallet import groups were found.');
+    // Compare DECIMAL aggregates inside MySQL. Do not convert financial totals
+    // to PHP floats, which can hide or introduce rounding differences.
+    $sourceWalletTotals = "(SELECT user_id,UPPER(currency) AS currency,SUM(amount) AS total
+        FROM wallet_transactions
+        WHERE status='COMPLETED' OR (status='PENDING' AND type='WITHDRAWAL')
+        GROUP BY user_id,UPPER(currency))";
+    $importedWalletTotals = "(SELECT user_id,UPPER(currency) AS currency,SUM(amount) AS total
+        FROM pf_wallet_ledger
+        WHERE reference_type='LEGACY_WALLET_TXN' AND idempotency_key LIKE 'legacy-wallet-txn-%'
+        GROUP BY user_id,UPPER(currency))";
+    $walletBalanceMismatch = (int)$pdo->query(
+        "SELECT
+            (SELECT COUNT(*) FROM {$sourceWalletTotals} s
+             LEFT JOIN {$importedWalletTotals} i
+               ON i.user_id=s.user_id AND i.currency=s.currency
+             WHERE i.user_id IS NULL OR s.total<>i.total)
+          + (SELECT COUNT(*) FROM {$importedWalletTotals} i
+             LEFT JOIN {$sourceWalletTotals} s
+               ON s.user_id=i.user_id AND s.currency=i.currency
+             WHERE s.user_id IS NULL OR s.total<>i.total)"
+    )->fetchColumn();
+    if ($walletBalanceMismatch !== 0) {
+        throw new RuntimeException('Legacy wallet balance reconciliation failed using exact DECIMAL comparisons.');
     }
 
     $expectedWithdrawalRows = (int)$pdo->query('SELECT COUNT(*) FROM withdrawals')->fetchColumn();
