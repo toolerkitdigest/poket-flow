@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!pf_auth_rate_allowed($pdo, 'LOGIN', $email, 10, 15)) {
                 $error = 'Too many sign-in attempts. Please wait 15 minutes before trying again.';
             } else {
-                $stmt = $pdo->prepare('SELECT id, password_hash, status FROM users WHERE LOWER(email) = ? LIMIT 1');
+                $stmt = $pdo->prepare('SELECT id, password_hash, status, session_version FROM users WHERE LOWER(email) = ? LIMIT 1');
                 $stmt->execute([$email]);
                 $record = $stmt->fetch();
 
@@ -31,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     session_regenerate_id(true);
                     $_SESSION['pf_user_id'] = (int) $record['id'];
+                    $_SESSION['pf_session_version'] = (int) $record['session_version'];
                     $_SESSION['pf_csrf'] = bin2hex(random_bytes(32));
                     header('Location: dashboard.php');
                     exit;
