@@ -698,23 +698,23 @@ try {
     }
     // Compare DECIMAL aggregates inside MySQL. Do not convert financial totals
     // to PHP floats, which can hide or introduce rounding differences.
-    $sourceWalletTotals = "(SELECT user_id,UPPER(currency) AS currency,SUM(amount) AS total
+    $sourceWalletTotals = "(SELECT user_id,CAST(UPPER(currency) AS BINARY) AS currency_key,SUM(amount) AS total
         FROM wallet_transactions
         WHERE status='COMPLETED' OR (status='PENDING' AND type='WITHDRAWAL')
-        GROUP BY user_id,UPPER(currency))";
-    $importedWalletTotals = "(SELECT user_id,UPPER(currency) AS currency,SUM(amount) AS total
+        GROUP BY user_id,CAST(UPPER(currency) AS BINARY))";
+    $importedWalletTotals = "(SELECT user_id,CAST(UPPER(currency) AS BINARY) AS currency_key,SUM(amount) AS total
         FROM pf_wallet_ledger
         WHERE reference_type='LEGACY_WALLET_TXN' AND idempotency_key LIKE 'legacy-wallet-txn-%'
-        GROUP BY user_id,UPPER(currency))";
+        GROUP BY user_id,CAST(UPPER(currency) AS BINARY))";
     $walletBalanceMismatch = (int)$pdo->query(
         "SELECT
             (SELECT COUNT(*) FROM {$sourceWalletTotals} s
              LEFT JOIN {$importedWalletTotals} i
-               ON i.user_id=s.user_id AND i.currency=s.currency
+               ON i.user_id=s.user_id AND i.currency_key=s.currency_key
              WHERE i.user_id IS NULL OR s.total<>i.total)
           + (SELECT COUNT(*) FROM {$importedWalletTotals} i
              LEFT JOIN {$sourceWalletTotals} s
-               ON s.user_id=i.user_id AND s.currency=i.currency
+               ON s.user_id=i.user_id AND s.currency_key=i.currency_key
              WHERE s.user_id IS NULL OR s.total<>i.total)"
     )->fetchColumn();
     if ($walletBalanceMismatch !== 0) {
