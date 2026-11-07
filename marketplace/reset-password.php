@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $valid) {
                 if (!$record) {
                     throw new RuntimeException('This password-reset link has expired or was already used.');
                 }
-                $update = $pdo->prepare("UPDATE users SET password_hash=? WHERE id=? AND status='ACTIVE'");
+                $update = $pdo->prepare("UPDATE users SET password_hash=?, session_version=session_version+1 WHERE id=? AND status='ACTIVE'");
                 $update->execute([$hash,(int)$record['user_id']]);
                 if ($update->rowCount() !== 1) {
                     throw new RuntimeException('The account password could not be updated.');
