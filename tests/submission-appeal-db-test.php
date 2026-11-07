@@ -157,7 +157,7 @@ try {
 // Guard the two user-facing regression fixes as part of this focused test.
 $adminSource = file_get_contents(__DIR__ . '/../marketplace/admin/disputes.php');
 $workerSource = file_get_contents(__DIR__ . '/../marketplace/my-submissions.php');
-if ($adminSource === false || !str_contains($adminSource, "strlen($note) < 10")) {
+if ($adminSource === false || !str_contains($adminSource, 'strlen($note) < 10')) {
     throw new RuntimeException('Final appeal decisions must require a written admin explanation.');
 }
 if ($workerSource === false || !str_contains($workerSource, 'LEFT JOIN pf_submission_disputes')) {
