@@ -11,8 +11,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
     $note = trim((string)($_POST['admin_note'] ?? ''));
 
-    if (!$disputeId || !in_array($action, ['start_review','worker_wins','advertiser_wins'], true) || strlen($note) > 2000) {
-        $error = 'Invalid appeal action or decision note.';
+    if (!$disputeId || !in_array($action, ['start_review','worker_wins','advertiser_wins'], true)
+        || strlen($note) > 2000
+        || (in_array($action, ['worker_wins','advertiser_wins'], true) && strlen($note) < 10)) {
+        $error = 'Choose a valid appeal action. Final decisions require an explanation of at least 10 characters.';
     } else {
         $pdo->beginTransaction();
         try {
@@ -138,5 +140,5 @@ $disputes = $pdo->query(
 <?php if($d['evidence_json']):?><h3>Appeal evidence</h3><pre class="evidence"><?=pf_e((string)$d['evidence_json'])?></pre><?php endif;?>
 <?php if($d['admin_note']):?><p class="small muted">Previous admin note: <?=pf_e($d['admin_note'])?></p><?php endif;?>
 <?php if($d['status']==='OPEN'):?><form class="actions" method="post"><input type="hidden" name="_token" value="<?=pf_e(pf_csrf_token())?>"><input type="hidden" name="dispute_id" value="<?=(int)$d['id']?>"><input name="admin_note" maxlength="2000" placeholder="Optional review note"><button class="button secondary" name="action" value="start_review">Move to review</button></form>
-<?php else:?><form class="actions" method="post"><input type="hidden" name="_token" value="<?=pf_e(pf_csrf_token())?>"><input type="hidden" name="dispute_id" value="<?=(int)$d['id']?>"><input name="admin_note" maxlength="2000" placeholder="Decision explanation (recommended)"><button class="button primary" name="action" value="worker_wins">Resolve for worker & pay</button><button class="button danger" name="action" value="advertiser_wins">Uphold rejection</button></form><?php endif;?>
+<?php else:?><form class="actions" method="post"><input type="hidden" name="_token" value="<?=pf_e(pf_csrf_token())?>"><input type="hidden" name="dispute_id" value="<?=(int)$d['id']?>"><input name="admin_note" minlength="10" maxlength="2000" required placeholder="Required decision explanation (at least 10 characters)"><button class="button primary" name="action" value="worker_wins">Resolve for worker & pay</button><button class="button danger" name="action" value="advertiser_wins">Uphold rejection</button></form><?php endif;?>
 </article><?php endforeach;?></section></main></body></html>
