@@ -1,0 +1,181 @@
+name: Marketplace MySQL migration and legacy import test
+
+on:
+  push:
+    branches: [rebuild/locked-marketplace-v1]
+    paths:
+      - 'database/migrations/**'
+      - 'tools/import-legacy-financial-history.php'
+      - 'tests/**'
+      - '.github/workflows/mysql-migration-test.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'database/migrations/**'
+      - 'tools/import-legacy-financial-history.php'
+      - 'tests/**'
+      - '.github/workflows/mysql-migration-test.yml'
+
+jobs:
+  mysql-migrations:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: poketflow_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: curl, mbstring, pdo_mysql, openssl
+      - name: Load disposable legacy schema
+        run: mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < tests/fixtures/legacy-minimal-schema.sql
+      - name: Seed a real legacy password hash for compatibility testing
+        run: |
+          php <<'PHP'
+          <?php
+          $hash = password_hash('LegacyPass!12345', PASSWORD_BCRYPT);
+          if (!is_string($hash)) { throw new RuntimeException('Could not generate test hash'); }
+          $pdo = new PDO('mysql:host=127.0.0.1;dbname=poketflow_test;charset=utf8mb4', 'root', 'root', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+          $pdo->prepare('UPDATE users SET password_hash=? WHERE id=1')->execute([$hash]);
+          file_put_contents('/tmp/poketflow-legacy-password-hash', $hash);
+          PHP
+      - name: Apply all marketplace migrations in order
+        run: |
+          set -euo pipefail
+          for migration in \
+            database/migrations/20261106_001_locked_marketplace_core.sql \
+            database/migrations/20261106_002_financial_workflows.sql \
+            database/migrations/20261106_003_legacy_financial_preservation.sql \
+            database/migrations/20261106_004_authentication_workflows.sql \
+            database/migrations/20261106_005_blog_sponsorship_workflow.sql \
+            database/migrations/20261106_006_submission_disputes.sql \
+            database/migrations/20261106_007_legacy_advertiser_preservation.sql \
+            database/migrations/20261106_008_blog_event_request_replay_protection.sql \
+            database/migrations/20261106_009_session_version_revocation.sql; do
+            echo "Applying marketplace migration $migration"
+            mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < "$migration"
+          done
+      - name: Verify password-reset session revocation schema
+        run: |
+          set -euo pipefail
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='poketflow_test' AND table_name='users' AND column_name='session_version' AND column_default='1'")" = "1"
+          mysql -h127.0.0.1 -uroot -proot poketflow_test -e "UPDATE users SET session_version=session_version+1 WHERE id=1"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT session_version FROM users WHERE id=1")" = "2"
+      - name: Create disposable CLI config
+        run: |
+          cat > /tmp/poketflow-test-config.php <<'PHP'
+          <?php
+          return [
+              'host' => '127.0.0.1',
+              'dbname' => 'poketflow_test',
+              'username' => 'root',
+              'password' => 'root',
+              'charset' => 'utf8mb4',
+              'encryption_key' => base64_encode(str_repeat('K', 32)),
+          ];
+          PHP
+      - name: Run guarded legacy import and reconciliation
+        env:
+          POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
+        run: |
+          printf 'IMPORT LEGACY FINANCIAL HISTORY INTO poketflow_test\n' | php tools/import-legacy-financial-history.php --apply
+      - name: Verify importer is idempotent
+        env:
+          POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
+        run: |
+          printf 'IMPORT LEGACY FINANCIAL HISTORY INTO poketflow_test\n' | php tools/import-legacy-financial-history.php --apply
+      - name: Verify preserved balances, accounts and archived history
+        run: |
+          set -euo pipefail
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_account_modes WHERE user_id=1 AND can_work=1 AND can_advertise=1")" = "1"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_wallets WHERE user_id=1")" = "2"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT FORMAT(SUM(l.amount),2) FROM pf_wallet_ledger l JOIN pf_wallets w ON w.id=l.wallet_id WHERE w.user_id=1 AND w.wallet_type='WORKER' AND l.reference_type='LEGACY_WALLET_TXN'")" = "10.25"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_withdrawals WHERE legacy_withdrawal_id=1 AND status='REJECTED' AND method_network='TRC20' AND destination_encrypted IS NOT NULL")" = "1"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_history WHERE source_table='campaigns'")" = "1"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_history WHERE source_table='conversions'")" = "1"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_history WHERE source_table='campaigns' AND owner_user_id=1")" = "1"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_advertiser_accounts WHERE legacy_advertiser_id=1 AND user_id=1 AND legacy_status='ACTIVE' AND legacy_balance=25.75")" = "1"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT FORMAT(SUM(l.amount),2) FROM pf_wallet_ledger l JOIN pf_wallets w ON w.id=l.wallet_id WHERE w.user_id=1 AND w.wallet_type='ADVERTISER' AND l.reference_type='LEGACY_ADVERTISER_BALANCE'")" = "25.75"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_advertiser_history WHERE source_table='advertiser_transactions'")" = "3"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_advertiser_history WHERE source_table='advertiser_transactions' AND JSON_UNQUOTE(JSON_EXTRACT(snapshot_json,'$.status'))='PENDING'")" = "1"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_advertiser_history WHERE source_table='ad_campaigns' AND legacy_advertiser_id=1 AND owner_user_id=1")" = "1"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_legacy_history WHERE source_table='campaigns' AND JSON_CONTAINS_PATH(snapshot_json,'one','$.network_offer_url')=1")" = "0"
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_blog_campaigns WHERE sync_status='PENDING'")" = "0"
+      - name: Verify signed blog event request replay protection
+        run: |
+          set -euo pipefail
+          mysql -h127.0.0.1 -uroot -proot poketflow_test <<'SQL'
+          INSERT INTO pf_blog_event_requests (nonce,request_timestamp)
+          VALUES (REPEAT('a',48),UNIX_TIMESTAMP());
+          INSERT IGNORE INTO pf_blog_event_requests (nonce,request_timestamp)
+          VALUES (REPEAT('a',48),UNIX_TIMESTAMP());
+          SQL
+          test "$(mysql -N -h127.0.0.1 -uroot -proot poketflow_test -e "SELECT COUNT(*) FROM pf_blog_event_requests WHERE nonce=REPEAT('a',48)")" = "1"
+      - name: Exercise signed blog event receiver over HTTP
+        env:
+          PF_TEST_HMAC_SECRET: POKETFLOW_TEST_SECRET_64_CHARACTERS_LONG_000000000000000000000000000000000000000000000000
+        run: |
+          set -euo pipefail
+          sudo mkdir -p /home/poketflo/private
+          sudo tee /home/poketflo/private/poketflow-main-database.php > /dev/null <<'PHP'
+          <?php
+          return [
+              'host' => '127.0.0.1',
+              'dbname' => 'poketflow_test',
+              'username' => 'root',
+              'password' => 'root',
+              'charset' => 'utf8mb4',
+              'blog_integration_secret' => 'POKETFLOW_TEST_SECRET_64_CHARACTERS_LONG_000000000000000000000000000000000000000000000000',
+          ];
+          PHP
+          sudo chmod 644 /home/poketflo/private/poketflow-main-database.php
+          php -S 127.0.0.1:8082 -t marketplace > /tmp/poketflow-main-http.log 2>&1 &
+          echo $! > /tmp/poketflow-main-http.pid
+          for attempt in $(seq 1 30); do
+            if curl -sS -o /dev/null http://127.0.0.1:8082/api/blog-events.php; then break; fi
+            sleep 1
+          done
+          php tests/blog-events-http-integration-test.php
+          kill "$(cat /tmp/poketflow-main-http.pid)" || true
+      - name: Verify legacy advertiser access restrictions
+        env:
+          POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
+        run: php tests/legacy-advertiser-access-test.php
+      - name: Verify worker submission appeal invariants
+        env:
+          POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
+        run: php tests/submission-appeal-db-test.php
+      - name: Verify legacy member identity and password hash are preserved
+        run: |
+          php <<'PHP'
+          <?php
+          $pdo = new PDO('mysql:host=127.0.0.1;dbname=poketflow_test;charset=utf8mb4', 'root', 'root', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+          $user = $pdo->query('SELECT id,role,name,email,email_verified,password_hash,status FROM users WHERE id=1')->fetch();
+          $originalHash = trim(file_get_contents('/tmp/poketflow-legacy-password-hash'));
+          if (!$user || (int)$user['id'] !== 1 || $user['email'] !== 'test-member@example.invalid' || $user['name'] !== 'Test Member') {
+              throw new RuntimeException('Legacy member identity was not preserved.');
+          }
+          if (!hash_equals($originalHash, (string)$user['password_hash']) || !password_verify('LegacyPass!12345', (string)$user['password_hash'])) {
+              throw new RuntimeException('Legacy password hash changed or no longer verifies.');
+          }
+          if ($user['status'] !== 'ACTIVE' || (int)$user['email_verified'] !== 0 || $user['role'] !== 'WORKER') {
+              throw new RuntimeException('Legacy member account status, verification state or role changed.');
+          }
+          $mode = $pdo->query('SELECT can_work,can_advertise FROM pf_account_modes WHERE user_id=1')->fetch();
+          if (!$mode || (int)$mode['can_work'] !== 1 || (int)$mode['can_advertise'] !== 1) {
+              throw new RuntimeException('Legacy member does not retain both account modes.');
+          }
+          echo "Legacy member ID, email, role, status, verification state and working password hash preserved. Both modes enabled.\n";
+          PHP
