@@ -49,16 +49,24 @@ function pf_user(PDO $pdo): ?array
     }
 
     $stmt = $pdo->prepare(
-        'SELECT id, name, email, country, status, role
+        'SELECT id, name, email, country, status, role, session_version
          FROM users WHERE id = ? LIMIT 1'
     );
     $stmt->execute([(int) $_SESSION['pf_user_id']]);
     $user = $stmt->fetch();
 
     if (!$user || strtoupper((string) $user['status']) !== 'ACTIVE') {
-        unset($_SESSION['pf_user_id']);
+        unset($_SESSION['pf_user_id'], $_SESSION['pf_session_version']);
         return null;
     }
+
+    // Older sessions without this value remain valid until the account password changes.
+    $sessionVersion = (int) ($_SESSION['pf_session_version'] ?? 1);
+    if ($sessionVersion !== (int) $user['session_version']) {
+        unset($_SESSION['pf_user_id'], $_SESSION['pf_session_version']);
+        return null;
+    }
+
     return $user;
 }
 
