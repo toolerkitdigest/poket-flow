@@ -1,0 +1,25 @@
+name: PHP syntax checks
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [rebuild/locked-marketplace-v1]
+jobs:
+  php-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: none
+      - name: Lint all PHP files
+        run: |
+          set -eu
+          find marketplace tools tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Test delayed blog event eligibility
+        run: php tests/blog-event-eligibility-test.php
+      - name: Test signed blog bridge contract
+        run: php tests/blog-bridge-contract-test.php
+      - name: Enforce independent marketplace architecture
+        run: php tests/no-external-cpa-integrations-test.php
