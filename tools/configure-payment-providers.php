@@ -17,10 +17,12 @@ if(!is_file($file)||!is_readable($file)){fwrite(STDERR,"Private PoketFlow config
 $config=require $file;if(!is_array($config)){fwrite(STDERR,"Private configuration is invalid.\n");exit(1);}
 fwrite(STDOUT,"Configure payment-provider credentials. Inputs are hidden. Press Enter to keep an existing value.\n");
 $mode=pf_choice('PayPal mode',['sandbox','live'],(string)($config['paypal_mode']??'sandbox'));if(!in_array($mode,['sandbox','live'],true)){fwrite(STDERR,"Invalid PayPal mode.\n");exit(1);}
-$paystack=pf_secret_prompt('Paystack secret key (blank keeps current)');$paypalId=pf_secret_prompt('PayPal client ID (blank keeps current)');$paypalSecret=pf_secret_prompt('PayPal client secret (blank keeps current)');\n$paypalWebhook=pf_secret_prompt('PayPal webhook ID (blank keeps current)');
+$paystack=pf_secret_prompt('Paystack secret key (blank keeps current)');$paypalId=pf_secret_prompt('PayPal client ID (blank keeps current)');$paypalSecret=pf_secret_prompt('PayPal client secret (blank keeps current)');
+$paypalWebhook=pf_secret_prompt('PayPal webhook ID (blank keeps current)');
 if($paystack!==''){if(!str_starts_with($paystack,'sk_test_')&&!str_starts_with($paystack,'sk_live_')){fwrite(STDERR,"Paystack secret key must begin sk_test_ or sk_live_. No file changed.\n");exit(1);}$config['paystack_secret_key']=$paystack;}
 if($paypalId!=='')$config['paypal_client_id']=$paypalId;
-if($paypalSecret!=='')$config['paypal_client_secret']=$paypalSecret;\nif($paypalWebhook!=='')$config['paypal_webhook_id']=$paypalWebhook;
+if($paypalSecret!=='')$config['paypal_client_secret']=$paypalSecret;
+if($paypalWebhook!=='')$config['paypal_webhook_id']=$paypalWebhook;
 $config['paypal_mode']=$mode;
 if((empty($config['paystack_secret_key'])||!str_starts_with((string)$config['paystack_secret_key'],'sk_'))&&(!empty($config['paypal_client_id'])||!empty($config['paypal_client_secret']))){if(empty($config['paypal_client_id'])||empty($config['paypal_client_secret'])){fwrite(STDERR,"Both PayPal client ID and secret are required. No file changed.\n");exit(1);}}
 $temp=$file.'.tmp.'.bin2hex(random_bytes(6));$php="<?php\n// Private PoketFlow configuration. Never place in public_html.\nreturn ".var_export($config,true).";\n";
