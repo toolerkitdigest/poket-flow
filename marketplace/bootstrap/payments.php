@@ -28,7 +28,7 @@ function pf_payment_provider_ready(string $provider): bool
 {
     global $config;
     if($provider==='PAYSTACK') return !empty($config['paystack_secret_key'])&&str_starts_with((string)$config['paystack_secret_key'],'sk_');
-    if($provider==='PAYPAL') return !empty($config['paypal_client_id'])&&!empty($config['paypal_client_secret'])&&in_array(($config['paypal_mode']??'sandbox'),['sandbox','live'],true);
+    if($provider==='PAYPAL') return !empty($config['paypal_client_id'])&&!empty($config['paypal_client_secret'])&&!empty($config['paypal_webhook_id'])&&in_array(($config['paypal_mode']??'sandbox'),['sandbox','live'],true);
     return false;
 }
 function pf_paypal_api_base(): string
