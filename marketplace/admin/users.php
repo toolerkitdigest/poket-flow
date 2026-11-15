@@ -94,7 +94,7 @@ if ($query !== '') {
     $where = ' WHERE u.name LIKE ? OR u.email LIKE ? OR CAST(u.id AS CHAR)=?';
     $params = ['%'.$query.'%','%'.$query.'%',$query];
 }
-$count = $pdo->prepare('SELECT COUNT(*) FROM users'.$where);
+$count = $pdo->prepare('SELECT COUNT(*) FROM users u'.$where);
 $count->execute($params);
 $total = (int)$count->fetchColumn();
 $list = $pdo->prepare(
