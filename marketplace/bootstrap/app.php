@@ -8,7 +8,7 @@ require_once __DIR__ . '/site-ads.php';
 require_once __DIR__ . '/payments.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
-    $sessionPath = '/home/poketflo/private/poketflow-sessions';
+    $sessionPath = getenv('POKETFLOW_SESSION_PATH') ?: '/home/poketflo/private/poketflow-sessions';
     if (!is_dir($sessionPath) && !mkdir($sessionPath, 0700, true) && !is_dir($sessionPath)) {
         throw new RuntimeException('Private session storage is unavailable.');
     }

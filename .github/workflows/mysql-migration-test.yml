@@ -154,6 +154,7 @@ jobs:
       - name: Exercise signed blog event receiver over HTTP
         env:
           PF_TEST_HMAC_SECRET: POKETFLOW_TEST_SECRET_64_CHARACTERS_LONG_000000000000000000000000000000000000000000000000
+          POKETFLOW_SESSION_PATH: /tmp/poketflow-test-sessions
         run: |
           set -euo pipefail
           sudo mkdir -p /home/poketflo/private
