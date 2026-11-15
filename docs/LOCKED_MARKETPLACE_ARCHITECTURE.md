@@ -1,44 +1,37 @@
-# PoketFlow — Locked Marketplace Architecture
+# PoketFlow — Advertiser-Only Marketplace Architecture
 
 ## Product boundary
 
-PoketFlow is an independent advertiser–worker marketplace. OGAds, CPAGrip and Indoleads are discontinued and must not be restored.
+PoketFlow is an independent advertising marketplace. Advertisers register or use their existing PoketFlow account, sign in, choose available placements and campaign durations, fund campaigns, and monitor delivery. The main website is the system of record for advertisers, campaigns, pricing, budgets, payments, moderation, impressions and clicks.
 
-- One member identity, one login, one account.
-- Every active member may use Earn mode, Advertise mode, or both.
-- The main platform is the system of record for members, advertiser campaigns, budgets, worker submissions, rewards, wallets, withdrawals, administration and reporting.
-- The blog remains a separate custom-PHP editorial application with its own database. It receives approved sponsored creatives through a narrow authenticated API and reports impressions/clicks back. It must never access the main financial database directly.
-- Sponsored content must be labeled. Gambling, adult, casino and alcohol promotions are prohibited.
+Approved advertising can appear on:
+- The main PoketFlow website: banner and native placements, including the public opportunities directory.
+- The separate custom-PHP editorial blog at blog.poketflow.com: clearly labelled sponsored placements and sponsored articles.
 
-## Financial invariants
+The blog remains a separate application and database. It receives approved creative through the authenticated sync API and reports impression/click events to the main platform. It must never access the main financial database directly.
 
-1. Advertiser funding is confirmed before campaign delivery.
-2. Worker rewards are reserved against funded campaign budget before tasks become available.
-3. A submission is payable only after advertiser/admin approval.
-4. Approval, reservation consumption and worker credit happen in one database transaction.
-5. Ledger entries are immutable, signed and protected by unique idempotency keys.
-6. Advertiser funds and worker earnings use distinct wallet types.
-7. Blog sponsorship budgets are distinct from worker-task reward budgets.
-8. Withdrawals reserve funds before processing and release or settle the hold on rejection/payment.
-9. Admin financial actions are audited.
+Worker accounts, task campaigns, submissions, evidence review, worker rewards, withdrawals, CPA conversion tracking, postbacks, offerwalls and external CPA networks are not part of the new product. Historical tables and records are retained for audit and reconciliation; they are not deleted or exposed as active product features.
 
-## Existing-member preservation
+## Advertiser identity and legacy preservation
 
-- Retain existing users rows, primary keys, email addresses, password hashes, profile data, statuses and historical financial records.
-- No bulk password reset, account recreation, user deletion or balance rewrite.
-- Account modes are additive and do not replace the legacy role field.
-- Existing and newly registered members receive both Earn and Advertise capabilities by default; each protected workflow checks its corresponding `pf_account_modes` capability.
-- Legacy advertiser profiles marked `SUSPENDED` or `REJECTED` retain that restriction in Advertise mode, while their separate Earn mode remains available unless the member account itself is suspended.
-- Legacy advertiser `PENDING` status is retained as history; new campaigns still require the marketplace's own funding and moderation workflow before delivery.
-- Existing login continues to verify password_hash with PHP password_verify().
-- Before any migration: inspect the exact live schema, compare the dated SQL backup, create a fresh backup, and test on a clone.
+- Existing user IDs, email addresses, password hashes, account status, profiles and historical financial records remain unchanged.
+- Existing members continue to sign in using their current email and password; no duplicate accounts or forced password resets.
+- Legacy role values are retained as historical compatibility fields. New registration uses the ADVERTISER role where supported by the existing users enum.
+- Advertiser profiles are additive. Existing members receive a profile unless an existing legacy advertiser restriction is SUSPENDED or REJECTED; those restrictions remain enforced.
+- New registrations receive advertiser capability only. Their advertiser profile awaits administrator approval after email verification.
+- The legacy worker capability and ledger data are preserved but worker workflows are disabled in the new application.
 
-## Main modules
+## Campaign and financial invariants
 
-Authentication and account settings; Earn mode campaign discovery, task detail, submission and evidence; Advertise mode campaign creation, funding, review and performance; wallet ledger and withdrawals; admin moderation, disputes, payouts, settings and audit; blog creative delivery and event ingestion API.
+1. A campaign cannot be published until the advertiser has sufficient cleared funds and the full campaign budget is reserved.
+2. Campaign pricing is controlled by administrators per placement and duration. New placements are disabled and unpriced until an administrator configures them.
+3. Campaign start/end dates are explicit; expired campaigns are not delivered.
+4. Blog creative sync occurs only after approval. Failed sync leaves the campaign paused and retryable.
+5. Impressions and clicks are the only delivery metrics in this release. No traffic or impression volume is guaranteed.
+6. Wallet ledger entries are immutable and idempotent. Funding, reservation, release and refund actions are transactional and audited.
+7. Paystack and PayPal integrations must verify payments server-side before crediting an advertiser wallet. A browser redirect alone is never proof of payment.
+8. Sponsored content is labelled. Gambling, adult content, casinos and alcohol promotions are prohibited.
 
 ## Deployment gates
 
-No live document-root deployment until PHP syntax checks pass; migrations pass on a disposable copy of the actual database; existing-member login succeeds without changing hashes; user IDs, emails, statuses, wallet totals and transaction counts reconcile; reserve/approval/rejection/duplicate/withdrawal/refund tests pass; blog API auth, replay protection and event idempotency pass; and mobile, desktop and security smoke tests pass.
-
-The old application is reference material only. The locked marketplace is a new build, not a revival of the old CPA offer-wall flow.
+No production deployment until PHP syntax checks pass, the additive migration is tested against a disposable restored copy of the exact live database, existing login and account data reconcile, advertiser funding/reservation/refund tests pass, blog sync and replay/idempotency tests pass, and desktop/mobile/security smoke tests pass. Production document root and blog application/database remain untouched until explicit deployment approval.

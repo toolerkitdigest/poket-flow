@@ -1,53 +1,23 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/bootstrap/app.php';
-$user = pf_require_login($pdo);
-
-$workerWallet = $pdo->prepare("SELECT id FROM pf_wallets WHERE user_id = ? AND wallet_type = 'WORKER' AND currency = 'USD' LIMIT 1");
-$workerWallet->execute([(int)$user['id']]);
-$workerWalletId = $workerWallet->fetchColumn();
-$workerBalance = 0.0;
-if ($workerWalletId) {
-    $balance = $pdo->prepare('SELECT COALESCE(SUM(amount),0) FROM pf_wallet_ledger WHERE wallet_id = ?');
-    $balance->execute([(int)$workerWalletId]);
-    $workerBalance = (float)$balance->fetchColumn();
-}
-
-$advertiserWallet = $pdo->prepare("SELECT id FROM pf_wallets WHERE user_id = ? AND wallet_type = 'ADVERTISER' AND currency = 'USD' LIMIT 1");
-$advertiserWallet->execute([(int)$user['id']]);
-$advertiserWalletId = $advertiserWallet->fetchColumn();
-$advertiserBalance = 0.0;
-if ($advertiserWalletId) {
-    $balance = $pdo->prepare('SELECT COALESCE(SUM(amount),0) FROM pf_wallet_ledger WHERE wallet_id = ?');
-    $balance->execute([(int)$advertiserWalletId]);
-    $advertiserBalance = (float)$balance->fetchColumn();
-}
-
-$taskCount = $pdo->prepare("SELECT COUNT(*) FROM pf_campaigns WHERE campaign_type='WORKER_TASK' AND status='ACTIVE'");
-$taskCount->execute();
-$availableTasks = (int)$taskCount->fetchColumn();
-
-$myCampaigns = $pdo->prepare('SELECT COUNT(*) FROM pf_campaigns WHERE advertiser_id = ?');
-$myCampaigns->execute([(int)$user['id']]);
-$campaignCount = (int)$myCampaigns->fetchColumn();
+$user=pf_require_login($pdo);
+$profile=$pdo->prepare('SELECT advertiser_name,status FROM pf_advertiser_profiles WHERE user_id=? LIMIT 1');
+$profile->execute([(int)$user['id']]); $advertiser=$profile->fetch() ?: ['advertiser_name'=>$user['name'],'status'=>'PENDING'];
+$wallet=$pdo->prepare("SELECT id,currency FROM pf_wallets WHERE user_id=? AND wallet_type='ADVERTISER' ORDER BY currency");
+$wallet->execute([(int)$user['id']]); $walletRows=$wallet->fetchAll(); $balances=[];
+foreach($walletRows as $w){$q=$pdo->prepare('SELECT COALESCE(SUM(amount),0) FROM pf_wallet_ledger WHERE wallet_id=?');$q->execute([(int)$w['id']]);$balances[$w['currency']]=(float)$q->fetchColumn();}
+$count=$pdo->prepare("SELECT COUNT(*) FROM pf_campaigns WHERE advertiser_id=? AND campaign_type IN ('SITE_DISPLAY','BLOG_SPONSORED')");
+$count->execute([(int)$user['id']]);$campaignCount=(int)$count->fetchColumn();
+$stats=$pdo->prepare("SELECT COALESCE(SUM(CASE WHEN e.event_type='IMPRESSION' THEN 1 ELSE 0 END),0) impressions,COALESCE(SUM(CASE WHEN e.event_type='CLICK' THEN 1 ELSE 0 END),0) clicks FROM pf_site_ad_events e JOIN pf_campaigns c ON c.id=e.campaign_id WHERE c.advertiser_id=?");
+$stats->execute([(int)$user['id']]);$performance=$stats->fetch() ?: ['impressions'=>0,'clicks'=>0];
+$blogStats=$pdo->prepare("SELECT COALESCE(SUM(CASE WHEN e.event_type='IMPRESSION' THEN 1 ELSE 0 END),0) impressions,COALESCE(SUM(CASE WHEN e.event_type='CLICK' THEN 1 ELSE 0 END),0) clicks FROM pf_blog_events e JOIN pf_campaigns c ON c.id=e.campaign_id WHERE c.advertiser_id=?");
+$blogStats->execute([(int)$user['id']]);$blogPerformance=$blogStats->fetch() ?: ['impressions'=>0,'clicks'=>0];
 ?>
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>My PoketFlow | Dashboard</title>
-<link rel="stylesheet" href="assets/marketplace.css">
-</head>
-<body>
-<header class="topbar"><a class="brand" href="index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="tasks.php">Find tasks</a><a href="campaigns.php">Worker tasks</a><a href="blog-campaigns.php">Blog ads</a><a href="wallet.php">Wallets</a><a href="funding.php">Add funds</a><?php if (strtoupper((string) $user['role']) === 'ADMIN'): ?><a href="admin/index.php">Admin</a><?php endif; ?><a href="logout.php">Sign out</a></nav></header>
-<main class="container">
-<section class="welcome"><p class="eyebrow">YOUR UNIFIED ACCOUNT</p><h1>Welcome, <?= pf_e((string)$user['name']) ?></h1><p class="muted">Use the same account to earn from tasks and advertise to the PoketFlow community.</p></section>
-<section class="mode-grid">
-<article class="panel mode-worker"><p class="eyebrow">EARN MODE</p><h2>Complete tasks. Earn rewards.</h2><p class="muted">Browse advertiser-created tasks, follow instructions and submit evidence for review.</p><div class="metric">$<?= number_format($workerBalance,2) ?><span>Worker wallet</span></div><p class="muted"><?= number_format($availableTasks) ?> active tasks available</p><a class="button primary" href="tasks.php">Explore tasks</a></article>
-<article class="panel mode-advertiser"><p class="eyebrow">ADVERTISE MODE</p><h2>Reach real people.</h2><p class="muted">Create worker tasks or request sponsored blog placements from one advertiser account.</p><div class="metric">$<?= number_format($advertiserBalance,2) ?><span>Advertiser wallet</span></div><p class="muted"><?= number_format($campaignCount) ?> campaigns in your account</p><a class="button primary" href="campaigns.php">Worker task campaigns</a><a class="button secondary" href="blog-campaigns.php">Blog sponsorships</a></article>
-</section>
-<p class="small muted">Both modes belong to this one account. Your advertiser funds and worker earnings are kept in separate ledgers.</p>
-</main>
-</body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Advertiser dashboard | PoketFlow</title><link rel="stylesheet" href="assets/marketplace.css"><style>.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.stats .panel{padding:22px}.metric{font-size:30px}@media(max-width:700px){.stats{grid-template-columns:1fr}}</style></head>
+<body><header class="topbar"><a class="brand" href="index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="opportunities.php">Opportunities</a><a href="campaigns.php">My campaigns</a><a href="create-campaign.php">Create ad</a><a href="blog-campaigns.php">Blog ads</a><a href="wallet.php">Wallet</a><a href="funding.php">Add funds</a><?php if(strtoupper((string)$user['role'])==='ADMIN'):?><a href="admin/index.php">Admin</a><?php endif;?><a href="logout.php">Sign out</a></nav></header>
+<main class="container"><section class="welcome"><p class="eyebrow">ADVERTISER ACCOUNT</p><h1>Welcome, <?=pf_e((string)$advertiser['advertiser_name'])?></h1><p class="muted">Manage your advertising campaigns, placements, budgets and performance from one dashboard.</p></section>
+<?php if($advertiser['status']!=='ACTIVE'):?><div class="panel"><h2>Advertiser profile: <?=pf_e($advertiser['status'])?></h2><p class="muted">Your advertiser profile must be approved before you can submit campaigns. You can still sign in and review your account.</p></div><?php endif;?>
+<section class="stats"><article class="panel"><p class="eyebrow">ADVERTISER BALANCE</p><div class="metric">$<?=number_format($balances['USD']??0,2)?></div><p class="muted">Available USD balance</p></article><article class="panel"><p class="eyebrow">CAMPAIGNS</p><div class="metric"><?=number_format($campaignCount)?></div><p class="muted">Main-site and blog campaigns</p></article><article class="panel"><p class="eyebrow">MAIN-SITE PERFORMANCE</p><div class="metric"><?=number_format((int)$performance['impressions'])?></div><p class="muted"><?=number_format((int)$performance['clicks'])?> clicks</p></article></section>
+<section class="stats" style="margin-top:16px"><article class="panel"><p class="eyebrow">BLOG IMPRESSIONS</p><div class="metric"><?=number_format((int)$blogPerformance['impressions'])?></div><p class="muted"><?=number_format((int)$blogPerformance['clicks'])?> clicks</p></article><article class="panel"><h2>Launch a campaign</h2><p class="muted">Choose a main-site placement and schedule.</p><a class="button primary" href="create-campaign.php">Create main-site ad</a></article><article class="panel"><h2>Sponsored blog</h2><p class="muted">Request a sponsored placement on blog.poketflow.com.</p><a class="button primary" href="blog-campaigns.php">Manage blog ads</a></article></section>
+</main></body></html>

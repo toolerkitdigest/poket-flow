@@ -1,70 +1,35 @@
-# PoketFlow Main Marketplace — Deployment Runbook
+# PoketFlow Advertiser-Only Marketplace — Deployment Runbook
 
-## Current release state
+## Current state
 
-This rebuild is developed under `marketplace/` on the draft branch `rebuild/locked-marketplace-v1`.
-It is not production-ready, has not been deployed, and has not run a migration against the live database.
+The advertiser-only rebuild is being prepared on branch `rebuild/advertiser-only-marketplace`. It is not production-ready and must not be deployed until the gates below pass. Production is `/home/poketflo/public_html`; the separate blog directory `/home/poketflo/public_html/pf-blog` must remain untouched.
 
-The main domain document root is expected to be `/home/poketflo/public_html`. The separate blog directory `/home/poketflo/public_html/pf-blog` must remain untouched.
+## Product release contents
 
-## Deployment layout
+Publish only the contents of `marketplace/` into the main domain document root after approval. Keep `tools/`, `database/migrations/`, `docs/`, tests and Git metadata outside the document root. Keep private database configuration at `/home/poketflo/private/poketflow-main-database.php`.
 
-When all release gates pass, publish the **contents** of `marketplace/` into the main domain document root. Do not publish the repository root. Do not copy the legacy root-level CPA application files into production. Keep `tools/`, `database/migrations/`, `docs/`, and the Git metadata outside the document root.
+## Database preparation
 
-Expected public entry points after deployment:
+1. Retain the verified private main database and website backups. Restore the database backup into a disposable database and verify table counts and representative records.
+2. Apply migrations 001–009 to the disposable copy in their documented order, then apply `20261115_010_advertiser_only_marketplace.sql`.
+3. Migration 010 is additive: it adds advertiser profiles, main-site placements/campaign metadata/events and payment-order records; it preserves legacy user identities, roles, passwords, wallets, ledger history and worker tables. Prices and new placements start disabled until configured by an administrator.
+4. Confirm every existing user ID, email, password hash, status and advertiser wallet total. Confirm legacy advertiser SUSPENDED/REJECTED restrictions remain in force.
+5. Do not apply migrations to the live database without explicit approval after clone tests.
 
-- `/index.php` — marketplace landing page
-- `/login.php` — existing-member login
-- `/dashboard.php` — unified member dashboard
-- `/tasks.php` — worker task discovery
-- `/campaigns.php` — advertiser task campaigns
-- `/blog-campaigns.php` — advertiser sponsored blog placements
-- `/register.php` — new member registration and email verification
-- `/wallet.php` — separate worker and advertiser ledgers
-- `/admin/finance.php` — restricted finance administration
-- `/admin/disputes.php` — administrator worker-appeal review
-- `/api/blog-events.php` — signed blog event receiver
+## Application tests
 
-The private configuration remains at `/home/poketflo/private/poketflow-main-database.php`, outside `public_html`. The CLI installer is run from the repository, not through a browser.
-
-## Mandatory pre-deployment gates
-
-1. Obtain fresh private backups of both `poketflo_db` and `poketflo_blog`. Verify the backup files are non-empty and record their checksums. Restore each backup into its own disposable database and verify the restored table counts and representative records before proceeding.
-2. Run `tools/audit-legacy-database.php` in CLI read-only mode and retain its private report. It must establish exact account IDs, statuses, password hash formats, wallet transaction totals by account/currency/status, and legacy table structures.
-3. Reconcile legacy worker balances, advertiser balances, withdrawals, and transaction histories. Do not assume the new `pf_wallets` start at zero is safe for existing members.
-4. Restore the main database backup into a disposable main-platform database. Apply **all nine locked marketplace migrations, in this exact order**, to that disposable main database only:
-   - `20261106_001_locked_marketplace_core.sql`
-   - `20261106_002_financial_workflows.sql`
-   - `20261106_003_legacy_financial_preservation.sql`
-   - `20261106_004_authentication_workflows.sql`
-   - `20261106_005_blog_sponsorship_workflow.sql`
-   - `20261106_006_submission_disputes.sql`
-   - `20261106_007_legacy_advertiser_preservation.sql`
-   - `20261106_008_blog_event_request_replay_protection.sql`
-   - `20261106_009_session_version_revocation.sql`
-
-   Migration 007 snapshots each legacy advertiser profile and current USD balance into the member-linked advertiser wallet, while archiving advertiser transaction and old ad-campaign history without replaying those historical amounts. Legacy `advertisers.id` is mapped through `advertisers.user_id` to `users.id`; unmapped or orphaned records stop the import. Migration 008 adds short-lived nonce replay protection for signed blog-to-marketplace event requests. Do not bulk-import every file in `database/migrations/`: older CPA-specific migrations are not part of this rebuild and must not be run. Do not apply any of these eight main-platform migrations to the separate blog database. Run `php tools/import-legacy-financial-history.php` as a read-only dry run, then run it with `--apply` only on the disposable main-platform clone after checking its report.
-5. Run login tests against existing accounts using their original passwords. Confirm existing user IDs, email addresses, account statuses and password hashes remain unchanged. Do not force password resets or create duplicate accounts. Test password recovery on a disposable account and verify that a successful reset increments `users.session_version`, marks outstanding reset tokens used, rejects the old authenticated session, and permits a new login with the new password.
-6. Test funding approval, campaign reservation, worker submission, approval/reward credit, duplicate review, campaign rejection/refund, withdrawal hold, withdrawal paid, withdrawal rejection/release, worker appeals resolved for or against the worker, and ledger reconciliation.
-7. Test the signed blog sync and event endpoints, including invalid signatures, expired timestamps, replayed nonces, duplicate event keys and inactive campaigns. Test text-only sponsored placement approval, rejection/refund, sync retry, advertiser suspension/pause, resume, and fixed-duration expiry.
-8. Verify transactional email delivery for registration, verification resend and password recovery. Before connecting the blog, rotate any integration secret that has been exposed and configure the replacement only through the intended hidden terminal prompt; never paste it into chat, commit it, or place it in a public file. Run `scripts/configure-poketflow-integration.php` from the blog repository and enter the new 64-character secret at its hidden prompt. The blog event endpoint must be `https://poketflow.com/api/blog-events.php` after the marketplace contents are published to the main document root; the creative sync endpoint is `https://blog.poketflow.com/api/poketflow-sync.php`. Install the blog event-flush cron and a CLI cron for `tools/expire-blog-campaigns.php` at a suitable interval (for example every 15 minutes) so fixed-duration sponsorship reservations are settled at expiry. Complete payment-provider integration, fraud controls, and mobile/desktop smoke tests before calling this a complete release.
-
-## Safe installation sequence (only after approval)
-
-1. Create the private database configuration with `php tools/create-db-config.php` from the repository root. Enter the database password only at its hidden terminal prompt. Do not paste passwords into chat, shell commands, or GitHub.
-2. Confirm the installer connects to the intended database. This step writes only a private config file; it does not migrate or modify application tables.
-3. Apply migrations to a disposable main-platform database and verify them. Restore and verify the separate blog backup in its own disposable database; do not run main-platform migrations there.
-4. Obtain explicit approval before running any migration on the live database.
-5. Publish only the contents of `marketplace/` to the main document root, preserving `pf-blog/` and its separate database.
-6. Verify HTTPS, secure session cookies, permissions, error logs, login, dashboard, and admin access.
-
-## Rollback
-
-Keep the previous document-root backup and both database backups. If application smoke tests fail, restore the previous document root. Restore database backups only if a production migration was explicitly approved and has changed data; never use rollback as a reason to overwrite new member activity without first reconciling it.
+- Existing users sign in with their original email and password.
+- New registrations create advertiser-only profiles and advertiser wallets.
+- Pending advertiser profiles cannot create or publish campaigns.
+- Admin can approve/suspend advertisers and configure placement pricing.
+- Advertisers can create main-site and blog campaigns, reserve funds, and see their balances and impression/click metrics.
+- Campaign approval, rejection/refund, pause/resume, expiry and duplicate requests are tested transactionally.
+- Paystack/PayPal payment verification is server-side; never credit funds based only on a browser callback.
+- Blog sync validates signatures, timestamps, replay protection and event idempotency.
+- Worker/task/withdrawal endpoints are disabled in the new application; historical data remains retained.
+- No prohibited CPA provider, offerwall, postback or conversion-tracking integration exists in the deployed marketplace directory.
+- Mobile, desktop, HTTPS, session cookies, CSRF, admin authorization, error logs and payment/webhook security are checked.
 
 ## Important boundaries
 
-- Never expose the private config, SQL migration files, audit reports, or CLI tools under the public document root.
-- Never give the blog database direct access to the main financial database.
-- Never enable OGAds, CPAGrip, Indoleads, or other external CPA offer-wall integrations in this marketplace rebuild.
-- Never merge or deploy this draft solely because PHP syntax checks pass.
+Never deploy the repository root or legacy root-level CPA application. Never expose private configs, SQL migrations, audit reports or CLI tools under the public document root. Never give the blog database direct access to the main financial database. Do not call the release production-ready until payment provider integration and all release gates are verified.

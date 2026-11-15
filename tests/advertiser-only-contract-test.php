@@ -1,0 +1,26 @@
+<?php
+declare(strict_types=1);
+
+$root=realpath(__DIR__.'/../marketplace');
+if($root===false)throw new RuntimeException('Marketplace application directory is missing.');
+$required=[
+ 'index.php'=>['Advertise','opportunities.php','pf_render_site_ad'],
+ 'dashboard.php'=>['ADVERTISER','campaigns.php','blog-campaigns.php'],
+ 'register.php'=>['ADVERTISER','can_work','can_advertise'],
+ 'bootstrap/app.php'=>['pf_require_advertiser','no longer offered'],
+ 'admin/index.php'=>['ACTIVE ADVERTISERS','placements.php','finance.php'],
+];
+$errors=[];
+foreach($required as $path=>$needles){
+ $content=file_get_contents($root.'/'.$path);
+ if($content===false){$errors[]=$path.' is missing';continue;}
+ foreach($needles as $needle)if(!str_contains($content,$needle))$errors[]=$path.' missing expected advertiser-only marker: '.$needle;
+}
+$forbidden=['/pf_require_worker\s*\(/','/pf_require_mode\([^;]*[\'"]worker[\'"]/'];
+foreach(['tasks.php','my-submissions.php','withdraw.php','dispute.php'] as $path){
+ $content=file_get_contents($root.'/'.$path);
+ if($content===false){$errors[]=$path.' missing (worker route must be explicitly disabled)';continue;}
+ if(!str_contains($content,'410'))$errors[]=$path.' must return HTTP 410';
+}
+if($errors){fwrite(STDERR,implode(PHP_EOL,$errors).PHP_EOL);exit(1);}
+echo "Advertiser-only product contract checks passed.\n";
