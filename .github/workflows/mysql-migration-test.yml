@@ -124,6 +124,10 @@ jobs:
           mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < database/migrations/20261115_010_advertiser_only_marketplace.sql
           mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < database/migrations/20261115_011_multi_currency_placement_pricing.sql
           mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < database/migrations/20261115_012_main_site_banner_formats.sql
+      - name: Verify advertiser administration and pricing queries
+        env:
+          POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
+        run: php tests/advertiser-admin-db-test.php
       - name: Verify preserved balances, accounts and archived history
         run: |
           set -euo pipefail
