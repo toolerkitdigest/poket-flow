@@ -8,8 +8,9 @@ ALTER TABLE pf_campaigns
 CREATE TABLE IF NOT EXISTS pf_advertiser_profiles (
   user_id BIGINT UNSIGNED NOT NULL,
   advertiser_name VARCHAR(150) NOT NULL,
-  website VARCHAR(255) NULL,
+  website VARCHAR(500) NULL,
   contact_email VARCHAR(190) NOT NULL,
+  description TEXT NULL,
   status ENUM('PENDING','ACTIVE','SUSPENDED','REJECTED') NOT NULL DEFAULT 'PENDING',
   reviewed_by BIGINT UNSIGNED NULL,
   reviewed_at DATETIME NULL,
