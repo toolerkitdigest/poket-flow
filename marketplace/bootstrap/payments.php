@@ -70,6 +70,7 @@ function pf_credit_payment_order(PDO $pdo,int $orderId,string $transactionId): b
   $ledger=$pdo->prepare("INSERT INTO pf_wallet_ledger(wallet_id,user_id,entry_type,amount,currency,reference_type,reference_id,idempotency_key,description) VALUES (?,?,'DEPOSIT',?,?,'PAYMENT_ORDER',?,?,?)");
   $ledger->execute([$walletId,(int)$order['advertiser_id'],$order['amount'],$order['currency'],$orderId,'payment-'.$order['provider'].'-'.$order['provider_reference'],'Verified '.$order['provider'].' advertiser funding']);
   $pdo->prepare("UPDATE pf_payment_orders SET status='PAID',provider_transaction_id=?,verified_at=NOW() WHERE id=? AND status='PENDING'")->execute([$transactionId,$orderId]);
+  $pdo->prepare('INSERT INTO pf_audit_log(actor_user_id,action,subject_type,subject_id,after_json) VALUES (NULL,\\'PAYMENT_VERIFIED\\',\\'PAYMENT_ORDER\\',?,?)')->execute([$orderId,json_encode(['provider'=>$order['provider'],'amount'=>$order['amount'],'currency'=>$order['currency'],'provider_transaction_id'=>$transactionId],JSON_THROW_ON_ERROR)]);
   $pdo->commit();return true;
  }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
 }
