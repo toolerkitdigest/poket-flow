@@ -64,7 +64,8 @@ jobs:
             database/migrations/20261106_007_legacy_advertiser_preservation.sql \
             database/migrations/20261106_008_blog_event_request_replay_protection.sql \
             database/migrations/20261106_009_session_version_revocation.sql \
-            database/migrations/20261115_010_advertiser_only_marketplace.sql \\\n            database/migrations/20261115_011_multi_currency_placement_pricing.sql; do
+            database/migrations/20261115_010_advertiser_only_marketplace.sql \
+            database/migrations/20261115_011_multi_currency_placement_pricing.sql; do
             echo "Applying marketplace migration $migration"
             mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < "$migration"
           done
