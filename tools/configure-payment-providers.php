@@ -12,7 +12,7 @@ function pf_choice(string $label,array $choices,string $default): string
 {
  fwrite(STDOUT,$label.' ('.implode('/',$choices).') ['.$default.']: ');$value=strtolower(trim((string)fgets(STDIN)));return $value===''?$default:$value;
 }
-$file='/home/poketflo/private/poketflow-main-database.php';
+$file=getenv('POKETFLOW_CONFIG') ?: '/home/poketflo/private/poketflow-main-database.php';
 if(!is_file($file)||!is_readable($file)){fwrite(STDERR,"Private PoketFlow configuration is missing.\n");exit(1);}
 $config=require $file;if(!is_array($config)){fwrite(STDERR,"Private configuration is invalid.\n");exit(1);}
 fwrite(STDOUT,"Configure payment-provider credentials. Inputs are hidden. Press Enter to keep an existing value.\n");
