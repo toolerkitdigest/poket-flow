@@ -26,6 +26,7 @@ function pf_paypal_api_base(): string
 function pf_paypal_access_token(): string
 {
  global $config;
+ if(!function_exists('curl_init'))throw new RuntimeException('cURL is unavailable.');
  if(!pf_payment_provider_ready('PAYPAL'))throw new RuntimeException('PayPal is not configured.');
  $ch=curl_init(pf_paypal_api_base().'/v1/oauth2/token');
  curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>'grant_type=client_credentials',CURLOPT_HTTPAUTH=>CURLAUTH_BASIC,CURLOPT_USERPWD=(string)$config['paypal_client_id'].':'.(string)$config['paypal_client_secret'],CURLOPT_HTTPHEADER=>['Accept: application/json','Accept-Language: en_US','Content-Type: application/x-www-form-urlencoded'],CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>5,CURLOPT_TIMEOUT=>15,CURLOPT_SSL_VERIFYPEER=>true,CURLOPT_SSL_VERIFYHOST=>2,CURLOPT_FOLLOWLOCATION=>false]);
@@ -61,7 +62,8 @@ function pf_credit_payment_order(PDO $pdo,int $orderId,string $transactionId): b
  try{
   $q=$pdo->prepare('SELECT * FROM pf_payment_orders WHERE id=? FOR UPDATE');$q->execute([$orderId]);$order=$q->fetch();
   if(!$order)throw new RuntimeException('Payment order not found.');
-  if($order['status']==='PAID'){$pdo->commit();return true;}
+  if($order['status']==='PAID'){$pdo->prepare('INSERT INTO pf_audit_log(actor_user_id,action,subject_type,subject_id,after_json) VALUES (NULL,\'PAYMENT_VERIFIED\',\'PAYMENT_ORDER\',?,?)')->execute([$orderId,json_encode(['provider'=>$order['provider'],'amount'=>$order['amount'],'currency'=>$order['currency'],'provider_transaction_id'=>$transactionId],JSON_THROW_ON_ERROR)]);
+  $pdo->commit();return true;}
   if($order['status']!=='PENDING')throw new RuntimeException('Payment order is not awaiting confirmation.');
   $pdo->prepare("INSERT IGNORE INTO pf_wallets(user_id,wallet_type,currency) VALUES (?,'ADVERTISER',?)")->execute([(int)$order['advertiser_id'],$order['currency']]);
   $w=$pdo->prepare("SELECT id FROM pf_wallets WHERE user_id=? AND wallet_type='ADVERTISER' AND currency=? FOR UPDATE");$w->execute([(int)$order['advertiser_id'],$order['currency']]);$walletId=(int)$w->fetchColumn();
