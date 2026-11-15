@@ -128,3 +128,14 @@ CREATE TABLE IF NOT EXISTS pf_payment_orders (
   UNIQUE KEY uq_pf_payment_order_reference (provider,provider_reference),
   KEY idx_pf_payment_order_advertiser (advertiser_id,status,created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Blog inventory uses the same admin-controlled daily pricing model.
+INSERT IGNORE INTO pf_ad_placements
+  (placement_key,surface,label,description,price_per_day,currency,min_duration_days,max_duration_days,formats_json,is_active,sort_order)
+VALUES
+ ('site_top','BLOG','Blog site top','Top-of-blog sponsored placement',0,'USD',1,365,'["native"]',0,10),
+ ('home_inline','BLOG','Blog homepage inline','Sponsored card within blog homepage content',0,'USD',1,365,'["native"]',0,20),
+ ('article_top','BLOG','Article top','Sponsored placement near the top of an article',0,'USD',1,365,'["native"]',0,30),
+ ('article_middle','BLOG','Article middle','Sponsored placement within article content',0,'USD',1,365,'["native"]',0,40),
+ ('article_bottom','BLOG','Article bottom','Sponsored placement after article content',0,'USD',1,365,'["native"]',0,50),
+ ('article_sidebar','BLOG','Article sidebar','Sponsored placement in the article sidebar',0,'USD',1,365,'["native"]',0,60),
+ ('opportunity_inline','BLOG','Blog opportunity inline','Sponsored placement within opportunity-related blog content',0,'USD',1,365,'["native"]',0,70);
