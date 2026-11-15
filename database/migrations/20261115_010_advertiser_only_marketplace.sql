@@ -67,7 +67,7 @@ VALUES
  ('main_home_top','MAIN_SITE','Homepage top banner','Prominent banner near the top of the PoketFlow homepage',0,'USD',1,365,'["banner"]',0,10),
  ('main_home_inline','MAIN_SITE','Homepage inline','Native sponsored card within homepage content',0,'USD',1,365,'["native"]',0,20),
  ('main_directory_inline','MAIN_SITE','Opportunities directory','Sponsored listing within the public opportunities directory',0,'USD',1,365,'["native"]',0,30),
- ('site_footer_banner','MAIN_SITE','Site-wide footer banner','Banner placement near the footer on eligible main-site pages',0,'USD',1,365,'["banner"]',0,40);
+ ('site_footer_banner','MAIN_SITE','Homepage footer banner','Banner placement near the footer of the PoketFlow homepage',0,'USD',1,365,'["banner"]',0,40);
 
 CREATE TABLE IF NOT EXISTS pf_site_campaigns (
   campaign_id BIGINT UNSIGNED NOT NULL,
