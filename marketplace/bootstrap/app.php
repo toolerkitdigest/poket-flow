@@ -8,6 +8,15 @@ require_once __DIR__ . '/site-ads.php';
 require_once __DIR__ . '/payments.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
+    $sessionPath = '/home/poketflo/private/poketflow-sessions';
+    if (!is_dir($sessionPath) && !mkdir($sessionPath, 0700, true) && !is_dir($sessionPath)) {
+        throw new RuntimeException('Private session storage is unavailable.');
+    }
+    @chmod($sessionPath, 0700);
+    if (!is_writable($sessionPath) || session_save_path($sessionPath) === false) {
+        throw new RuntimeException('Private session storage is not writable.');
+    }
+    ini_set('session.gc_maxlifetime', '1800');
     ini_set('session.use_strict_mode','1');
     ini_set('session.use_only_cookies','1');
     ini_set('session.use_trans_sid','0');
