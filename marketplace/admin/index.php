@@ -10,6 +10,7 @@ $stats=[
  'campaign_review'=>(int)$pdo->query("SELECT COUNT(*) FROM pf_campaigns WHERE campaign_type IN ('SITE_DISPLAY','BLOG_SPONSORED') AND status='PENDING_REVIEW'")->fetchColumn(),
  'active_campaigns'=>(int)$pdo->query("SELECT COUNT(*) FROM pf_campaigns WHERE campaign_type IN ('SITE_DISPLAY','BLOG_SPONSORED') AND status='ACTIVE'")->fetchColumn(),
  'pending_funding'=>(int)$pdo->query("SELECT COUNT(*) FROM pf_funding_requests WHERE status='PENDING'")->fetchColumn(),
+ 'pending_payments'=>(int)$pdo->query("SELECT COUNT(*) FROM pf_payment_orders WHERE status='PENDING'")->fetchColumn(),
  'sync_failed'=>(int)$pdo->query("SELECT COUNT(*) FROM pf_blog_campaigns WHERE sync_status='FAILED'")->fetchColumn(),
 ];
 ?>
@@ -17,6 +18,6 @@ $stats=[
 <body><header class="topbar"><a class="brand" href="../index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><nav><a href="../dashboard.php">Advertiser dashboard</a><a href="advertisers.php">Advertisers</a><a href="placements.php">Placements & pricing</a><a href="finance.php">Finance & campaigns</a><a href="users.php">Members</a><a href="../logout.php">Sign out</a></nav></header>
 <main class="container"><section class="welcome"><p class="eyebrow">PLATFORM CONTROL</p><h1>Advertising administration</h1><p class="muted">Manage advertiser access, campaign review, placements, pricing and payments. Legacy financial records remain preserved.</p></section>
 <section class="admin-grid">
-<?php foreach([['ALL MEMBERS','members'],['ACTIVE MEMBERS','active_members'],['ACTIVE ADVERTISERS','active_advertisers'],['PENDING ADVERTISERS','pending_profiles'],['CAMPAIGNS TO REVIEW','campaign_review'],['ACTIVE CAMPAIGNS','active_campaigns'],['PENDING FUNDING','pending_funding'],['BLOG SYNC FAILURES','sync_failed']] as [$label,$key]):?><article class="panel"><p class="eyebrow"><?=$label?></p><div class="metric"><?=number_format($stats[$key])?></div></article><?php endforeach;?>
+<?php foreach([['ALL MEMBERS','members'],['ACTIVE MEMBERS','active_members'],['ACTIVE ADVERTISERS','active_advertisers'],['PENDING ADVERTISERS','pending_profiles'],['CAMPAIGNS TO REVIEW','campaign_review'],['ACTIVE CAMPAIGNS','active_campaigns'],['PENDING FUNDING','pending_funding'],['PENDING ONLINE PAYMENTS','pending_payments'],['BLOG SYNC FAILURES','sync_failed']] as [$label,$key]):?><article class="panel"><p class="eyebrow"><?=$label?></p><div class="metric"><?=number_format($stats[$key])?></div></article><?php endforeach;?>
 </section><section class="panel" style="margin-top:24px"><h2>Administration tools</h2><p><a class="button primary" href="advertisers.php">Review advertisers</a> <a class="button" style="background:#fff;border:1px solid var(--line)" href="placements.php">Configure placements</a> <a class="button" style="background:#fff;border:1px solid var(--line)" href="finance.php">Review payments & campaigns</a></p><p class="small muted">Do not edit member passwords, emails, IDs, wallet balances or historical ledger records during advertiser moderation.</p></section>
 </main></body></html>

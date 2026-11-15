@@ -24,7 +24,7 @@ Worker accounts, task campaigns, submissions, evidence review, worker rewards, w
 ## Campaign and financial invariants
 
 1. A campaign cannot be published until the advertiser has sufficient cleared funds and the full campaign budget is reserved.
-2. Campaign pricing is controlled by administrators per placement and duration. New placements are disabled and unpriced until an administrator configures them.
+2. Campaign pricing is controlled by administrators per placement, currency (USD or NGN) and duration. NGN and USD prices are separate; no automatic foreign-exchange conversion is implied. New placements are disabled and unpriced until an administrator configures them.
 3. Campaign start/end dates are explicit; expired campaigns are not delivered.
 4. Blog creative sync occurs only after approval. Failed sync leaves the campaign paused and retryable.
 5. Impressions and clicks are the only delivery metrics in this release. No traffic or impression volume is guaranteed.

@@ -16,6 +16,10 @@ Publish only the contents of `marketplace/` into the main domain document root a
 4. Confirm every existing user ID, email, password hash, status and advertiser wallet total. Confirm legacy advertiser SUSPENDED/REJECTED restrictions remain in force.
 5. Do not apply migrations to the live database without explicit approval after clone tests.
 
+## Payment provider setup
+
+After application and database tests on a disposable clone, configure credentials from the private server terminal with `php tools/configure-payment-providers.php`. Secret input is hidden and values are written only to `/home/poketflo/private/poketflow-main-database.php`. Configure the Paystack webhook to `https://poketflow.com/api/paystack-webhook.php` and the PayPal webhook to `https://poketflow.com/api/paypal-webhook.php` for `PAYMENT.CAPTURE.COMPLETED`. Never put provider secrets in GitHub, public files, or chat. Verify sandbox transactions before enabling live credentials.
+
 ## Application tests
 
 - Existing users sign in with their original email and password.
