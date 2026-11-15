@@ -39,7 +39,7 @@ function pf_verify_paystack_order(array $order): array
  if(!pf_payment_provider_ready('PAYSTACK'))return ['ok'=>false,'transaction_id'=>'','error'=>'Paystack is not configured.'];
  $reference=(string)$order['provider_reference'];$result=pf_payment_http('GET','https://api.paystack.co/transaction/verify/'.rawurlencode($reference),['Authorization: Bearer '.$config['paystack_secret_key'],'Accept: application/json']);
  $data=$result['data']['data']??null;
- if(!$result['ok']||!is_array($data)||($data['status']??'')!=='success'||($data['reference']??'')!==$reference||(data_get_placeholder()))return ['ok'=>false,'transaction_id'=>'','error'=>'Paystack could not verify this payment.'];
+ if(!$result['ok']||!is_array($data)||($data['status']??'')!=='success'||($data['reference']??'')!==$reference)return ['ok'=>false,'transaction_id'=>'','error'=>'Paystack could not verify this payment.'];
  $expected=(int)round((float)$order['amount']*100);
  if((int)($data['amount']??0)!==$expected||strtoupper((string)($data['currency']??''))!==strtoupper((string)$order['currency']))return ['ok'=>false,'transaction_id'=>'','error'=>'Paystack payment amount or currency does not match the order.'];
  return ['ok'=>true,'transaction_id'=>(string)($data['id']??$reference),'error'=>''];
@@ -48,7 +48,7 @@ function pf_capture_paypal_order(array $order,string $paypalOrderId): array
 {
  if(!pf_payment_provider_ready('PAYPAL'))return ['ok'=>false,'transaction_id'=>'','error'=>'PayPal is not configured.'];
  try{$token=pf_paypal_access_token();}catch(Throwable $e){return ['ok'=>false,'transaction_id'=>'','error'=>$e->getMessage()];}
- $result=pf_payment_http('POST',pf_paypal_api_base().'/v2/checkout/orders/'.rawurlencode($paypalOrderId).'/capture',['Authorization: Bearer '.$token,'Accept: application/json','PayPal-Request-Id'=>'poketflow-capture-'.$order['id']],[]);
+ $result=pf_payment_http('POST',pf_paypal_api_base().'/v2/checkout/orders/'.rawurlencode($paypalOrderId).'/capture',['Authorization: Bearer '.$token,'Accept: application/json','PayPal-Request-Id'=>'poketflow-capture-'.$order['id']],null);
  $data=$result['data'];$unit=$data['purchase_units'][0]??[];$capture=$unit['payments']['captures'][0]??[];$amount=$capture['amount']??[];
  if(!$result['ok']||($data['status']??'')!=='COMPLETED'||(string)($unit['invoice_id']??'')!==(string)$order['provider_reference']||(string)($unit['custom_id']??'')!==(string)$order['advertiser_id']||strtoupper((string)($amount['currency_code']??''))!==strtoupper((string)$order['currency'])||abs((float)($amount['value']??0)-(float)$order['amount'])>0.001)
   return ['ok'=>false,'transaction_id'=>'','error'=>'PayPal capture could not be verified against this PoketFlow order.'];
@@ -64,7 +64,7 @@ function pf_credit_payment_order(PDO $pdo,int $orderId,string $transactionId): b
   if($order['status']==='PAID'){$pdo->commit();return true;}
   if($order['status']!=='PENDING')throw new RuntimeException('Payment order is not awaiting confirmation.');
   $pdo->prepare("INSERT IGNORE INTO pf_wallets(user_id,wallet_type,currency) VALUES (?,'ADVERTISER',?)")->execute([(int)$order['advertiser_id'],$order['currency']]);
-  $w=$pdo->prepare("SELECT id FROM pf_wallets WHERE user_id=? AND wallet_type='ADVERTISER' AND currency=? FOR UPDATE");$w->execute([(int)$order['advertiser_id'],$order['currency']);$walletId=(int)$w->fetchColumn();
+  $w=$pdo->prepare("SELECT id FROM pf_wallets WHERE user_id=? AND wallet_type='ADVERTISER' AND currency=? FOR UPDATE");$w->execute([(int)$order['advertiser_id'],$order['currency']]);$walletId=(int)$w->fetchColumn();
   $ledger=$pdo->prepare("INSERT INTO pf_wallet_ledger(wallet_id,user_id,entry_type,amount,currency,reference_type,reference_id,idempotency_key,description) VALUES (?,?,'DEPOSIT',?,?,'PAYMENT_ORDER',?,?,?)");
   $ledger->execute([$walletId,(int)$order['advertiser_id'],$order['amount'],$order['currency'],$orderId,'payment-'.$order['provider'].'-'.$order['provider_reference'],'Verified '.$order['provider'].' advertiser funding']);
   $pdo->prepare("UPDATE pf_payment_orders SET status='PAID',provider_transaction_id=?,verified_at=NOW() WHERE id=? AND status='PENDING'")->execute([$transactionId,$orderId]);
