@@ -18,9 +18,9 @@ try{$token=pf_paypal_access_token();$verify=pf_payment_http('POST',pf_paypal_api
  if(!$verify['ok']||($verify['data']['verification_status']??'')!=='SUCCESS'){http_response_code(401);exit;}
  if(($event['event_type']??'')!=='PAYMENT.CAPTURE.COMPLETED'){http_response_code(200);exit('ignored');}
  $resource=$event['resource']??[];$invoice=(string)($resource['invoice_id']??'');$custom=(string)($resource['custom_id']??'');
- if($invoice===''||$custom===''||($resource['status']??'')!=='COMPLETED'){http_response_code(400);exit;}
- $q=$pdo->prepare("SELECT * FROM pf_payment_orders WHERE provider='PAYPAL' AND provider_reference=? AND advertiser_id=? LIMIT 1");$q->execute([$invoice,(int)$custom]);$order=$q->fetch();
- if(!$order){http_response_code(200);exit('unknown order');}
+ if($invoice===''||($resource['status']??'')!=='COMPLETED'){http_response_code(400);exit;}
+ $q=$pdo->prepare("SELECT * FROM pf_payment_orders WHERE provider='PAYPAL' AND provider_reference=? LIMIT 1");$q->execute([$invoice]);$order=$q->fetch();
+ if(!$order||($custom!==''&&(string)$order['advertiser_id']!==$custom)){http_response_code(200);exit('unknown order');}
  $amount=$resource['amount']??[];if(strtoupper((string)($amount['currency_code']??''))!==strtoupper((string)$order['currency'])||abs((float)($amount['value']??0)-(float)$order['amount'])>0.001){http_response_code(400);exit('amount mismatch');}
  pf_credit_payment_order($pdo,(int)$order['id'],(string)($resource['id']??'paypal-capture'));http_response_code(200);exit('ok');
 }catch(Throwable $e){error_log('PoketFlow PayPal webhook failed: '.$e->getMessage());http_response_code(500);exit('verification failed');}
