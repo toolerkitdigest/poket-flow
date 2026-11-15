@@ -39,9 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $pausedCampaigns = 0;
             if ($action === 'suspend') {
-                $pause = $pdo->prepare("UPDATE pf_campaigns SET status='PAUSED' WHERE advertiser_id=? AND status='ACTIVE'");
+                $pause = $pdo->prepare("UPDATE pf_campaigns SET status='PAUSED' WHERE advertiser_id=? AND campaign_type IN ('SITE_DISPLAY','BLOG_SPONSORED') AND status='ACTIVE'");
                 $pause->execute([$targetId]);
                 $pausedCampaigns = $pause->rowCount();
+                $pdo->prepare("UPDATE pf_site_campaigns s JOIN pf_campaigns c ON c.id=s.campaign_id SET s.status='PAUSED' WHERE c.advertiser_id=? AND s.status='ACTIVE'")->execute([$targetId]);
                 if ($blogCampaignIds) {
                     $placeholders = implode(',',array_fill(0,count($blogCampaignIds),'?'));
                     $pauseBlog = $pdo->prepare("UPDATE pf_blog_campaigns SET status='PAUSED',sync_status='PENDING' WHERE campaign_id IN ({$placeholders})");
@@ -90,15 +91,15 @@ $offset = ($page-1)*$limit;
 $where = '';
 $params = [];
 if ($query !== '') {
-    $where = ' WHERE name LIKE ? OR email LIKE ? OR CAST(id AS CHAR)=?';
+    $where = ' WHERE u.name LIKE ? OR u.email LIKE ? OR CAST(u.id AS CHAR)=?';
     $params = ['%'.$query.'%','%'.$query.'%',$query];
 }
 $count = $pdo->prepare('SELECT COUNT(*) FROM users'.$where);
 $count->execute($params);
 $total = (int)$count->fetchColumn();
 $list = $pdo->prepare(
-    'SELECT id,name,email,role,status,email_verified,country,created_at FROM users'
-    .$where.' ORDER BY id DESC LIMIT '.$limit.' OFFSET '.$offset
+    'SELECT u.id,u.name,u.email,u.role,u.status,u.email_verified,u.country,u.created_at,p.status AS advertiser_status FROM users u LEFT JOIN pf_advertiser_profiles p ON p.user_id=u.id'
+    .$where.' ORDER BY u.id DESC LIMIT '.$limit.' OFFSET '.$offset
 );
 $list->execute($params);
 $members = $list->fetchAll();
@@ -109,9 +110,9 @@ $pages = max(1,(int)ceil($total/$limit));
 <main class="container"><section class="welcome"><p class="eyebrow">ADMINISTRATION</p><h1>Member management</h1><p class="muted">Review account status and control access. Passwords, email addresses and wallet records are never edited here.</p></section>
 <?php if($error):?><div class="alert"><?=pf_e($error)?></div><?php endif;?><?php if($notice):?><div class="panel"><?=pf_e($notice)?></div><?php endif;?>
 <section class="panel"><form class="tools" method="get"><input name="q" value="<?=pf_e($query)?>" maxlength="100" placeholder="Search name, email or member ID"><button class="button primary" type="submit">Search</button><?php if($query!==''):?><a href="users.php">Clear</a><?php endif;?></form>
-<p class="small muted"><?=number_format($total)?> members · Page <?=$page?> of <?=$pages?></p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Member</th><th>Role</th><th>Status</th><th>Email verified</th><th>Country</th><th>Joined</th><th>Action</th></tr></thead><tbody>
-<?php foreach($members as $member):?><tr><td><?=(int)$member['id']?></td><td><strong><?=pf_e($member['name'])?></strong><br><span class="small muted"><?=pf_e($member['email'])?></span></td><td><?=pf_e($member['role'])?></td><td><?=pf_e($member['status'])?></td><td><?=((int)$member['email_verified']===1?'Yes':'No')?></td><td><?=pf_e((string)$member['country'])?></td><td><?=pf_e($member['created_at'])?></td><td><?php if(strtoupper((string)$member['role'])!=='ADMIN' && $member['status']==='ACTIVE'):?><form class="inline-form" method="post"><input type="hidden" name="_token" value="<?=pf_e(pf_csrf_token())?>"><input type="hidden" name="user_id" value="<?=(int)$member['id']?>"><button class="button small danger" name="action" value="suspend" type="submit">Suspend</button></form><?php elseif(strtoupper((string)$member['role'])!=='ADMIN' && $member['status']==='SUSPENDED'):?><form class="inline-form" method="post"><input type="hidden" name="_token" value="<?=pf_e(pf_csrf_token())?>"><input type="hidden" name="user_id" value="<?=(int)$member['id']?>"><button class="button small primary" name="action" value="restore" type="submit">Restore</button></form><?php else:?>—<?php endif;?></td></tr><?php endforeach;?>
-<?php if(!$members):?><tr><td colspan="8">No members matched your search.</td></tr><?php endif;?>
+<p class="small muted"><?=number_format($total)?> members · Page <?=$page?> of <?=$pages?></p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Member</th><th>Account type</th><th>Account status</th><th>Advertiser status</th><th>Email verified</th><th>Country</th><th>Joined</th><th>Action</th></tr></thead><tbody>
+<?php foreach($members as $member):?><tr><td><?=(int)$member['id']?></td><td><strong><?=pf_e($member['name'])?></strong><br><span class="small muted"><?=pf_e($member['email'])?></span></td><td><?=strtoupper((string)$member['role'])==='ADMIN'?'Administrator':'Advertiser'?></td><td><?=pf_e($member['status'])?></td><td><?=pf_e((string)($member['advertiser_status']??'—'))?></td><td><?=((int)$member['email_verified']===1?'Yes':'No')?></td><td><?=pf_e((string)$member['country'])?></td><td><?=pf_e($member['created_at'])?></td><td><?php if(strtoupper((string)$member['role'])!=='ADMIN' && $member['status']==='ACTIVE'):?><form class="inline-form" method="post"><input type="hidden" name="_token" value="<?=pf_e(pf_csrf_token())?>"><input type="hidden" name="user_id" value="<?=(int)$member['id']?>"><button class="button small danger" name="action" value="suspend" type="submit">Suspend</button></form><?php elseif(strtoupper((string)$member['role'])!=='ADMIN' && $member['status']==='SUSPENDED'):?><form class="inline-form" method="post"><input type="hidden" name="_token" value="<?=pf_e(pf_csrf_token())?>"><input type="hidden" name="user_id" value="<?=(int)$member['id']?>"><button class="button small primary" name="action" value="restore" type="submit">Restore</button></form><?php else:?>—<?php endif;?></td></tr><?php endforeach;?>
+<?php if(!$members):?><tr><td colspan="9">No members matched your search.</td></tr><?php endif;?>
 </tbody></table></div>
 <div class="tools" style="margin-top:16px"><?php if($page>1):?><a href="?q=<?=rawurlencode($query)?>&page=<?=$page-1?>">Previous</a><?php endif;?><?php if($page<$pages):?><a href="?q=<?=rawurlencode($query)?>&page=<?=$page+1?>">Next</a><?php endif;?></div>
 </section></main></body></html>
