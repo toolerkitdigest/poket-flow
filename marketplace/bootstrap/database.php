@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Runtime database loader for the new marketplace build.
  * Credentials are created by tools/create-db-config.php and never committed.
  */
-$configFile = '/home/poketflo/private/poketflow-main-database.php';
+$configFile = getenv('POKETFLOW_CONFIG') ?: '/home/poketflo/private/poketflow-main-database.php';
 
 if (!is_file($configFile) || !is_readable($configFile)) {
     throw new RuntimeException('Private PoketFlow database configuration is not installed.');
