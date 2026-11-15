@@ -21,7 +21,7 @@ Publish only the contents of `marketplace/` into the main domain document root a
 
 After application and database tests on a disposable clone, configure credentials from the private server terminal with `php tools/configure-payment-providers.php`. Secret input is hidden and values are written only to `/home/poketflo/private/poketflow-main-database.php`. Configure the Paystack webhook to `https://poketflow.com/api/paystack-webhook.php` and the PayPal webhook to `https://poketflow.com/api/paypal-webhook.php` for `PAYMENT.CAPTURE.COMPLETED`. Never put provider secrets in GitHub, public files, or chat. Verify sandbox transactions before enabling live credentials.
 
-## Application tests
+## Scheduled expiry\n\nRun `tools/expire-ad-campaigns.php` from CLI once daily using the release's private filesystem path. It expires main-site and blog placements at their configured end time, consumes the reserved fixed-duration budget, and revokes expired blog creative through the signed integration. Keep this script and all tools outside the public document root.\n\n## Application tests
 
 - Existing users sign in with their original email and password.
 - New registrations create advertiser-only profiles and advertiser wallets.
