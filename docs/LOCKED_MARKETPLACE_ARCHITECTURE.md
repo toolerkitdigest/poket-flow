@@ -6,7 +6,7 @@ PoketFlow is an independent advertising marketplace. Advertisers register or use
 
 Approved advertising can appear on:
 - The main PoketFlow website: banner and native placements, including the public opportunities directory.
-- The separate custom-PHP editorial blog at blog.poketflow.com: clearly labelled sponsored placements and sponsored articles.
+- The separate custom-PHP editorial blog at blog.poketflow.com: clearly labelled native and in-article sponsored placements. Full sponsored-article publishing is outside this first release.
 
 The blog remains a separate application and database. It receives approved creative through the authenticated sync API and reports impression/click events to the main platform. It must never access the main financial database directly.
 
@@ -14,10 +14,10 @@ Worker accounts, task campaigns, submissions, evidence review, worker rewards, w
 
 ## Advertiser identity and legacy preservation
 
-- Existing user IDs, email addresses, password hashes, account status, profiles and historical financial records remain unchanged.
+- Existing user IDs, email addresses, password hashes, account statuses and historical financial records remain unchanged. Advertiser profiles are added separately.
 - Existing members continue to sign in using their current email and password; no duplicate accounts or forced password resets.
 - Legacy role values are retained as historical compatibility fields. New registration uses the ADVERTISER role where supported by the existing users enum.
-- Advertiser profiles are additive. Existing members receive a profile unless an existing legacy advertiser restriction is SUSPENDED or REJECTED; those restrictions remain enforced.
+- Advertiser profiles are additive. Existing members receive an additive advertiser profile; legacy SUSPENDED/REJECTED advertiser restrictions are copied into the profile and remain enforced.
 - New registrations receive advertiser capability only. Their advertiser profile awaits administrator approval after email verification.
 - The legacy worker capability and ledger data are preserved but worker workflows are disabled in the new application.
 
