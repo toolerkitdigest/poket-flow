@@ -6,7 +6,7 @@ The advertiser-only rebuild is being prepared on branch `rebuild/advertiser-only
 
 ## Product release contents
 
-Publish only the contents of `marketplace/` into the main domain document root after approval. Keep `tools/`, `database/migrations/`, `docs/`, tests and Git metadata outside the document root. Keep private database configuration at `/home/poketflo/private/poketflow-main-database.php`.
+Publish only the contents of `marketplace/` into the main domain document root after approval. Keep `tools/`, `database/migrations/`, `docs/`, tests and Git metadata outside the document root. Keep private database configuration at `/home/poketflo/private/poketflow-main-database.php`. For isolated staging, set `POKETFLOW_CONFIG` to a separate private config file that points to a disposable database; never point staging at the live database.
 
 ## Database preparation
 
