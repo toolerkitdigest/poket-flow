@@ -7,8 +7,8 @@ try{
   $reference=trim((string)($_GET['reference']??''));if($reference==='')throw new RuntimeException('The Paystack payment reference is missing.');
   $q=$pdo->prepare("SELECT * FROM pf_payment_orders WHERE provider='PAYSTACK' AND provider_reference=? AND advertiser_id=? LIMIT 1");$q->execute([$reference,(int)$user['id']]);$order=$q->fetch();
  }elseif($provider==='PAYPAL'){
-  $token=trim((string)($_GET['token']??''));if($token==='')throw new RuntimeException('The PayPal order reference is missing.');
-  $q=$pdo->prepare("SELECT * FROM pf_payment_orders WHERE provider='PAYPAL' AND provider_transaction_id=? AND advertiser_id=? LIMIT 1");$q->execute([$token,(int)$user['id']]);$order=$q->fetch();
+  $reference=trim((string)($_GET['reference']??''));if($reference==='')throw new RuntimeException('The PayPal payment reference is missing.');
+  $q=$pdo->prepare("SELECT * FROM pf_payment_orders WHERE provider='PAYPAL' AND provider_reference=? AND advertiser_id=? LIMIT 1");$q->execute([$reference,(int)$user['id']]);$order=$q->fetch();
   if(isset($_GET['cancelled'])){if($order&&$order['status']==='PENDING')$pdo->prepare("UPDATE pf_payment_orders SET status='CANCELLED' WHERE id=? AND status='PENDING'")->execute([(int)$order['id']]);throw new RuntimeException('The PayPal checkout was cancelled. No funds were added.');}
  }else throw new RuntimeException('Unsupported payment provider.');
  if(!$order)throw new RuntimeException('The payment order could not be found for this account.');

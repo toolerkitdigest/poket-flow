@@ -4,7 +4,7 @@ require_once dirname(__DIR__).'/bootstrap/app.php';
 if($_SERVER['REQUEST_METHOD']!=='POST'){http_response_code(405);exit;}
 $webhookId=(string)($config['paypal_webhook_id']??'');if($webhookId===''||!pf_payment_provider_ready('PAYPAL')){http_response_code(503);exit;}
 $raw=file_get_contents('php://input');$event=is_string($raw)?json_decode($raw,true):null;if(!is_array($event)){http_response_code(400);exit;}
-$headers=[
+$verificationPayload=[
  'auth_algo'=>(string)($_SERVER['HTTP_PAYPAL_AUTH_ALGO']??''),
  'cert_url'=>(string)($_SERVER['HTTP_PAYPAL_CERT_URL']??''),
  'transmission_id'=>(string)($_SERVER['HTTP_PAYPAL_TRANSMISSION_ID']??''),
@@ -13,8 +13,8 @@ $headers=[
  'webhook_id'=>$webhookId,
  'webhook_event'=>$event,
 ];
-foreach(['auth_algo','cert_url','transmission_id','transmission_sig','transmission_time'] as $key)if($headers[$key]===''){http_response_code(401);exit;}
-try{$token=pf_paypal_access_token();$verify=pf_payment_http('POST',pf_paypal_api_base().'/v1/notifications/verify-webhook-signature',['Authorization: Bearer '.$token,'Accept: application/json'],$headers);
+foreach(['auth_algo','cert_url','transmission_id','transmission_sig','transmission_time'] as $key)if($verificationPayload[$key]===''){http_response_code(401);exit;}
+try{$token=pf_paypal_access_token();$verify=pf_payment_http('POST',pf_paypal_api_base().'/v1/notifications/verify-webhook-signature',['Authorization: Bearer '.$token,'Accept: application/json'],$verificationPayload);
  if(!$verify['ok']||($verify['data']['verification_status']??'')!=='SUCCESS'){http_response_code(401);exit;}
  if(($event['event_type']??'')!=='PAYMENT.CAPTURE.COMPLETED'){http_response_code(200);exit('ignored');}
  $resource=$event['resource']??[];$invoice=(string)($resource['invoice_id']??'');$custom=(string)($resource['custom_id']??'');
