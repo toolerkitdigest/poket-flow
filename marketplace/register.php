@@ -1,149 +1,31 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/bootstrap/app.php';
-
-if (pf_user($pdo)) {
-    header('Location: dashboard.php');
-    exit;
-}
-
-$error = '';
-$notice = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    pf_verify_csrf();
-    $name = trim((string) ($_POST['name'] ?? ''));
-    $email = strtolower(trim((string) ($_POST['email'] ?? '')));
-    $country = trim((string) ($_POST['country'] ?? ''));
-    $password = (string) ($_POST['password'] ?? '');
-    $confirm = (string) ($_POST['password_confirmation'] ?? '');
-
-    $nameLength = function_exists('mb_strlen') ? mb_strlen($name) : strlen($name);
-    $countryLength = function_exists('mb_strlen') ? mb_strlen($country) : strlen($country);
-
-    if ($nameLength < 2 || $nameLength > 100 || !filter_var($email, FILTER_VALIDATE_EMAIL)
-        || $countryLength > 100 || strlen($password) < 12 || $password !== $confirm) {
-        $error = 'Check your details. Use a valid email, a name, and a password of at least 12 characters.';
-    } else {
-        try {
-            if (!pf_auth_rate_allowed($pdo, 'REGISTER', $email, 5, 60)) {
-                throw new RuntimeException('Too many registration attempts. Please wait before trying again.');
-            }
-
-            $columns = $pdo->query('SHOW FULL COLUMNS FROM users')->fetchAll();
-            $columnMap = [];
-            foreach ($columns as $column) {
-                $columnMap[$column['Field']] = $column;
-            }
-            foreach (['id','role','name','email','email_verified','password_hash','country','status','referral_code'] as $required) {
-                if (!isset($columnMap[$required])) {
-                    throw new RuntimeException('Registration is temporarily unavailable while account compatibility is checked.');
-                }
-            }
-            if (!str_contains((string) $columnMap['status']['Type'], "'PENDING'")
-                || !str_contains((string) $columnMap['role']['Type'], "'WORKER'")) {
-                throw new RuntimeException('Registration is temporarily unavailable. Please contact support.');
-            }
-
-            $token = bin2hex(random_bytes(32));
-            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            if (!is_string($passwordHash)) {
-                throw new RuntimeException('We could not secure your password. Please try again.');
-            }
-
-            $pdo->beginTransaction();
-            try {
-                $referralCode = '';
-                for ($attempt = 0; $attempt < 5; $attempt++) {
-                    $referralCode = 'PF' . strtoupper(bin2hex(random_bytes(5)));
-                    $check = $pdo->prepare('SELECT 1 FROM users WHERE referral_code=? LIMIT 1');
-                    $check->execute([$referralCode]);
-                    if (!$check->fetchColumn()) break;
-                    $referralCode = '';
-                }
-                if ($referralCode === '') {
-                    throw new RuntimeException('Could not generate a unique account code. Please try again.');
-                }
-
-                $insert = $pdo->prepare(
-                    "INSERT INTO users (role,name,email,email_verified,password_hash,country,status,referral_code)
-                     VALUES ('WORKER',?,?,0,?,?,'PENDING',?)"
-                );
-                $insert->execute([$name,$email,$passwordHash,$country !== '' ? $country : null,$referralCode]);
-                $userId = (int) $pdo->lastInsertId();
-
-                $pdo->prepare(
-                    'INSERT INTO pf_account_modes (user_id,can_work,can_advertise) VALUES (?,1,1)'
-                )->execute([$userId]);
-                $pdo->prepare("INSERT INTO pf_wallets (user_id,wallet_type,currency) VALUES (?,'WORKER','USD'),(?,'ADVERTISER','USD')")
-                    ->execute([$userId,$userId]);
-                $pdo->prepare(
-                    'INSERT INTO pf_email_verifications (user_id,token_hash,expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))'
-                )->execute([$userId,hash('sha256',$token)]);
-
-                $pdo->commit();
-            } catch (Throwable $exception) {
-                if ($pdo->inTransaction()) $pdo->rollBack();
-                throw $exception;
-            }
-
-            $link = 'https://poketflow.com/verify-email.php?token=' . rawurlencode($token);
-            $sent = pf_send_mail(
-                $pdo,
-                $email,
-                'Verify your PoketFlow account',
-                "Hello {$name},\n\nWelcome to PoketFlow. Verify your email address within 24 hours using this link:\n{$link}\n\nIf you did not create this account, you can ignore this email.\n\nPoketFlow Support"
-            );
-            $notice = $sent
-                ? 'Your account has been created. Check your email and verify your address before signing in.'
-                : 'Your account is saved but the verification email could not be sent. Use the resend-verification page or contact support.';
-        } catch (PDOException $exception) {
-            if ($exception->getCode() === '23000') {
-                $error = 'We could not create an account with those details. If you already have an account, sign in or reset your password.';
-            } else {
-                error_log('PoketFlow registration failed: ' . $exception->getMessage());
-                $error = 'Registration is temporarily unavailable. Please try again later.';
-            }
-        } catch (Throwable $exception) {
-            $error = $exception instanceof RuntimeException
-                ? $exception->getMessage()
-                : 'Registration is temporarily unavailable. Please try again later.';
-        }
-    }
+require_once __DIR__.'/bootstrap/app.php';
+if(pf_user($pdo)){header('Location: dashboard.php');exit;}
+$error='';$notice='';
+if($_SERVER['REQUEST_METHOD']==='POST'){
+ pf_verify_csrf();$name=trim((string)($_POST['name']??''));$business=trim((string)($_POST['advertiser_name']??''));$email=strtolower(trim((string)($_POST['email']??'')));$country=trim((string)($_POST['country']??''));$website=trim((string)($_POST['website']??''));$password=(string)($_POST['password']??'');$confirm=(string)($_POST['password_confirmation']??'');
+ $nl=function_exists('mb_strlen')?mb_strlen($name):strlen($name);$bl=function_exists('mb_strlen')?mb_strlen($business):strlen($business);$cl=function_exists('mb_strlen')?mb_strlen($country):strlen($country);$parts=$website!==''?parse_url($website):[];
+ if($nl<2||$nl>100||$bl<2||$bl>150||!filter_var($email,FILTER_VALIDATE_EMAIL)||$cl>100||strlen($password)<12||$password!==$confirm||($website!==''&&(!filter_var($website,FILTER_VALIDATE_URL)||strtolower((string)($parts['scheme']??''))!=='https'||empty($parts['host']))))$error='Check your details. Use a valid email, advertiser name, optional HTTPS website, and password of at least 12 characters.';
+ else try{
+  if(!pf_auth_rate_allowed($pdo,'REGISTER',$email,5,60))throw new RuntimeException('Too many registration attempts. Please wait before trying again.');
+  $cols=$pdo->query('SHOW FULL COLUMNS FROM users')->fetchAll();$map=[];foreach($cols as $col)$map[$col['Field']]=$col;foreach(['id','role','name','email','email_verified','password_hash','country','status','referral_code'] as $key)if(!isset($map[$key]))throw new RuntimeException('Registration is temporarily unavailable while account compatibility is checked.');
+  if(!str_contains((string)$map['status']['Type'],"'PENDING'")||!str_contains((string)$map['role']['Type'],"'ADVERTISER'"))throw new RuntimeException('The database is not yet prepared for advertiser registration.');
+  $token=bin2hex(random_bytes(32));$hash=password_hash($password,PASSWORD_DEFAULT);if(!is_string($hash))throw new RuntimeException('We could not secure your password.');
+  $pdo->beginTransaction();try{
+   $ref='';for($i=0;$i<5;$i++){$ref='PF'.strtoupper(bin2hex(random_bytes(5)));$q=$pdo->prepare('SELECT 1 FROM users WHERE referral_code=? LIMIT 1');$q->execute([$ref]);if(!$q->fetchColumn())break;$ref='';}if($ref==='')throw new RuntimeException('Could not generate a unique account code.');
+   $q=$pdo->prepare("INSERT INTO users(role,name,email,email_verified,password_hash,country,status,referral_code) VALUES('ADVERTISER',?,?,0,?,?,'PENDING',?)");$q->execute([$name,$email,$hash,$country?:null,$ref]);$uid=(int)$pdo->lastInsertId();
+   $pdo->prepare('INSERT INTO pf_account_modes(user_id,can_work,can_advertise) VALUES (?,0,1)')->execute([$uid]);$pdo->prepare("INSERT INTO pf_wallets(user_id,wallet_type,currency) VALUES (?,'ADVERTISER','USD')")->execute([$uid]);
+   $pdo->prepare("INSERT INTO pf_advertiser_profiles(user_id,advertiser_name,website,contact_email,status) VALUES (?,?,?,?, 'PENDING')")->execute([$uid,$business,$website?:null,$email]);
+   $pdo->prepare('INSERT INTO pf_email_verifications(user_id,token_hash,expires_at) VALUES (?,?,DATE_ADD(NOW(),INTERVAL 24 HOUR))')->execute([$uid,hash('sha256',$token)]);$pdo->commit();
+  }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
+  $link='https://poketflow.com/verify-email.php?token='.rawurlencode($token);$sent=pf_send_mail($pdo,$email,'Verify your PoketFlow advertiser account',"Hello {$name},\n\nWelcome to PoketFlow. Verify your email within 24 hours:\n{$link}\n\nYour advertiser profile will be reviewed after email verification.\n\nPoketFlow Support");
+  $notice=$sent?'Your advertiser account has been created. Check your email and verify your address.':'Your account is saved but the verification email could not be sent. Use the resend-verification page or contact support.';
+ }catch(PDOException $e){if($e->getCode()==='23000')$error='An account with those details may already exist. Sign in or reset your password.';else{error_log('PoketFlow advertiser registration failed: '.$e->getMessage());$error='Registration is temporarily unavailable.';}}
+ catch(Throwable $e){$error=$e instanceof RuntimeException?$e->getMessage():'Registration is temporarily unavailable.';}
 }
 ?>
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Create account | PoketFlow</title>
-<link rel="stylesheet" href="assets/marketplace.css">
-</head>
-<body class="auth-shell">
-<main class="auth-card">
-<a class="brand" href="index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a>
-<p class="eyebrow">ONE ACCOUNT · TWO OPPORTUNITIES</p>
-<h1>Create your account</h1>
-<p class="muted">One PoketFlow login lets you earn from tasks and advertise to the community.</p>
-<?php if ($error !== ''): ?><div class="alert"><?=pf_e($error)?></div><?php endif; ?>
-<?php if ($notice !== ''): ?><div class="panel"><?=pf_e($notice)?><p><a href="resend-verification.php">Resend verification email</a></p></div><?php endif; ?>
-<?php if ($notice === ''): ?>
-<form method="post" action="">
-<input type="hidden" name="_token" value="<?=pf_e(pf_csrf_token())?>">
-<label for="name">Full name</label>
-<input id="name" name="name" maxlength="100" required autocomplete="name" value="<?=pf_e((string)($_POST['name']??''))?>">
-<label for="email">Email address</label>
-<input id="email" name="email" type="email" maxlength="190" required autocomplete="email" value="<?=pf_e((string)($_POST['email']??''))?>">
-<label for="country">Country (optional)</label>
-<input id="country" name="country" maxlength="100" autocomplete="country-name" value="<?=pf_e((string)($_POST['country']??''))?>">
-<label for="password">Password</label>
-<input id="password" name="password" type="password" minlength="12" required autocomplete="new-password">
-<label for="password_confirmation">Confirm password</label>
-<input id="password_confirmation" name="password_confirmation" type="password" minlength="12" required autocomplete="new-password">
-<button class="button primary" type="submit">Create account</button>
-</form>
-<?php endif; ?>
-<p class="muted small">Already a member? <a href="login.php">Sign in</a></p>
-</main>
-</body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Create advertiser account | PoketFlow</title><link rel="stylesheet" href="assets/marketplace.css"></head><body class="auth-shell"><main class="auth-card"><a class="brand" href="index.php"><span class="brand-mark">P</span><span>Poket<span>Flow</span></span></a><p class="eyebrow">ADVERTISER REGISTRATION</p><h1>Create your advertiser account</h1><p class="muted">Promote your business across PoketFlow's main website and editorial blog.</p>
+<?php if($error!==''):?><div class="alert"><?=pf_e($error)?></div><?php endif;?><?php if($notice!==''):?><div class="panel"><?=pf_e($notice)?><p><a href="resend-verification.php">Resend verification email</a></p></div><?php endif;?>
+<?php if($notice===''):?><form method="post"><input type="hidden" name="_token" value="<?=pf_e(pf_csrf_token())?>"><label for="name">Your full name</label><input id="name" name="name" maxlength="100" required autocomplete="name" value="<?=pf_e((string)($_POST['name']??''))?>"><label for="advertiser_name">Business / advertiser name</label><input id="advertiser_name" name="advertiser_name" maxlength="150" required value="<?=pf_e((string)($_POST['advertiser_name']??''))?>"><label for="email">Email address</label><input id="email" name="email" type="email" maxlength="190" required autocomplete="email" value="<?=pf_e((string)($_POST['email']??''))?>"><label for="website">Website (optional, HTTPS)</label><input id="website" name="website" type="url" placeholder="https://example.com" value="<?=pf_e((string)($_POST['website']??''))?>"><label for="country">Country (optional)</label><input id="country" name="country" maxlength="100" autocomplete="country-name" value="<?=pf_e((string)($_POST['country']??''))?>"><label for="password">Password</label><input id="password" name="password" type="password" minlength="12" required autocomplete="new-password"><label for="password_confirmation">Confirm password</label><input id="password_confirmation" name="password_confirmation" type="password" minlength="12" required autocomplete="new-password"><button class="button primary" type="submit">Create advertiser account</button></form><?php endif;?>
+<p class="muted small">Already have a PoketFlow account? <a href="login.php">Sign in using your existing credentials</a>.</p></main></body></html>
