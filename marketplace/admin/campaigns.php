@@ -15,6 +15,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
   }else{
    if($c['status']!=='PAUSED'||$c['user_status']!=='ACTIVE'||$c['advertiser_status']!=='ACTIVE')throw new RuntimeException('Only paused campaigns belonging to active advertisers can resume.');
    if($c['ends_at']!==null&&strtotime((string)$c['ends_at'])<time())throw new RuntimeException('This campaign has expired and cannot be resumed.');
+   $childTable=$c['campaign_type']==='SITE_DISPLAY'?'pf_site_campaigns':'pf_blog_campaigns';$childCheck=$pdo->prepare("SELECT status FROM {$childTable} WHERE campaign_id=? FOR UPDATE");$childCheck->execute([$id]);if($childCheck->fetchColumn()!=='PAUSED')throw new RuntimeException('The campaign placement is not in a resumable paused state.');
    $table=$c['campaign_type']==='SITE_DISPLAY'?'pf_site_campaign_reservations':'pf_blog_campaign_reservations';
    $r=$pdo->prepare("SELECT amount FROM {$table} WHERE campaign_id=? AND status='RESERVED' FOR UPDATE");$r->execute([$id]);$amount=$r->fetchColumn();
    if($amount===false||(float)$amount<=0||abs((float)$amount-(float)$c['reserved_budget'])>0.01)throw new RuntimeException('The remaining campaign budget reservation does not match.');
