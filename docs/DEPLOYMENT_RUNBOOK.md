@@ -2,11 +2,11 @@
 
 ## Current state
 
-The advertiser-only rebuild is being prepared on branch `rebuild/advertiser-only-marketplace`. It is not production-ready and must not be deployed until the gates below pass. Production is `/home/poketflo/public_html`; the separate blog directory `/home/poketflo/public_html/pf-blog` must remain untouched.
+The advertiser-only rebuild is being prepared on branch `rebuild/advertiser-only-marketplace`. It is not production-ready and must not be deployed until the gates below pass. Production is `/home/poketflo/public_html`; preserve the separate blog directory `/home/poketflo/public_html/pf-blog`, the existing `/home/poketflo/public_html/techdev` directory and all unrelated public_html content.
 
 ## Product release contents
 
-Publish only the contents of `marketplace/` into the main domain document root after approval. Keep `tools/`, `database/migrations/`, `docs/`, tests and Git metadata outside the document root. Keep private database configuration at `/home/poketflo/private/poketflow-main-database.php`. For isolated staging, set `POKETFLOW_CONFIG` to a separate private config file that points to a disposable database; never point staging at the live database.
+After approval, deploy only the named application files from `marketplace/` into the main domain document root using a backed-up, reversible file-level release. Never delete or replace the entire `public_html` directory. Keep `tools/`, `database/migrations/`, `docs/`, tests and Git metadata outside the document root. Keep private database configuration at `/home/poketflo/private/poketflow-main-database.php`. For isolated staging, set `POKETFLOW_CONFIG` to a separate private config file that points to a disposable database; never point staging at the live database.
 
 ## Database preparation
 
