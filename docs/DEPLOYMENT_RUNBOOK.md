@@ -11,8 +11,8 @@ Publish only the contents of `marketplace/` into the main domain document root a
 ## Database preparation
 
 1. Retain the verified private main database and website backups. Restore the database backup into a disposable database and verify table counts and representative records.
-2. Apply migrations 001–009 to the disposable copy in their documented order, then apply `20261115_010_advertiser_only_marketplace.sql`.
-3. Migration 010 is additive: it adds advertiser profiles, main-site placements/campaign metadata/events and payment-order records; it preserves legacy user identities, roles, passwords, wallets, ledger history and worker tables. Prices and new placements start disabled until configured by an administrator.
+2. Apply migrations 001–009 to the disposable copy in their documented order, then run the guarded legacy financial-history import and reconciliation.
+3. Apply `20261115_010_advertiser_only_marketplace.sql` after the legacy import so existing advertiser ACTIVE/SUSPENDED/REJECTED states are available when profiles are seeded. Migration 010 is additive: it adds advertiser profiles, main-site placements/campaign metadata/events and payment-order records; it preserves legacy user identities, roles, passwords, wallets, ledger history and worker tables. Prices and new placements start disabled until configured by an administrator.
 4. Confirm every existing user ID, email, password hash, status and advertiser wallet total. Confirm legacy advertiser SUSPENDED/REJECTED restrictions remain in force.
 5. Apply `20261115_011_multi_currency_placement_pricing.sql` after migration 010. It adds separate USD and NGN placement price rows; NGN prices start disabled and zero until configured.
 6. Do not apply migrations to the live database without explicit approval after clone tests.

@@ -120,6 +120,11 @@ jobs:
           POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
         run: |
           printf 'IMPORT LEGACY FINANCIAL HISTORY INTO poketflow_test\n' | php tools/import-legacy-financial-history.php --apply
+      - name: Apply advertiser-only migrations after legacy import
+        run: |
+          set -euo pipefail
+          mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < database/migrations/20261115_010_advertiser_only_marketplace.sql
+          mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < database/migrations/20261115_011_multi_currency_placement_pricing.sql
       - name: Verify preserved balances, accounts and archived history
         run: |
           set -euo pipefail
