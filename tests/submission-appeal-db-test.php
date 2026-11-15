@@ -157,11 +157,11 @@ try {
 // Guard the two user-facing regression fixes as part of this focused test.
 $adminSource = file_get_contents(__DIR__ . '/../marketplace/admin/disputes.php');
 $workerSource = file_get_contents(__DIR__ . '/../marketplace/my-submissions.php');
-if ($adminSource === false || !str_contains($adminSource, 'strlen($note) < 10')) {
-    throw new RuntimeException('Final appeal decisions must require a written admin explanation.');
+if ($adminSource === false || !str_contains($adminSource, 'http_response_code(410)')) {
+    throw new RuntimeException('Legacy worker appeal administration must be retired from the active product.');
 }
-if ($workerSource === false || !str_contains($workerSource, 'LEFT JOIN pf_submission_disputes')) {
-    throw new RuntimeException('Worker submission history must show appeal outcomes.');
+if ($workerSource === false || !str_contains($workerSource, 'http_response_code(410)')) {
+    throw new RuntimeException('Legacy worker submission history must be retired from the active product.');
 }
 
-echo "Submission appeal checks passed: one appeal per submission, one reward credit, reserve reconciliation, audited resolution, required admin reason and worker-visible outcome.\n";
+echo "Legacy appeal ledger reconciliation passed; worker appeal and submission routes are retired while historical records remain testable.\n";
