@@ -9,7 +9,10 @@ if (!$id || !preg_match('/\A[a-f0-9]{64}\z/',$sig) || !hash_equals(pf_site_ad_si
 $stmt=$pdo->prepare(
     "SELECT c.id,s.placement_key,s.creative_json
      FROM pf_campaigns c JOIN pf_site_campaigns s ON s.campaign_id=c.id
+     JOIN users u ON u.id=c.advertiser_id
+     JOIN pf_advertiser_profiles ap ON ap.user_id=c.advertiser_id
      WHERE c.id=? AND c.campaign_type='SITE_DISPLAY' AND c.status='ACTIVE' AND s.status='ACTIVE'
+       AND u.status='ACTIVE' AND ap.status='ACTIVE'
        AND s.starts_at<=NOW() AND s.ends_at>=NOW() LIMIT 1"
 );
 $stmt->execute([$id]); $ad=$stmt->fetch();
