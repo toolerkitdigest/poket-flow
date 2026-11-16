@@ -5,6 +5,7 @@ function pf_payment_http(string $method,string $url,array $headers=[],?array $pa
 {
     if(!function_exists('curl_init')) return ['ok'=>false,'status'=>0,'data'=>null,'error'=>'cURL is unavailable.'];
     $ch=curl_init($url);
+    if($ch===false) return ['ok'=>false,'status'=>0,'data'=>null,'error'=>'Could not initialize cURL.'];
     $options=[
         CURLOPT_CUSTOMREQUEST=>$method,
         CURLOPT_HTTPHEADER=>$headers,
@@ -42,6 +43,7 @@ function pf_paypal_access_token(): string
     if(!function_exists('curl_init')) throw new RuntimeException('cURL is unavailable.');
     if(!pf_payment_provider_ready('PAYPAL')) throw new RuntimeException('PayPal is not configured.');
     $ch=curl_init(pf_paypal_api_base().'/v1/oauth2/token');
+    if($ch===false) throw new RuntimeException('Could not initialize PayPal authentication.');
     curl_setopt_array($ch,[
         CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>'grant_type=client_credentials',
         CURLOPT_HTTPAUTH=>CURLAUTH_BASIC,
