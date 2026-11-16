@@ -75,6 +75,9 @@ $checks = [
         str_contains($paypalWebhook, 'provider_order_id') &&
         str_contains($paypalOrderMigration, 'provider_order_id') &&
         str_contains($paypalOrderMigration, 'provider_transaction_id = NULL'),
+    'PayPal credits require a genuine capture transaction ID' =>
+        str_contains($payments, 'empty($capture') &&
+        str_contains($paypalWebhook, 'capture ID missing'),
 ];
 
 foreach ($checks as $label => $passed) {
