@@ -16,7 +16,7 @@ $stmt->execute([$id]); $ad=$stmt->fetch();
 if (!$ad) { http_response_code(404); exit('Advertisement is no longer available.'); }
 $creative=json_decode((string)$ad['creative_json'],true);
 $url=(string)($creative['url']??''); $parts=parse_url($url);
-if (!filter_var($url,FILTER_VALIDATE_URL) || strtolower((string)($parts['scheme']??''))!=='https' || empty($parts['host'])) {
+if (!filter_var($url,FILTER_VALIDATE_URL) || strtolower((string)($parts['scheme']??''))!=='https' || empty($parts['host']) || !filter_var($parts['host'],FILTER_VALIDATE_DOMAIN,FILTER_FLAG_HOSTNAME) || isset($parts['user']) || isset($parts['pass'])) {
     http_response_code(410); exit('This advertisement destination is unavailable.');
 }
 try {
