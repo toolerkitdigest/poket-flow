@@ -17,6 +17,7 @@ $read = static function (string $path) use ($root): string {
 $sync = $read('marketplace/bootstrap/blog-sync.php');
 $adminFinance = $read('marketplace/admin/finance.php');
 $adminCampaigns = $read('marketplace/admin/campaigns.php');
+$adminAdvertisers = $read('marketplace/admin/advertisers.php');
 $siteAds = $read('marketplace/bootstrap/site-ads.php');
 $siteClick = $read('marketplace/ad-click.php');
 $paypalWebhook = $read('marketplace/api/paypal-webhook.php');
@@ -26,6 +27,8 @@ $createPayment = $read('marketplace/create-payment.php');
 $checks = [
     'blog synchronization checks advertiser status before activation' =>
         str_contains($sync, 'advertiser_status') &&
+        str_contains($sync, 'user_status') &&
+        str_contains($sync, 'pf_advertiser_profiles') &&
         str_contains($sync, 'hasReservedBudget') &&
         str_contains($sync, "=== 'ACTIVE'"),
     'blog synchronization requires a remaining reserved budget' =>
@@ -33,6 +36,9 @@ $checks = [
         str_contains($sync, 'hasReservedBudget'),
     'blog pause synchronizes a paused creative instead of ending it' =>
         str_contains($adminCampaigns, "syncAction='upsert';"),
+    'advertiser suspension synchronizes paused state and revokes only as fallback' =>
+        str_contains($adminAdvertisers, "pf_sync_blog_campaign($pdo,(int)$cid,'upsert')") &&
+        str_contains($adminAdvertisers, "pf_sync_blog_campaign($pdo,(int)$cid,'revoke')"),
     'failed blog synchronization retry performs an upsert' =>
         str_contains($adminFinance, "syncAction='upsert';") &&
         str_contains($adminFinance, 'Retry blog sync'),
