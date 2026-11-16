@@ -11,7 +11,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
    if($c['status']!=='ACTIVE')throw new RuntimeException('Only active campaigns can be paused.');
    $pdo->prepare("UPDATE pf_campaigns SET status='PAUSED' WHERE id=?")->execute([$id]);
    if($c['campaign_type']==='SITE_DISPLAY')$pdo->prepare("UPDATE pf_site_campaigns SET status='PAUSED' WHERE campaign_id=?")->execute([$id]);
-   else{$pdo->prepare("UPDATE pf_blog_campaigns SET status='PAUSED',sync_status='PENDING' WHERE campaign_id=?")->execute([$id]);$syncId=$id;$syncAction='revoke';}
+   else{$pdo->prepare("UPDATE pf_blog_campaigns SET status='PAUSED',sync_status='PENDING' WHERE campaign_id=?")->execute([$id]);$syncId=$id;$syncAction='upsert';}
   }else{
    if($c['status']!=='PAUSED'||$c['user_status']!=='ACTIVE'||$c['advertiser_status']!=='ACTIVE')throw new RuntimeException('Only paused campaigns belonging to active advertisers can resume.');
    if($c['ends_at']!==null&&strtotime((string)$c['ends_at'])<time())throw new RuntimeException('This campaign has expired and cannot be resumed.');
