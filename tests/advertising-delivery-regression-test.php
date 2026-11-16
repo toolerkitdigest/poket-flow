@@ -49,8 +49,8 @@ $checks = [
         str_contains($paypalWebhook, 'supplementary_data') &&
         str_contains($paypalWebhook, 'related_ids'),
     'PayPal idempotency keys are sent as HTTP header lines' =>
-        str_contains($payments, 'PayPal-Request-Id: poketflow-capture-') &&
-        str_contains($createPayment, 'PayPal-Request-Id: poketflow-order-') &&
+        str_contains($payments, 'PayPal-Request-Id: pf-capture-') &&
+        str_contains($createPayment, 'PayPal-Request-Id: pf-order-') &&
         str_contains($payments, 'paypalOrderId') &&
         str_contains($payments, 'transactionId'),
         !str_contains($payments, "'PayPal-Request-Id'=>") &&
