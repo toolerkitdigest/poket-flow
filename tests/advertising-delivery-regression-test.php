@@ -89,8 +89,8 @@ $checks = [
     'campaign reservation uses post-redirect-get to prevent resubmission' =>
         str_contains($fundBlog, 'fund-blog-campaign.php?id=') &&
         str_contains($fundSite, 'fund-site-campaign.php?id=') &&
-        str_contains($fundBlog, 'true, 303') &&
-        str_contains($fundSite, 'true, 303'),
+        preg_match('/header\\(.*?true\\s*,\\s*303\\)/s', $fundBlog) === 1 &&
+        preg_match('/header\\(.*?true\\s*,\\s*303\\)/s', $fundSite) === 1,
 ];
 
 foreach ($checks as $label => $passed) {
