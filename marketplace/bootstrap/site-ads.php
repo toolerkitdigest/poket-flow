@@ -38,8 +38,18 @@ function pf_render_site_ad(PDO $pdo, string $placementKey): string
     $title=pf_e((string)($creative['title']??$ad['title']));
     $summary=pf_e((string)($creative['summary']??''));
     $image=trim((string)($creative['image']??''));
+    $imageParts=$image!==''?parse_url($image):[];
     $imageHtml='';
-    if ($image!=='' && filter_var($image,FILTER_VALIDATE_URL) && strtolower((string)parse_url($image,PHP_URL_SCHEME))==='https') {
+    if (
+        $image!=='' &&
+        filter_var($image,FILTER_VALIDATE_URL) &&
+        is_array($imageParts) &&
+        strtolower((string)($imageParts['scheme']??''))==='https' &&
+        !empty($imageParts['host']) &&
+        filter_var($imageParts['host'],FILTER_VALIDATE_DOMAIN,FILTER_FLAG_HOSTNAME) &&
+        !isset($imageParts['user']) &&
+        !isset($imageParts['pass'])
+    ) {
         $imageHtml='<img loading="lazy" src="'.pf_e($image).'" alt="'.$title.'" style="max-width:100%;height:auto;border-radius:12px">';
     }
     return '<aside class="pf-sponsored-ad" aria-label="Advertisement"><span class="pf-ad-label">Sponsored</span><a href="ad-click.php?id='.(int)$ad['id'].'&sig='.rawurlencode($sig).'" rel="sponsored nofollow noopener" target="_blank">'.$imageHtml.'<strong>'.$title.'</strong><span>'.$summary.'</span></a></aside>';
