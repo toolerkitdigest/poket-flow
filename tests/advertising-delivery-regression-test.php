@@ -43,6 +43,11 @@ $checks = [
     'failed blog synchronization retry performs an upsert' =>
         str_contains($adminFinance, "syncAction='upsert';") &&
         str_contains($adminFinance, 'Retry blog sync'),
+    'main-site ad delivery requires an active user and advertiser profile' =>
+        str_contains($siteAds, 'JOIN pf_advertiser_profiles') &&
+        str_contains($siteAds, "ap.status='ACTIVE'") &&
+        str_contains($siteClick, 'JOIN pf_advertiser_profiles') &&
+        str_contains($siteClick, "ap.status='ACTIVE'"),
     'main-site impression tracking failure does not stop ad rendering' =>
         str_contains($siteAds, 'Analytics failure must never make the public page unavailable.') &&
         str_contains($siteAds, 'catch (Throwable $exception)'),
