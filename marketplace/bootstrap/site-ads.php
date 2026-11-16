@@ -8,7 +8,10 @@ function pf_render_site_ad(PDO $pdo, string $placementKey): string
         "SELECT c.id,c.title,s.placement_key,s.creative_json
          FROM pf_campaigns c
          JOIN pf_site_campaigns s ON s.campaign_id=c.id
+         JOIN users u ON u.id=c.advertiser_id
+         JOIN pf_advertiser_profiles ap ON ap.user_id=c.advertiser_id
          WHERE c.campaign_type='SITE_DISPLAY' AND c.status='ACTIVE' AND s.status='ACTIVE'
+           AND u.status='ACTIVE' AND ap.status='ACTIVE'
            AND s.placement_key=? AND s.starts_at<=NOW() AND s.ends_at>=NOW()
          ORDER BY RAND() LIMIT 1"
     );
