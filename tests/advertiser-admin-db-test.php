@@ -16,4 +16,12 @@ $prices=$pdo->query("SELECT COUNT(*) FROM pf_ad_placement_prices WHERE currency 
 if((int)$prices<2)throw new RuntimeException('USD/NGN placement price rows were not created.');
 $format=$pdo->query("SELECT formats_json FROM pf_ad_placements WHERE placement_key='main_home_top'")->fetchColumn();
 $formats=json_decode((string)$format,true);if(!is_array($formats)||!in_array('banner',$formats,true))throw new RuntimeException('Main-site banner placement format is missing.');
-echo "Advertiser profile, admin queries, payment reconciliation and USD/NGN placement schema checks passed.\n";
+$paymentColumns=$pdo->query("SHOW COLUMNS FROM pf_payment_orders")->fetchAll(PDO::FETCH_COLUMN);
+if(!in_array('provider_order_id',$paymentColumns,true))throw new RuntimeException('PayPal provider order ID column is missing.');
+$paymentIndexes=$pdo->query("SHOW INDEX FROM pf_payment_orders")->fetchAll();
+$hasUniqueOrderIndex=false;foreach($paymentIndexes as $index){if($index['Key_name']==='uq_pf_payment_provider_order_id'&&(int)$index['Non_unique']===0)$hasUniqueOrderIndex=true;}
+if(!$hasUniqueOrderIndex)throw new RuntimeException('PayPal provider order ID uniqueness is missing.');
+$legacyPaypal=$pdo->prepare("SELECT provider_order_id,provider_transaction_id FROM pf_payment_orders WHERE provider='PAYPAL' AND provider_reference='PF-LEGACY-PAYPAL-ORDER' LIMIT 1");
+$legacyPaypal->execute();$legacyPaypalRow=$legacyPaypal->fetch();
+if(!$legacyPaypalRow||$legacyPaypalRow['provider_order_id']!=='PAYPAL-ORDER-ID-OLD'||$legacyPaypalRow['provider_transaction_id']!==null)throw new RuntimeException('Existing pending PayPal order ID was not migrated safely.');
+echo "Advertiser profile, admin queries, payment reconciliation, PayPal order separation and USD/NGN placement schema checks passed.\n";
