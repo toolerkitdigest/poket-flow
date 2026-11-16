@@ -15,7 +15,7 @@ try{
  if($order['status']==='PAID'){$success=true;}
  elseif($order['status']!=='PENDING')throw new RuntimeException('This payment order is not awaiting confirmation.');
  else{
-  $verified=$provider==='PAYSTACK'?pf_verify_paystack_order($order):pf_capture_paypal_order($order,(string)$order['provider_transaction_id']);
+  $verified=$provider==='PAYSTACK'?pf_verify_paystack_order($order):pf_capture_paypal_order($order,(string)$order['provider_order_id']);
   if(!$verified['ok'])throw new RuntimeException($verified['error']);
   pf_credit_payment_order($pdo,(int)$order['id'],$verified['transaction_id']);$success=true;
  }
