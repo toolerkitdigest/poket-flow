@@ -3,7 +3,8 @@ declare(strict_types=1);
 require_once dirname(__DIR__).'/bootstrap/app.php';
 if($_SERVER['REQUEST_METHOD']!=='POST'){http_response_code(405);exit;}
 $secret=(string)($config['paystack_secret_key']??'');$signature=(string)($_SERVER['HTTP_X_PAYSTACK_SIGNATURE']??'');$raw=file_get_contents('php://input');
-if($secret===''||$signature===''||!is_string($raw)||!hash_equals(hash_hmac('sha512',$raw,$secret),$signature)){http_response_code(401);exit;}
+if(!is_string($raw)||$raw===''||strlen($raw)>262144){http_response_code(413);exit;}
+if($secret===''||$signature===''||!hash_equals(hash_hmac('sha512',$raw,$secret),$signature)){http_response_code(401);exit;}
 $event=json_decode($raw,true);if(!is_array($event)||($event['event']??'')!=='charge.success'){http_response_code(200);exit('ignored');}
 $reference=(string)($event['data']['reference']??'');if($reference===''){http_response_code(400);exit;}
 $q=$pdo->prepare("SELECT * FROM pf_payment_orders WHERE provider='PAYSTACK' AND provider_reference=? LIMIT 1");$q->execute([$reference]);$order=$q->fetch();
