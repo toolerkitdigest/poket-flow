@@ -75,6 +75,8 @@ function pf_sync_blog_campaign(PDO $pdo, int $campaignId, string $action = 'upse
             !filter_var($url, FILTER_VALIDATE_URL) ||
             strtolower((string) ($parts['scheme'] ?? '')) !== 'https' ||
             empty($parts['host']) ||
+            isset($parts['user']) ||
+            isset($parts['pass']) ||
             !filter_var(
                 $parts['host'],
                 FILTER_VALIDATE_DOMAIN,
