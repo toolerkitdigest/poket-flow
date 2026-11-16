@@ -2,7 +2,7 @@ name: Marketplace MySQL migration and legacy import test
 
 on:
   push:
-    branches: [rebuild/locked-marketplace-v1, rebuild/advertiser-only-marketplace]
+    branches: [rebuild/locked-marketplace-v1, rebuild/advertiser-only-marketplace, fix/advertiser-marketplace-audit]
     paths:
       - 'database/migrations/**'
       - 'tools/import-legacy-financial-history.php'
