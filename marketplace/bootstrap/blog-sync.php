@@ -27,7 +27,8 @@ function pf_sync_blog_campaign(PDO $pdo, int $campaignId, string $action = 'upse
                 c.status AS campaign_status,
                 c.reserved_budget,
                 c.ends_at AS campaign_ends_at,
-                u.status AS advertiser_status,
+                u.status AS user_status,
+                ap.status AS advertiser_status,
                 bc.placement_key,
                 bc.creative_json,
                 bc.starts_at,
@@ -42,6 +43,7 @@ function pf_sync_blog_campaign(PDO $pdo, int $campaignId, string $action = 'upse
              FROM pf_campaigns c
              JOIN pf_blog_campaigns bc ON bc.campaign_id = c.id
              JOIN users u ON u.id = c.advertiser_id
+             JOIN pf_advertiser_profiles ap ON ap.user_id = c.advertiser_id
              WHERE c.id = ?
                AND c.campaign_type = 'BLOG_SPONSORED'
              LIMIT 1"
@@ -113,6 +115,7 @@ function pf_sync_blog_campaign(PDO $pdo, int $campaignId, string $action = 'upse
             $eligible =
                 strtoupper((string) $row['campaign_status']) === 'ACTIVE' &&
                 strtoupper((string) $row['blog_status']) === 'ACTIVE' &&
+                strtoupper((string) $row['user_status']) === 'ACTIVE' &&
                 strtoupper((string) $row['advertiser_status']) === 'ACTIVE' &&
                 $hasReservedBudget;
 
