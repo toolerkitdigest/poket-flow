@@ -1,7 +1,7 @@
 name: PHP syntax checks
 on:
   pull_request:
-    branches: [main]
+    branches: [main, rebuild/advertiser-only-marketplace]
   push:
     branches: [rebuild/locked-marketplace-v1, rebuild/advertiser-only-marketplace, fix/advertiser-marketplace-audit]
 jobs:
