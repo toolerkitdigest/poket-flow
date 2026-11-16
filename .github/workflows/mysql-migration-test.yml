@@ -9,7 +9,7 @@ on:
       - 'tests/**'
       - '.github/workflows/mysql-migration-test.yml'
   pull_request:
-    branches: [main]
+    branches: [main, rebuild/advertiser-only-marketplace]
     paths:
       - 'database/migrations/**'
       - 'tools/import-legacy-financial-history.php'
