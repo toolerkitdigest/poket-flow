@@ -20,6 +20,8 @@ $adminCampaigns = $read('marketplace/admin/campaigns.php');
 $siteAds = $read('marketplace/bootstrap/site-ads.php');
 $siteClick = $read('marketplace/ad-click.php');
 $paypalWebhook = $read('marketplace/api/paypal-webhook.php');
+$payments = $read('marketplace/bootstrap/payments.php');
+$createPayment = $read('marketplace/create-payment.php');
 
 $checks = [
     'blog synchronization checks advertiser status before activation' =>
@@ -44,6 +46,11 @@ $checks = [
         str_contains($paypalWebhook, "custom===''") &&
         str_contains($paypalWebhook, 'advertiser_id') &&
         str_contains($paypalWebhook, '!==$custom'),
+    'PayPal idempotency keys are sent as HTTP header lines' =>
+        str_contains($payments, 'PayPal-Request-Id: poketflow-capture-') &&
+        str_contains($createPayment, 'PayPal-Request-Id: poketflow-order-') &&
+        !str_contains($payments, "'PayPal-Request-Id'=>") &&
+        !str_contains($createPayment, "'PayPal-Request-Id'=>"),
 ];
 
 foreach ($checks as $label => $passed) {
