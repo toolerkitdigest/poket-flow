@@ -130,6 +130,10 @@ jobs:
         env:
           POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
         run: php tests/advertiser-admin-db-test.php
+      - name: Verify PayPal order/capture separation and duplicate-credit idempotency
+        env:
+          POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
+        run: php tests/payment-order-idempotency-test.php
       - name: Verify preserved balances, accounts and archived history
         run: |
           set -euo pipefail
