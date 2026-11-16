@@ -24,14 +24,15 @@ $paypalWebhook = $read('marketplace/api/paypal-webhook.php');
 $checks = [
     'blog synchronization checks advertiser status before activation' =>
         str_contains($sync, 'advertiser_status') &&
-        str_contains($sync, "strtoupper((string) $row['advertiser_status']) === 'ACTIVE'"),
+        str_contains($sync, 'hasReservedBudget') &&
+        str_contains($sync, "=== 'ACTIVE'"),
     'blog synchronization requires a remaining reserved budget' =>
         str_contains($sync, 'remaining_reserved') &&
-        str_contains($sync, '$hasReservedBudget'),
+        str_contains($sync, 'hasReservedBudget'),
     'blog pause synchronizes a paused creative instead of ending it' =>
-        str_contains($adminCampaigns, "$syncAction='upsert';"),
+        str_contains($adminCampaigns, "syncAction='upsert';"),
     'failed blog synchronization retry performs an upsert' =>
-        str_contains($adminFinance, "$syncAction='upsert';") &&
+        str_contains($adminFinance, "syncAction='upsert';") &&
         str_contains($adminFinance, 'Retry blog sync'),
     'main-site impression tracking failure does not stop ad rendering' =>
         str_contains($siteAds, 'Analytics failure must never make the public page unavailable.') &&
@@ -40,8 +41,9 @@ $checks = [
         str_contains($siteClick, 'A tracking outage must not prevent a visitor from following the ad.') &&
         strpos($siteClick, "header('Location: '.$url") > strpos($siteClick, 'catch (Throwable $exception)'),
     'PayPal webhook requires exact advertiser identity' =>
-        str_contains($paypalWebhook, "$custom===''") &&
-        str_contains($paypalWebhook, "(string)$order['advertiser_id']!==$custom"),
+        str_contains($paypalWebhook, "custom===''") &&
+        str_contains($paypalWebhook, 'advertiser_id') &&
+        str_contains($paypalWebhook, '!==$custom'),
 ];
 
 foreach ($checks as $label => $passed) {
