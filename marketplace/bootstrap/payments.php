@@ -78,7 +78,7 @@ function pf_capture_paypal_order(array $order,string $paypalOrderId): array
     if(!pf_payment_provider_ready('PAYPAL')) return ['ok'=>false,'transaction_id'=>'','error'=>'PayPal is not configured.'];
     try{$token=pf_paypal_access_token();}catch(Throwable $e){return ['ok'=>false,'transaction_id'=>'','error'=>$e->getMessage()];}
     $result=pf_payment_http('POST',pf_paypal_api_base().'/v2/checkout/orders/'.rawurlencode($paypalOrderId).'/capture',[
-        'Authorization: Bearer '.$token,'Accept: application/json','PayPal-Request-Id: poketflow-capture-'.$order['id']
+        'Authorization: Bearer '.$token,'Accept: application/json','PayPal-Request-Id: pf-capture-'.$order['id']
     ]);
     $data=$result['data'];$unit=$data['purchase_units'][0]??[];$capture=$unit['payments']['captures'][0]??[];$amount=$capture['amount']??[];
     if(!$result['ok']||(string)($data['id']??'')!==$paypalOrderId||($data['status']??'')!=='COMPLETED'||(string)($unit['invoice_id']??'')!==(string)$order['provider_reference']||(string)($unit['custom_id']??'')!==(string)$order['advertiser_id']||strtoupper((string)($amount['currency_code']??''))!==strtoupper((string)$order['currency'])||abs((float)($amount['value']??0)-(float)$order['amount'])>0.001)
