@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__).'/bootstrap/app.php';
 if($_SERVER['REQUEST_METHOD']!=='POST'){http_response_code(405);exit;}
 $webhookId=(string)($config['paypal_webhook_id']??'');if($webhookId===''||!pf_payment_provider_ready('PAYPAL')){http_response_code(503);exit;}
-$raw=file_get_contents('php://input');$event=is_string($raw)?json_decode($raw,true):null;if(!is_array($event)){http_response_code(400);exit;}
+$raw=file_get_contents('php://input');if(!is_string($raw)||$raw===''||strlen($raw)>262144){http_response_code(413);exit;}$event=json_decode($raw,true);if(!is_array($event)){http_response_code(400);exit;}
 $verificationPayload=[
  'auth_algo'=>(string)($_SERVER['HTTP_PAYPAL_AUTH_ALGO']??''),
  'cert_url'=>(string)($_SERVER['HTTP_PAYPAL_CERT_URL']??''),
