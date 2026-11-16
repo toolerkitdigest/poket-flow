@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/bootstrap/app.php';
 $user = pf_require_advertiser($pdo);
 $error = '';
-$notice = '';
+$notice = (($_GET['reserved'] ?? '') === '1') ? 'Your fixed blog sponsorship budget is reserved. The campaign is now waiting for administrator review.' : '';
 $id = filter_input(INPUT_GET,'id',FILTER_VALIDATE_INT);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     pf_verify_csrf();
@@ -56,7 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update->execute([$amount,$id]);
             if ($update->rowCount()!==1) throw new RuntimeException('Campaign status changed. Please refresh and try again.');
             $pdo->commit();
-            $notice = 'Your fixed blog sponsorship budget is reserved. The campaign is now waiting for administrator review.';
+            header('Location: fund-blog-campaign.php?id=' . $id . '&reserved=1', true, 303);
+            exit;
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) $pdo->rollBack();
             $error = $exception instanceof RuntimeException ? $exception->getMessage() : 'Could not reserve the blog sponsorship budget.';
