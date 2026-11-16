@@ -24,6 +24,8 @@ $paypalWebhook = $read('marketplace/api/paypal-webhook.php');
 $payments = $read('marketplace/bootstrap/payments.php');
 $createPayment = $read('marketplace/create-payment.php');
 $paymentReturn = $read('marketplace/payment-return.php');
+$fundBlog = $read('marketplace/fund-blog-campaign.php');
+$fundSite = $read('marketplace/fund-site-campaign.php');
 $paypalOrderMigration = $read('database/migrations/20261115_013_paypal_order_reference_separation.sql');
 
 $checks = [
@@ -84,6 +86,11 @@ $checks = [
         str_contains($createPayment, "pf_payment_checkout_url_allowed('PAYPAL'"),
     'late PayPal cancellation callback does not contradict a completed payment' =>
         str_contains($paymentReturn, "status!=='PAID'"),
+    'campaign reservation uses post-redirect-get to prevent resubmission' =>
+        str_contains($fundBlog, 'fund-blog-campaign.php?id=') &&
+        str_contains($fundSite, 'fund-site-campaign.php?id=') &&
+        str_contains($fundBlog, 'true, 303') &&
+        str_contains($fundSite, 'true, 303'),
 ];
 
 foreach ($checks as $label => $passed) {
