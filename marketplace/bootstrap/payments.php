@@ -5,6 +5,7 @@ function pf_payment_http(string $method,string $url,array $headers=[],?array $pa
 {
     if(!function_exists('curl_init')) return ['ok'=>false,'status'=>0,'data'=>null,'error'=>'cURL is unavailable.'];
     $ch=curl_init($url);
+    if($ch===false) return ['ok'=>false,'status'=>0,'data'=>null,'error'=>'Could not initialize cURL.'];
     $options=[
         CURLOPT_CUSTOMREQUEST=>$method,
         CURLOPT_HTTPHEADER=>$headers,
@@ -24,6 +25,34 @@ function pf_payment_http(string $method,string $url,array $headers=[],?array $pa
     $data=is_string($body)?json_decode($body,true):null;
     return ['ok'=>$status>=200&&$status<300&&is_array($data),'status'=>$status,'data'=>$data,'error'=>$error!==''?$error:'HTTP '.$status];
 }
+function pf_payment_checkout_url_allowed(string $provider, string $url): bool
+{
+    global $config;
+    $parts = parse_url($url);
+    if (
+        !filter_var($url, FILTER_VALIDATE_URL) ||
+        !is_array($parts) ||
+        strtolower((string) ($parts['scheme'] ?? '')) !== 'https' ||
+        empty($parts['host']) ||
+        isset($parts['user']) ||
+        isset($parts['pass'])
+    ) {
+        return false;
+    }
+
+    $host = strtolower((string) $parts['host']);
+    if ($provider === 'PAYSTACK') {
+        return $host === 'checkout.paystack.com';
+    }
+    if ($provider === 'PAYPAL') {
+        $expected = ($config['paypal_mode'] ?? 'sandbox') === 'live'
+            ? 'www.paypal.com'
+            : 'www.sandbox.paypal.com';
+        return $host === $expected;
+    }
+    return false;
+}
+
 function pf_payment_provider_ready(string $provider): bool
 {
     global $config;
@@ -42,6 +71,7 @@ function pf_paypal_access_token(): string
     if(!function_exists('curl_init')) throw new RuntimeException('cURL is unavailable.');
     if(!pf_payment_provider_ready('PAYPAL')) throw new RuntimeException('PayPal is not configured.');
     $ch=curl_init(pf_paypal_api_base().'/v1/oauth2/token');
+    if($ch===false) throw new RuntimeException('Could not initialize PayPal authentication.');
     curl_setopt_array($ch,[
         CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>'grant_type=client_credentials',
         CURLOPT_HTTPAUTH=>CURLAUTH_BASIC,
@@ -76,12 +106,12 @@ function pf_capture_paypal_order(array $order,string $paypalOrderId): array
     if(!pf_payment_provider_ready('PAYPAL')) return ['ok'=>false,'transaction_id'=>'','error'=>'PayPal is not configured.'];
     try{$token=pf_paypal_access_token();}catch(Throwable $e){return ['ok'=>false,'transaction_id'=>'','error'=>$e->getMessage()];}
     $result=pf_payment_http('POST',pf_paypal_api_base().'/v2/checkout/orders/'.rawurlencode($paypalOrderId).'/capture',[
-        'Authorization: Bearer '.$token,'Accept: application/json','PayPal-Request-Id'=>'poketflow-capture-'.$order['id']
+        'Authorization: Bearer '.$token,'Accept: application/json','PayPal-Request-Id: pf-capture-'.$order['id']
     ]);
     $data=$result['data'];$unit=$data['purchase_units'][0]??[];$capture=$unit['payments']['captures'][0]??[];$amount=$capture['amount']??[];
-    if(!$result['ok']||($data['status']??'')!=='COMPLETED'||(string)($unit['invoice_id']??'')!==(string)$order['provider_reference']||(string)($unit['custom_id']??'')!==(string)$order['advertiser_id']||strtoupper((string)($amount['currency_code']??''))!==strtoupper((string)$order['currency'])||abs((float)($amount['value']??0)-(float)$order['amount'])>0.001)
+    if(!$result['ok']||(string)($data['id']??'')!==$paypalOrderId||($data['status']??'')!=='COMPLETED'||empty($capture['id'])||(string)($unit['invoice_id']??'')!==(string)$order['provider_reference']||(string)($unit['custom_id']??'')!==(string)$order['advertiser_id']||strtoupper((string)($amount['currency_code']??''))!==strtoupper((string)$order['currency'])||abs((float)($amount['value']??0)-(float)$order['amount'])>0.001)
         return ['ok'=>false,'transaction_id'=>'','error'=>'PayPal capture could not be verified against this PoketFlow order.'];
-    return ['ok'=>true,'transaction_id'=>(string)($capture['id']??$paypalOrderId),'error'=>''];
+    return ['ok'=>true,'transaction_id'=>(string)$capture['id'],'error'=>''];
 }
 function pf_credit_payment_order(PDO $pdo,int $orderId,string $transactionId): bool
 {
@@ -91,6 +121,7 @@ function pf_credit_payment_order(PDO $pdo,int $orderId,string $transactionId): b
         if(!$order) throw new RuntimeException('Payment order not found.');
         if($order['status']==='PAID'){$pdo->commit();return true;}
         if($order['status']!=='PENDING') throw new RuntimeException('Payment order is not awaiting confirmation.');
+        if(trim($transactionId)==='') throw new RuntimeException('Verified provider transaction ID is missing.');
         $pdo->prepare("INSERT IGNORE INTO pf_wallets(user_id,wallet_type,currency) VALUES (?,'ADVERTISER',?)")->execute([(int)$order['advertiser_id'],$order['currency']]);
         $w=$pdo->prepare("SELECT id FROM pf_wallets WHERE user_id=? AND wallet_type='ADVERTISER' AND currency=? FOR UPDATE");
         $w->execute([(int)$order['advertiser_id'],$order['currency']]);$walletId=(int)$w->fetchColumn();

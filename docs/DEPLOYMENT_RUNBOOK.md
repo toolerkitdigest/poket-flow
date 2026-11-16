@@ -16,6 +16,7 @@ After approval, deploy only the named application files from `marketplace/` into
 4. Confirm every existing user ID, email, password hash, status and advertiser wallet total. Confirm legacy advertiser SUSPENDED/REJECTED restrictions remain in force.
 5. Apply `20261115_011_multi_currency_placement_pricing.sql` after migration 010. It adds separate USD and NGN placement price rows; NGN prices start disabled and zero until configured.
 6. Apply `20261115_012_main_site_banner_formats.sql` after migration 011 to mark the top and footer main-site slots as banner-capable.
+7. Apply `20261115_013_paypal_order_reference_separation.sql` after migration 012. It preserves pending PayPal checkout order IDs separately from capture transaction IDs so duplicate webhook deliveries remain verifiable and idempotent.
 7. Do not apply migrations to the live database without explicit approval after clone tests.
 
 ## Payment provider setup

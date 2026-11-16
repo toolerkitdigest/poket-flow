@@ -22,39 +22,116 @@ function pf_sync_blog_campaign(PDO $pdo, int $campaignId, string $action = 'upse
     $payload = ['action'=>$action,'campaign_id'=>$campaignId];
     if ($action === 'upsert') {
         $stmt = $pdo->prepare(
-            'SELECT c.title,c.status AS campaign_status,bc.placement_key,bc.creative_json,
-                    bc.starts_at,bc.ends_at,bc.status AS blog_status
-             FROM pf_campaigns c JOIN pf_blog_campaigns bc ON bc.campaign_id=c.id
-             WHERE c.id=? AND c.campaign_type=\'BLOG_SPONSORED\' LIMIT 1'
+            "SELECT
+                c.title,
+                c.status AS campaign_status,
+                c.reserved_budget,
+                c.ends_at AS campaign_ends_at,
+                u.status AS user_status,
+                ap.status AS advertiser_status,
+                bc.placement_key,
+                bc.creative_json,
+                bc.starts_at,
+                bc.ends_at,
+                bc.status AS blog_status,
+                (
+                    SELECT COALESCE(SUM(r.amount), 0)
+                    FROM pf_blog_campaign_reservations r
+                    WHERE r.campaign_id = c.id
+                      AND r.status = 'RESERVED'
+                ) AS remaining_reserved
+             FROM pf_campaigns c
+             JOIN pf_blog_campaigns bc ON bc.campaign_id = c.id
+             JOIN users u ON u.id = c.advertiser_id
+             JOIN pf_advertiser_profiles ap ON ap.user_id = c.advertiser_id
+             WHERE c.id = ?
+               AND c.campaign_type = 'BLOG_SPONSORED'
+             LIMIT 1"
         );
         $stmt->execute([$campaignId]);
         $row = $stmt->fetch();
+
         if (!$row) {
-            return ['ok'=>false,'error'=>'Blog sponsorship record was not found.'];
+            return ['ok' => false, 'error' => 'Blog sponsorship record was not found.'];
         }
+
         try {
-            $creative = json_decode((string)$row['creative_json'], true, 16, JSON_THROW_ON_ERROR);
+            $creative = json_decode(
+                (string) $row['creative_json'],
+                true,
+                16,
+                JSON_THROW_ON_ERROR
+            );
         } catch (Throwable $exception) {
-            return ['ok'=>false,'error'=>'Stored blog creative is invalid.'];
+            return ['ok' => false, 'error' => 'Stored blog creative is invalid.'];
         }
-        $url = (string)($creative['url'] ?? '');
+
+        if (!is_array($creative)) {
+            return ['ok' => false, 'error' => 'Stored blog creative is invalid.'];
+        }
+
+        $url = (string) ($creative['url'] ?? '');
         $parts = parse_url($url);
-        if (!filter_var($url,FILTER_VALIDATE_URL)
-            || strtolower((string)($parts['scheme']??''))!=='https'
-            || empty($parts['host'])) {
-            return ['ok'=>false,'error'=>'Blog destination URL is not a valid HTTPS address.'];
+
+        if (
+            !filter_var($url, FILTER_VALIDATE_URL) ||
+            strtolower((string) ($parts['scheme'] ?? '')) !== 'https' ||
+            empty($parts['host']) ||
+            isset($parts['user']) ||
+            isset($parts['pass']) ||
+            !filter_var(
+                $parts['host'],
+                FILTER_VALIDATE_DOMAIN,
+                FILTER_FLAG_HOSTNAME
+            )
+        ) {
+            return ['ok' => false, 'error' => 'Blog destination URL is not a valid HTTPS address.'];
         }
-        $start = $row['starts_at'] ? date('Y-m-d',strtotime((string)$row['starts_at'])) : null;
-        $end = $row['ends_at'] ? date('Y-m-d',strtotime((string)$row['ends_at'])) : null;
+
+        $start = $row['starts_at']
+            ? date('Y-m-d', strtotime((string) $row['starts_at']))
+            : null;
+        $end = $row['ends_at']
+            ? date('Y-m-d', strtotime((string) $row['ends_at']))
+            : null;
+
+        $campaignEndExpired = $row['campaign_ends_at'] !== null
+            && strtotime((string) $row['campaign_ends_at']) < time();
+        $blogEndExpired = $row['ends_at'] !== null
+            && strtotime((string) $row['ends_at']) < time();
+
+        if (
+            $campaignEndExpired ||
+            $blogEndExpired ||
+            in_array(strtoupper((string) $row['blog_status']), ['ENDED', 'REVOKED'], true) ||
+            in_array(strtoupper((string) $row['campaign_status']), ['COMPLETED', 'CANCELLED', 'REJECTED'], true)
+        ) {
+            $effectiveStatus = 'ended';
+        } else {
+            $hasReservedBudget =
+                (float) $row['reserved_budget'] > 0 &&
+                (float) $row['remaining_reserved'] > 0;
+
+            $eligible =
+                strtoupper((string) $row['campaign_status']) === 'ACTIVE' &&
+                strtoupper((string) $row['blog_status']) === 'ACTIVE' &&
+                strtoupper((string) $row['user_status']) === 'ACTIVE' &&
+                strtoupper((string) $row['advertiser_status']) === 'ACTIVE' &&
+                $hasReservedBudget;
+
+            $effectiveStatus = $eligible ? 'active' : 'paused';
+        }
+
         $payload += [
-            'name'=>(string)($creative['name'] ?? $row['title']),
-            'summary'=>(string)($creative['summary'] ?? ''),
-            'placement'=>(string)$row['placement_key'],
-            'image'=>'',
-            'url'=>$url,
-            'status'=>$row['blog_status']==='ACTIVE' ? 'active' : ($row['blog_status']==='ENDED' ? 'ended' : 'paused'),
-            'start_date'=>$start,
-            'end_date'=>$end,
+            'name' => (string) ($creative['name'] ?? $row['title']),
+            'summary' => (string) ($creative['summary'] ?? ''),
+            'placement' => (string) $row['placement_key'],
+            // Blog image uploads are not yet part of the signed sync contract.
+            'image' => '',
+            'url' => $url,
+            'status' => $effectiveStatus,
+            'start_date' => $start,
+            'end_date' => $end,
         ];
     }
 

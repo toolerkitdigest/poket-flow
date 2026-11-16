@@ -2,14 +2,14 @@ name: Marketplace MySQL migration and legacy import test
 
 on:
   push:
-    branches: [rebuild/locked-marketplace-v1, rebuild/advertiser-only-marketplace]
+    branches: [rebuild/locked-marketplace-v1, rebuild/advertiser-only-marketplace, fix/advertiser-marketplace-audit]
     paths:
       - 'database/migrations/**'
       - 'tools/import-legacy-financial-history.php'
       - 'tests/**'
       - '.github/workflows/mysql-migration-test.yml'
   pull_request:
-    branches: [main]
+    branches: [main, rebuild/advertiser-only-marketplace]
     paths:
       - 'database/migrations/**'
       - 'tools/import-legacy-financial-history.php'
@@ -124,10 +124,16 @@ jobs:
           mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < database/migrations/20261115_010_advertiser_only_marketplace.sql
           mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < database/migrations/20261115_011_multi_currency_placement_pricing.sql
           mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < database/migrations/20261115_012_main_site_banner_formats.sql
+          mysql -h127.0.0.1 -uroot -proot poketflow_test -e "INSERT INTO pf_payment_orders(advertiser_id,provider,provider_reference,amount,currency,status,provider_transaction_id) VALUES (1,'PAYPAL','PF-LEGACY-PAYPAL-ORDER',5.00,'USD','PENDING','PAYPAL-ORDER-ID-OLD')"
+          mysql --default-character-set=utf8mb4 -h127.0.0.1 -uroot -proot poketflow_test < database/migrations/20261115_013_paypal_order_reference_separation.sql
       - name: Verify advertiser administration and pricing queries
         env:
           POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
         run: php tests/advertiser-admin-db-test.php
+      - name: Verify PayPal order/capture separation and duplicate-credit idempotency
+        env:
+          POKETFLOW_CONFIG: /tmp/poketflow-test-config.php
+        run: php tests/payment-order-idempotency-test.php
       - name: Verify preserved balances, accounts and archived history
         run: |
           set -euo pipefail

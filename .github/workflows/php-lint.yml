@@ -1,9 +1,9 @@
 name: PHP syntax checks
 on:
   pull_request:
-    branches: [main]
+    branches: [main, rebuild/advertiser-only-marketplace]
   push:
-    branches: [rebuild/locked-marketplace-v1, rebuild/advertiser-only-marketplace]
+    branches: [rebuild/locked-marketplace-v1, rebuild/advertiser-only-marketplace, fix/advertiser-marketplace-audit]
 jobs:
   php-lint:
     runs-on: ubuntu-latest
@@ -25,3 +25,5 @@ jobs:
         run: php tests/no-external-cpa-integrations-test.php
       - name: Enforce advertiser-only product contract
         run: php tests/advertiser-only-contract-test.php
+      - name: Test advertising delivery regressions
+        run: php tests/advertising-delivery-regression-test.php
