@@ -31,9 +31,11 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
   }elseif($action==='blog_sync_retry'){
    $q=$pdo->prepare("SELECT c.status,bc.status blog_status,bc.sync_status FROM pf_campaigns c JOIN pf_blog_campaigns bc ON bc.campaign_id=c.id WHERE c.id=? AND c.campaign_type='BLOG_SPONSORED' FOR UPDATE");$q->execute([$id]);$r=$q->fetch();
    if(!$r||$r['sync_status']!=='FAILED')throw new RuntimeException('This blog campaign does not have a failed synchronization to retry.');
+   // A retry must upsert the current safe state, not revoke the advertisement.
+   // Keep the campaign paused until an administrator deliberately resumes it.
    if($r['status']==='ACTIVE')$pdo->prepare("UPDATE pf_campaigns SET status='PAUSED' WHERE id=?")->execute([$id]);
-   if($r['blog_status']==='ACTIVE')$pdo->prepare("UPDATE pf_blog_campaigns SET status='PAUSED' WHERE campaign_id=?")->execute([$id]);
-   $syncCampaignId=(int)$id;$syncAction='revoke';
+   if(in_array($r['blog_status'],['ACTIVE','PENDING'],true))$pdo->prepare("UPDATE pf_blog_campaigns SET status='PAUSED' WHERE campaign_id=?")->execute([$id]);
+   $syncCampaignId=(int)$id;$syncAction='upsert';
   }else throw new RuntimeException('Unknown administrator action.');
   $ip=(string)($_SERVER['REMOTE_ADDR']??'');$ipBin=filter_var($ip,FILTER_VALIDATE_IP)?inet_pton($ip):null;$pdo->prepare('INSERT INTO pf_audit_log(actor_user_id,action,subject_type,subject_id,after_json,ip_address) VALUES (?,?,?,?,?,?)')->execute([(int)$admin['id'],'ADMIN_'.strtoupper($action),strtoupper($action),$id,json_encode(['decision'=>$decision,'note'=>$note]),$ipBin]);
   $pdo->commit();$notice='The administrator action has been recorded.';
