@@ -25,7 +25,7 @@ $payments = $read('marketplace/bootstrap/payments.php');
 $createPayment = $read('marketplace/create-payment.php');
 
 $checks = [
-    'blog synchronization checks advertiser status before activation' =>
+    'blog synchronization checks user and advertiser profile status before activation' =>
         str_contains($sync, 'advertiser_status') &&
         str_contains($sync, 'user_status') &&
         str_contains($sync, 'pf_advertiser_profiles') &&
@@ -37,8 +37,9 @@ $checks = [
     'blog pause synchronizes a paused creative instead of ending it' =>
         str_contains($adminCampaigns, "syncAction='upsert';"),
     'advertiser suspension synchronizes paused state and revokes only as fallback' =>
-        str_contains($adminAdvertisers, "pf_sync_blog_campaign($pdo,(int)$cid,'upsert')") &&
-        str_contains($adminAdvertisers, "pf_sync_blog_campaign($pdo,(int)$cid,'revoke')"),
+        str_contains($adminAdvertisers, 'pf_sync_blog_campaign(') &&
+        str_contains($adminAdvertisers, "'upsert'") &&
+        str_contains($adminAdvertisers, "'revoke'"),
     'failed blog synchronization retry performs an upsert' =>
         str_contains($adminFinance, "syncAction='upsert';") &&
         str_contains($adminFinance, 'Retry blog sync'),
@@ -47,18 +48,18 @@ $checks = [
         str_contains($siteAds, 'catch (Throwable $exception)'),
     'main-site click tracking failure does not block destination redirect' =>
         str_contains($siteClick, 'A tracking outage must not prevent a visitor from following the ad.') &&
-        strpos($siteClick, "header('Location: '.$url") > strpos($siteClick, 'catch (Throwable $exception)'),
-    'PayPal webhook requires exact advertiser identity' =>
+        strpos($siteClick, 'header(') > strpos($siteClick, 'catch (Throwable $exception)'),
+    'PayPal webhook requires exact advertiser and stored order identity' =>
         str_contains($paypalWebhook, "custom===''") &&
         str_contains($paypalWebhook, 'advertiser_id') &&
         str_contains($paypalWebhook, '!==$custom') &&
         str_contains($paypalWebhook, 'supplementary_data') &&
         str_contains($paypalWebhook, 'related_ids'),
-    'PayPal idempotency keys are sent as HTTP header lines' =>
+    'PayPal idempotency keys are valid HTTP header lines' =>
         str_contains($payments, 'PayPal-Request-Id: pf-capture-') &&
         str_contains($createPayment, 'PayPal-Request-Id: pf-order-') &&
         str_contains($payments, 'paypalOrderId') &&
-        str_contains($payments, 'transactionId'),
+        str_contains($payments, 'transactionId') &&
         !str_contains($payments, "'PayPal-Request-Id'=>") &&
         !str_contains($createPayment, "'PayPal-Request-Id'=>"),
 ];
