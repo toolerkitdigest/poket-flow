@@ -81,9 +81,9 @@ function pf_capture_paypal_order(array $order,string $paypalOrderId): array
         'Authorization: Bearer '.$token,'Accept: application/json','PayPal-Request-Id: pf-capture-'.$order['id']
     ]);
     $data=$result['data'];$unit=$data['purchase_units'][0]??[];$capture=$unit['payments']['captures'][0]??[];$amount=$capture['amount']??[];
-    if(!$result['ok']||(string)($data['id']??'')!==$paypalOrderId||($data['status']??'')!=='COMPLETED'||(string)($unit['invoice_id']??'')!==(string)$order['provider_reference']||(string)($unit['custom_id']??'')!==(string)$order['advertiser_id']||strtoupper((string)($amount['currency_code']??''))!==strtoupper((string)$order['currency'])||abs((float)($amount['value']??0)-(float)$order['amount'])>0.001)
+    if(!$result['ok']||(string)($data['id']??'')!==$paypalOrderId||($data['status']??'')!=='COMPLETED'||empty($capture['id'])||(string)($unit['invoice_id']??'')!==(string)$order['provider_reference']||(string)($unit['custom_id']??'')!==(string)$order['advertiser_id']||strtoupper((string)($amount['currency_code']??''))!==strtoupper((string)$order['currency'])||abs((float)($amount['value']??0)-(float)$order['amount'])>0.001)
         return ['ok'=>false,'transaction_id'=>'','error'=>'PayPal capture could not be verified against this PoketFlow order.'];
-    return ['ok'=>true,'transaction_id'=>(string)($capture['id']??$paypalOrderId),'error'=>''];
+    return ['ok'=>true,'transaction_id'=>(string)$capture['id'],'error'=>''];
 }
 function pf_credit_payment_order(PDO $pdo,int $orderId,string $transactionId): bool
 {
