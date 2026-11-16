@@ -78,6 +78,10 @@ $checks = [
     'PayPal credits require a genuine capture transaction ID' =>
         str_contains($payments, 'empty($capture') &&
         str_contains($paypalWebhook, 'capture ID missing'),
+    'payment redirects are restricted to trusted HTTPS provider hosts' =>
+        str_contains($payments, 'pf_payment_checkout_url_allowed') &&
+        str_contains($createPayment, "pf_payment_checkout_url_allowed('PAYSTACK'") &&
+        str_contains($createPayment, "pf_payment_checkout_url_allowed('PAYPAL'"),
     'late PayPal cancellation callback does not contradict a completed payment' =>
         str_contains($paymentReturn, "status!=='PAID'"),
 ];
