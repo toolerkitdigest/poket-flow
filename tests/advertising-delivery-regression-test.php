@@ -23,6 +23,8 @@ $siteClick = $read('marketplace/ad-click.php');
 $paypalWebhook = $read('marketplace/api/paypal-webhook.php');
 $payments = $read('marketplace/bootstrap/payments.php');
 $createPayment = $read('marketplace/create-payment.php');
+$paymentReturn = $read('marketplace/payment-return.php');
+$paypalOrderMigration = $read('database/migrations/20261115_013_paypal_order_reference_separation.sql');
 
 $checks = [
     'blog synchronization checks user and advertiser profile status before activation' =>
@@ -67,6 +69,12 @@ $checks = [
         str_contains($payments, 'transactionId') &&
         !str_contains($payments, "'PayPal-Request-Id'=>") &&
         !str_contains($createPayment, "'PayPal-Request-Id'=>"),
+    'PayPal order ID remains separate from capture transaction ID' =>
+        str_contains($createPayment, 'provider_order_id') &&
+        str_contains($paymentReturn, 'provider_order_id') &&
+        str_contains($paypalWebhook, 'provider_order_id') &&
+        str_contains($paypalOrderMigration, 'provider_order_id') &&
+        str_contains($paypalOrderMigration, 'provider_transaction_id = NULL'),
 ];
 
 foreach ($checks as $label => $passed) {
