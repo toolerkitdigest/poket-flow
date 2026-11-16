@@ -78,6 +78,8 @@ $checks = [
     'PayPal credits require a genuine capture transaction ID' =>
         str_contains($payments, 'empty($capture') &&
         str_contains($paypalWebhook, 'capture ID missing'),
+    'late PayPal cancellation callback does not contradict a completed payment' =>
+        str_contains($paymentReturn, "status!=='PAID'"),
 ];
 
 foreach ($checks as $label => $passed) {
