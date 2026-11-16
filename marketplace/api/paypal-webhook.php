@@ -25,6 +25,7 @@ try{$token=pf_paypal_access_token();$verify=pf_payment_http('POST',pf_paypal_api
  if(!empty($order['provider_order_id'])&&$relatedOrderId!==(string)$order['provider_order_id']){http_response_code(400);exit('order mismatch');}
  if($order['status']==='PAID'){http_response_code(200);exit('already processed');}
  if($relatedOrderId===''||$relatedOrderId!==(string)$order['provider_order_id']){http_response_code(400);exit('order mismatch');}
+ $captureId=(string)($resource['id']??'');if($captureId===''){http_response_code(400);exit('capture ID missing');}
  $amount=$resource['amount']??[];if(strtoupper((string)($amount['currency_code']??''))!==strtoupper((string)$order['currency'])||abs((float)($amount['value']??0)-(float)$order['amount'])>0.001){http_response_code(400);exit('amount mismatch');}
- pf_credit_payment_order($pdo,(int)$order['id'],(string)($resource['id']??'paypal-capture'));http_response_code(200);exit('ok');
+ pf_credit_payment_order($pdo,(int)$order['id'],$captureId);http_response_code(200);exit('ok');
 }catch(Throwable $e){error_log('PoketFlow PayPal webhook failed: '.$e->getMessage());http_response_code(500);exit('verification failed');}
