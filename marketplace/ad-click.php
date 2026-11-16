@@ -19,6 +19,12 @@ $url=(string)($creative['url']??''); $parts=parse_url($url);
 if (!filter_var($url,FILTER_VALIDATE_URL) || strtolower((string)($parts['scheme']??''))!=='https' || empty($parts['host'])) {
     http_response_code(410); exit('This advertisement destination is unavailable.');
 }
-$pdo->prepare("INSERT INTO pf_site_ad_events(campaign_id,event_type,placement_key,event_key,occurred_at) VALUES (?,'CLICK',?,?,NOW())")
-    ->execute([(int)$id,$ad['placement_key'],bin2hex(random_bytes(24))]);
-header('Location: '.$url, true, 302); exit;
+try {
+    $pdo->prepare("INSERT INTO pf_site_ad_events(campaign_id,event_type,placement_key,event_key,occurred_at) VALUES (?,'CLICK',?,?,NOW())")
+        ->execute([(int)$id,$ad['placement_key'],bin2hex(random_bytes(24))]);
+} catch (Throwable $exception) {
+    // A tracking outage must not prevent a visitor from following the ad.
+    error_log('PoketFlow site advertisement click could not be recorded: '.$exception->getMessage());
+}
+header('Location: '.$url, true, 302);
+exit;
