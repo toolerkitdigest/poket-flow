@@ -25,6 +25,34 @@ function pf_payment_http(string $method,string $url,array $headers=[],?array $pa
     $data=is_string($body)?json_decode($body,true):null;
     return ['ok'=>$status>=200&&$status<300&&is_array($data),'status'=>$status,'data'=>$data,'error'=>$error!==''?$error:'HTTP '.$status];
 }
+function pf_payment_checkout_url_allowed(string $provider, string $url): bool
+{
+    global $config;
+    $parts = parse_url($url);
+    if (
+        !filter_var($url, FILTER_VALIDATE_URL) ||
+        !is_array($parts) ||
+        strtolower((string) ($parts['scheme'] ?? '')) !== 'https' ||
+        empty($parts['host']) ||
+        isset($parts['user']) ||
+        isset($parts['pass'])
+    ) {
+        return false;
+    }
+
+    $host = strtolower((string) $parts['host']);
+    if ($provider === 'PAYSTACK') {
+        return $host === 'checkout.paystack.com';
+    }
+    if ($provider === 'PAYPAL') {
+        $expected = ($config['paypal_mode'] ?? 'sandbox') === 'live'
+            ? 'www.paypal.com'
+            : 'www.sandbox.paypal.com';
+        return $host === $expected;
+    }
+    return false;
+}
+
 function pf_payment_provider_ready(string $provider): bool
 {
     global $config;
