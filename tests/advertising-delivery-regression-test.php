@@ -85,7 +85,7 @@ $checks = [
         str_contains($createPayment, "pf_payment_checkout_url_allowed('PAYSTACK'") &&
         str_contains($createPayment, "pf_payment_checkout_url_allowed('PAYPAL'"),
     'late PayPal cancellation callback does not contradict a completed payment' =>
-        str_contains($paymentReturn, "status!=='PAID'"),
+        str_contains($paymentReturn, "status']!=='PAID'"),
     'campaign reservation uses post-redirect-get to prevent resubmission' =>
         str_contains($fundBlog, 'fund-blog-campaign.php?id=') &&
         str_contains($fundSite, 'fund-site-campaign.php?id=') &&
