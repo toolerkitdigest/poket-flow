@@ -9,7 +9,7 @@ try{
  }elseif($provider==='PAYPAL'){
   $reference=trim((string)($_GET['reference']??''));if($reference==='')throw new RuntimeException('The PayPal payment reference is missing.');
   $q=$pdo->prepare("SELECT * FROM pf_payment_orders WHERE provider='PAYPAL' AND provider_reference=? AND advertiser_id=? LIMIT 1");$q->execute([$reference,(int)$user['id']]);$order=$q->fetch();
-  if(isset($_GET['cancelled'])){if($order&&$order['status']==='PENDING')$pdo->prepare("UPDATE pf_payment_orders SET status='CANCELLED' WHERE id=? AND status='PENDING'")->execute([(int)$order['id']]);throw new RuntimeException('The PayPal checkout was cancelled. No funds were added.');}
+  if(isset($_GET['cancelled'])&&(!$order||$order['status']!=='PAID')){if($order&&$order['status']==='PENDING')$pdo->prepare("UPDATE pf_payment_orders SET status='CANCELLED' WHERE id=? AND status='PENDING'")->execute([(int)$order['id']]);throw new RuntimeException('The PayPal checkout was cancelled. No funds were added.');}
  }else throw new RuntimeException('Unsupported payment provider.');
  if(!$order)throw new RuntimeException('The payment order could not be found for this account.');
  if($order['status']==='PAID'){$success=true;}
