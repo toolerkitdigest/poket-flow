@@ -17,29 +17,36 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     exit('POST required.');
 }
 
+/*
+ * These are the exact POST field names shown in the user's CPAGrip
+ * Multi Postback documentation: password, payout, offer_id, tracking_id.
+ */
 $trackingId = trim((string) ($_POST['tracking_id'] ?? ''));
 $password = (string) ($_POST['password'] ?? '');
-$payoutRaw = trim((string) ($_POST['payout'] ?? '0'));
-$transactionId = trim((string) ($_POST['transaction_id'] ?? ''));
+$offerId = trim((string) ($_POST['offer_id'] ?? ''));
+$payoutRaw = trim((string) ($_POST['payout'] ?? ''));
 
-if (!hash_equals((string) $config['postback_password'], $password)) {
+$expectedPassword = (string) ($config['postback_password'] ?? '');
+if ($expectedPassword === '' || str_starts_with($expectedPassword, 'CHANGE_')
+    || !hash_equals($expectedPassword, $password)) {
     http_response_code(403);
     exit('Invalid postback credentials.');
 }
+
+// Global Postback can call this endpoint for other CPAGrip offers.
+// Acknowledge but never unlock this Opera GX funnel for another offer.
+if ($offerId !== (string) ($config['expected_offer_id'] ?? '')) {
+    http_response_code(200);
+    exit('Ignored: offer does not belong to this funnel.');
+}
+
 if (!preg_match('/^[a-f0-9]{32}$/i', $trackingId)) {
     http_response_code(400);
     exit('Invalid tracking ID.');
 }
-if ($payoutRaw !== '' && !preg_match('/^\d{1,9}(?:\.\d{1,4})?$/', $payoutRaw)) {
+if ($payoutRaw === '' || !preg_match('/^\\d{1,9}(?:\\.\\d{1,4})?$/', $payoutRaw)) {
     http_response_code(400);
     exit('Invalid payout.');
-}
-if ($transactionId === '') {
-    $transactionId = 'click-' . $trackingId;
-}
-if (strlen($transactionId) > 191) {
-    http_response_code(400);
-    exit('Invalid transaction ID.');
 }
 
 try {
@@ -61,18 +68,23 @@ try {
         http_response_code(404);
         exit('Unknown tracking ID.');
     }
+
+    // CPAGrip may retry a callback. Repeated callbacks must not change the result.
     if ($click['status'] === 'approved') {
         $pdo->commit();
         http_response_code(200);
         exit('OK');
     }
 
+    // The CPAGrip page documents no unique transaction-id POST field.
+    // The offer + unique tracking ID pair is our idempotency key.
+    $transactionKey = '39689:' . $trackingId;
     $update = $pdo->prepare(
         "UPDATE funnel_clicks
          SET status = 'approved', network_transaction_id = ?, payout = ?, converted_at = NOW()
          WHERE id = ?"
     );
-    $update->execute([$transactionId, $payoutRaw === '' ? null : $payoutRaw, $click['id']]);
+    $update->execute([$transactionKey, $payoutRaw, $click['id']]);
     $pdo->commit();
 
     http_response_code(200);
@@ -81,7 +93,6 @@ try {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    // A duplicate provider transaction can be retried safely.
     if ((string) $e->getCode() === '23000') {
         http_response_code(200);
         exit('OK');
