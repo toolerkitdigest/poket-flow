@@ -47,13 +47,13 @@ unlock this funnel.
 5. Copy `config.example.php` to `config.php`; set the database credentials
    and a long random `postback_password`. Do not commit `config.php`.
 6. Ensure HTTPS is active.
-7. In CPAGrip Postback Tools, configure the callback URL above and set the same
-   password as in `config.php`. CPAGrip's supplied page distinguishes Global
-   Postback from Multi Postback custom callbacks. Use Global Postback only if
-   you intend this endpoint to receive callbacks for all tools/offers; this
-   endpoint safely ignores any offer ID other than 39689. A Multi Postback
-   custom callback requires choosing the correct Tool Attachment for the
-   monetization tool that actually delivers this offer.
+7. This campaign uses a direct offer URL copied from CPAGrip's Offers page,
+   not a Content Locker or URL/File Locker. Configure the callback under
+   CPAGrip Global Postback at `https://unlock.poketflow.com/postback.php` and
+   enter the same password as `config.php`. Do not attach this callback to
+   `New Content Locker` in Multi Postback. CPAGrip says Global Postback is
+   called for leads regardless of custom Multi Postback settings. This
+   endpoint safely ignores every offer ID except 39689.
 8. Before enabling traffic, confirm that the supplied offer URL is the correct
    CPAGrip-generated link for offer 39689 and that it preserves the appended
    `tracking_id` parameter.
