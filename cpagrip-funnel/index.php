@@ -36,7 +36,7 @@ declare(strict_types=1);
 
       <div class="hero-art">
         <div class="art-glow"></div>
-        <img src="assets/opera-gx-offer.png" alt="Opera GX promotional artwork showing the gaming browser on desktop and mobile devices">
+        <img src="assets/opera-gx-offer.png" alt="Opera GX promotional artwork showing the gaming browser on desktop and mobile devices" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="image-fallback" hidden>Upload the supplied Opera GX artwork to<br><b>assets/opera-gx-offer.png</b></div>
         <div class="art-caption"><span class="live-dot"></span> OPERA GX · GAMING BROWSER</div>
       </div>
     </section>
