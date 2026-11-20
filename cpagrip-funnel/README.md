@@ -1,58 +1,69 @@
 # Opera GX single-offer funnel (CPAGrip)
 
 This is an isolated PHP 8.3 + MySQL mini-app intended for the document root of
-`unlock.poketflow.com`. It does not use or modify the existing PoketFlow
-application, its database, or its OGAds code.
+`unlock.poketflow.com`. It does not modify the existing PoketFlow application
+or its database.
 
 ## Files
 
-- `index.php` — landing page and supplied promotional artwork
-- `start.php` — creates a unique 32-character tracking ID, records the browser session, and redirects to the offer
-- `postback.php` — POST-only authenticated CPAGrip callback receiver
-- `success.php` — only grants access when the same browser session has a matching approved conversion
+- `index.php` — landing page
+- `start.php` — creates a random 32-character tracking ID and redirects to the offer
+- `postback.php` — authenticates CPAGrip's POST callback and approves the matching offer
+- `success.php` — unlocks only for the same browser session after approval
 - `schema.sql` — one-table MySQL schema
-- `config.example.php` — configuration template; copy to `config.php` and fill in secrets
-- `assets/` — stylesheet and offer artwork
+- `config.example.php` — safe configuration template
+- `assets/style.css` — responsive design
+- `assets/opera-gx-offer.png` — upload the promotional image supplied by the user
+
+## Confirmed CPAGrip callback format
+
+The user supplied the text of CPAGrip's Multi Postback page. It explicitly lists
+these POST variables:
+
+- `password` — the password entered in CPAGrip postback settings
+- `payout` — offer payout
+- `offer_id` — completed offer ID
+- `tracking_id` — SubID passed on the offer URL
+
+CPAGrip documents the tracking parameter as `tracking_id`, appended to the offer
+URL. This project therefore appends a unique value as
+`&tracking_id=<32-character-random-id>`.
+
+The callback endpoint is:
+`https://unlock.poketflow.com/postback.php`
+
+The endpoint accepts POST only, checks the shared password, and only approves
+offer ID `39689`. This matters if the endpoint is configured as a Global
+Postback: callbacks for other offers are acknowledged but ignored and cannot
+unlock this funnel.
 
 ## Installation
 
-1. Point `unlock.poketflow.com` to its own document root, for example
+1. Point `unlock.poketflow.com` to its own document root, e.g.
    `/home/poketflo/unlock`.
 2. Upload the contents of this folder into that document root.
-3. Create a dedicated MySQL database and database user in cPanel.
+3. Create a dedicated MySQL database and user in cPanel.
 4. Import `schema.sql` using phpMyAdmin.
-5. Copy `config.example.php` to `config.php`, then enter the database details
-   and a long random postback password. Never commit `config.php`.
-6. Ensure HTTPS is active before testing; the session cookie is Secure.
-7. In the CPAGrip offer URL, the tracking value is appended as
-   `tracking_id=<unique-id>`.
-8. Configure CPAGrip's Global Postback to POST these fields to
-   `https://unlock.poketflow.com/postback.php`:
-   - `tracking_id` = the provider's tracking-id macro
-   - `payout` = the provider's payout macro (optional for unlocking)
-   - `transaction_id` = provider transaction macro (optional)
-   - `password` = the exact secret configured in `config.php`
+5. Copy `config.example.php` to `config.php`; set the database credentials
+   and a long random `postback_password`. Do not commit `config.php`.
+6. Ensure HTTPS is active.
+7. In CPAGrip Postback Tools, configure the callback URL above and set the same
+   password as in `config.php`. CPAGrip's supplied page distinguishes Global
+   Postback from Multi Postback custom callbacks. Use Global Postback only if
+   you intend this endpoint to receive callbacks for all tools/offers; this
+   endpoint safely ignores any offer ID other than 39689. A Multi Postback
+   custom callback requires choosing the correct Tool Attachment for the
+   monetization tool that actually delivers this offer.
+8. Before enabling traffic, confirm that the supplied offer URL is the correct
+   CPAGrip-generated link for offer 39689 and that it preserves the appended
+   `tracking_id` parameter.
 
-## Important CPAGrip verification gate
+## Offer and eligibility
 
-The offer URL provided for this project is:
-`https://getafilenow.com/show.php?l=0&u=820144&id=39689`.
+Offer: `Install and Access the Latest Opera GX!`
+Supplied URL: `https://getafilenow.com/show.php?l=0&u=820144&id=39689`
+Target shown to visitors: Canada, desktop; email/ZIP submit.
 
-CPAGrip's public website describes postback tracking, but does not expose a
-complete current public macro reference for this specific publisher account.
-The `tracking_id` link parameter and POST callback field names in this
-starter are based on commonly documented CPAGrip integration examples, not
-verified against the user's live CPAGrip dashboard. Before enabling traffic,
-confirm the exact tracking parameter, HTTP method, macro names, and password
-field in CPAGrip's Postback Tools / Global Postback screen. Adjust
-`postback.php` and the CPAGrip configuration to match that screen exactly.
-
-Do not use a simulated callback to represent a real conversion. Test with a
-real eligible conversion or CPAGrip's official test facility, if available.
-The offer provider decides whether the conversion qualifies and approves it.
-
-## Eligibility
-
-The supplied offer is listed as Canada / desktop / email or ZIP submit.
-This page displays those restrictions; CPAGrip and the advertiser remain
-authoritative for actual geographic, device, and offer eligibility.
+The offer provider controls eligibility and conversion approval. Do not claim
+a conversion merely because a visitor clicks or returns to the landing page.
+Test with an eligible real conversion or an official CPAGrip test facility.
