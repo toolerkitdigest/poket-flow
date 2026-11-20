@@ -40,3 +40,5 @@ h1 em{font-style:normal;color:var(--red)}
 .notice p{color:#b8aeb9;line-height:1.8;font-size:14px}
 @media(max-width:800px){.hero{grid-template-columns:1fr;gap:35px;padding:48px 0 38px}.hero-copy{max-width:620px}.hero-art{max-width:680px}.steps{grid-template-columns:1fr;gap:4px}.step{padding:10px 4px}.footer{flex-direction:column;gap:8px}.footer span:last-child{text-align:left}.topbar{height:72px}}
 @media(max-width:480px){.page-shell{width:min(100% - 30px,1120px)}.top-label{font-size:8px}.hero{padding-top:38px}h1{font-size:43px}.intro{font-size:13px}.offer-facts{gap:6px}.offer-facts span{font-size:10px}.hero-art{padding:8px}.cta{width:100%}}
+
+.image-fallback{min-height:180px;display:grid;place-content:center;text-align:center;color:#c6bbc8;font-size:12px;line-height:1.8;background:repeating-linear-gradient(135deg,#21131f,#21131f 12px,#291421 12px,#291421 24px);border-radius:5px}
